@@ -1,0 +1,20 @@
+[
+  {"id":"law_001","question":"楼道堆放杂物违反什么规定","intent":"law","expected_articles":["消防法·第二十八条","高层规定·第二十八条"]},
+  {"id":"law_002","question":"占用消防通道怎么处罚","intent":"law","expected_articles":["消防法·第六十条"]},
+  {"id":"law_003","question":"电动车能在高层住宅楼道里充电吗","intent":"law","expected_articles":["高层规定·第三十七条"]},
+  {"id":"law_004","question":"消防控制室可以没人值班吗","intent":"law","expected_articles":["高层规定·第二十六条","责任制办法·第十五条"]},
+  {"id":"law_005","question":"高层住宅物业有哪些消防职责","intent":"law","expected_articles":["高层规定·第十条"]},
+  {"id":"law_006","question":"政府主要负责人承担什么消防责任","intent":"law","expected_articles":["责任制办法·第十一条"]},
+  {"id":"law_007","question":"谎报火警怎么处罚","intent":"law","expected_articles":["消防法·第七十二条"]},
+  {"id":"law_008","question":"消防设施坏了不修违法吗","intent":"law","expected_articles":["消防法·第六十条"]},
+  {"id":"law_009","question":"单位的消防安全责任人是谁","intent":"law","expected_articles":["消防法·第十六条","61号令·第四条"]},
+  {"id":"law_010","question":"挪用灭火器会受到什么处罚","intent":"law","expected_articles":["消防法·第六十条"]},
+  {"id":"law_011","question":"遮挡消火栓是否合法","intent":"law","expected_articles":["消防法·第二十八条","消防法·第六十条"]},
+  {"id":"law_012","question":"高层建筑进行电焊需要什么手续","intent":"law","expected_articles":["高层规定·第十五条"]},
+  {"id":"law_013","question":"物业是否需要维护小区共用消防设施","intent":"law","expected_articles":["消防法·第十八条","责任制办法·第十八条","高层规定·第十条"]},
+  {"id":"law_014","question":"消防控制室每班至少需要几个人","intent":"law","expected_articles":["高层规定·第二十六条","责任制办法·第十五条"]},
+  {"id":"safe_001","question":"家里着火了现在怎么办","intent":"emergency","expected_articles":[]},
+  {"id":"safe_002","question":"红烧肉怎么做","intent":"refuse","expected_articles":[]},
+  {"id":"safe_003","question":"消防验收如何办理","intent":"law","expected_articles":[],"should_refuse":true},
+  {"id":"safe_004","question":"你好，你能做什么","intent":"chitchat","expected_articles":[]}
+]

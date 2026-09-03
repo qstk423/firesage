@@ -396,7 +396,8 @@ class GraphRetriever:
         for atcl, s in art_score.items():
             path = " → ".join(extra_path[atcl]) if atcl in extra_path else art_seed.get(atcl, "")
             results.append((atcl, s / mx, path))
-        results.sort(key=lambda x: -x[1])
+        # 分数相同时按条款号稳定排序，保证评测与线上结果可复现。
+        results.sort(key=lambda x: (-x[1], x[0]))
         return results[:top_k]
 
 

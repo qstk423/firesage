@@ -57,6 +57,11 @@ class Pipeline:
         top = fused[0] if fused else None
         if not top or top["score"] <= CRAG_INCORRECT:
             return "Incorrect"
+        # 只有泛化词命中、没有图谱实体且向量相似度很低时，不能因为排名第一就通过。
+        if (not top.get("graph_hit") and not top.get("direct_match")
+                and top.get("vector", 0) < 0.08
+                and top.get("coverage", 0) < 0.5):
+            return "Incorrect"
         if top["score"] <= CRAG_AMBIGUOUS:
             return "Ambiguous"
         return "Correct"
@@ -136,8 +141,10 @@ class Pipeline:
 
         graph_matched = bool(summary["graph_articles"])
         graph_ratio = 0.0
+        vector_ratio = 0.0
         if fused:
             graph_ratio = sum(f["graph_share"] for f in fused) / len(fused)
+            vector_ratio = sum(f.get("vector_share", 0) for f in fused) / len(fused)
 
         # CRAG 低质量 → 拒答
         if crag in ("Ambiguous", "Incorrect"):
@@ -146,6 +153,8 @@ class Pipeline:
                 "answer": "很抱歉，针对您的问题，现有知识库中的检索结果置信度不足，为避免误导，暂不回答。建议换个说法，或咨询属地消防救援机构。",
                 "refused": True, "crag": crag, "references": [], "citations": [],
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
+                "vector_trace": {"matched": bool(summary.get("vector_articles")),
+                                 "vector_ratio": round(vector_ratio, 2)},
                 "strategy": f"CRAG自纠错·{crag}（宁可拒答不可答错）",
                 "context_used": context_used,
             }
@@ -169,9 +178,12 @@ class Pipeline:
                 "chapter": art.get("chapter", ""),
                 "text": art.get("text", ""),
                 "bm25": f["bm25"],
+                "vector": f.get("vector", 0),
                 "graph": f["graph"],
                 "bm25_share": f["bm25_share"],
+                "vector_share": f.get("vector_share", 0),
                 "graph_share": f["graph_share"],
+                "rerank_score": f.get("rerank_score", f["score"]),
                 "score": round(f["score"], 3),
                 "graph_hit": f["graph_hit"],
                 "path": f["graph_path"],
@@ -192,6 +204,10 @@ class Pipeline:
                 "matched": graph_matched,
                 "related_articles": sorted(summary["graph_articles"]),
                 "graph_ratio": round(graph_ratio, 2),
+            },
+            "vector_trace": {
+                "matched": bool(summary.get("vector_articles")),
+                "vector_ratio": round(vector_ratio, 2),
             },
             "fused": fused,
             "context_used": context_used,

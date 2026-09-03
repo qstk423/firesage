@@ -18,7 +18,7 @@ import rag.pipeline as pipeline_mod
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
 graph = build_if_missing()
 
@@ -164,7 +164,8 @@ def system_status():
         "name": "消安智答 FireSage",
         "version": APP_VERSION,
         "generation_mode": "LLM 生成" if pl.llm.enabled else "本地抽取式回答",
-        "retrieval": "BM25 + GraphRAG",
+        "retrieval": "BM25 + TF-IDF向量 + GraphRAG + 法规重排",
+        "retrieval_channels": pl.retriever.channels,
         "knowledge_bases": [source["name"] for source in sources],
         "sources": sources,
     }
