@@ -17,7 +17,7 @@ except ImportError:
 
 from .graphrag import GraphRetriever, load_graph
 from .reranker import LegalReranker
-from .vector_index import TfidfVectorIndex
+from .semantic_index import CrossEncoderReranker, SemanticVectorIndex
 
 # RRF 权重与平滑常数。BM25 保留较高权重，图谱负责补充关系证据。
 CHANNEL_WEIGHTS = {"bm25": 0.42, "vector": 0.33, "graph": 0.25}
@@ -115,10 +115,12 @@ class HybridRetriever:
         graph = load_graph()
         self.chunks = chunks or []
         self.bm25 = BM25Index(self.chunks)
-        self.vector = TfidfVectorIndex(self.chunks)
+        self.vector = SemanticVectorIndex(self.chunks)
         self.graph = GraphRetriever(graph)
         self.reranker = LegalReranker(self.chunks)
-        self.channels = ["BM25", self.vector.name, "GraphRAG", self.reranker.name]
+        self.cross_encoder = CrossEncoderReranker(self.chunks)
+        self.channels = ["BM25", self.vector.name, "GraphRAG",
+                         self.reranker.name, self.cross_encoder.name]
 
     def retrieve(self, question, top_k=5):
         pool_size = max(12, top_k * 4)
@@ -156,10 +158,21 @@ class HybridRetriever:
                 "graph_path": graph_paths.get(article),
             })
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
-        ranked = self.reranker.rerank(question, candidates[:pool_size])[:top_k]
+        reranked = self.reranker.rerank(question, candidates[:pool_size])
+        # CrossEncoder 语义精排：与法规意图重排线性组合（语义为主、规则为辅）
+        ce_scores = self.cross_encoder.score(question, reranked)
+        if ce_scores:
+            for item in reranked:
+                ce = ce_scores.get(item["article"], 0.0)
+                item["cross_encoder"] = round(ce, 4)
+                item["rerank_score"] = round(0.55 * ce + 0.45 * item["rerank_score"], 4)
+                item["score"] = item["rerank_score"]
+            reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
+        ranked = reranked[:top_k]
         summary = {
             "bm25_articles": set(raw["bm25"]),
             "vector_articles": set(raw["vector"]),
             "graph_articles": set(raw["graph"]),
+            "cross_encoder_used": bool(ce_scores),
         }
         return ranked, summary

@@ -3,3 +3,7 @@ uvicorn>=0.29,<1
 jieba>=0.42,<1
 rank-bm25>=0.2.2,<1
 requests>=2.31,<3
+numpy>=1.26,<3
+torch>=2.1
+sentence-transformers>=2.7
+faiss-cpu>=1.8

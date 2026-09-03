@@ -45,6 +45,9 @@ class LegalReranker:
             direct_match = any(term in question and term in text for term in (
                 "挪用", "占用", "堵塞", "遮挡", "停用", "谎报", "充电", "值班", "维护"
             ))
+            # 长而泛的"枢纽条款"（单位职责总纲等）与任何问题都有字面重叠，适度降权，
+            # 让位给标题/内容直接命中的具体条款
+            length_penalty = -0.05 if len(text) > 250 else 0.0
             intent_adjustment = 0.0
             if wants_penalty and is_penalty_article:
                 intent_adjustment += 0.10
@@ -65,9 +68,10 @@ class LegalReranker:
                 intent_adjustment -= 0.04
             rerank_score = (
                 0.62 * candidate["retrieval_score"]
-                + 0.28 * coverage
-                + 0.10 * title_coverage
+                + 0.18 * coverage
+                + 0.20 * title_coverage
                 + intent_adjustment
+                + length_penalty
             )
             enriched = dict(candidate)
             enriched["coverage"] = round(coverage, 3)

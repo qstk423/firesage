@@ -29,28 +29,36 @@ class LLMClient:
         self.base_url = os.getenv("LLM_BASE_URL", "")
         self.api_key = os.getenv("LLM_API_KEY", "")
         self.model = os.getenv("LLM_MODEL", "")
+        self.timeout = int(os.getenv("LLM_TIMEOUT", "30"))
+        self.max_retries = int(os.getenv("LLM_MAX_RETRIES", "2"))
         self.enabled = bool(self.base_url and self.api_key and self.model)
 
     def complete(self, system, user):
         if not self.enabled:
             return None
-        try:
-            url = self.base_url.rstrip("/") + "/chat/completions"
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "temperature": 0.3,
-            }
-            req = urllib.request.Request(url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json",
-                         "Authorization": f"Bearer {self.api_key}"})
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            print(f"[LLM] 调用失败（降级为抽取式）: {e}")
-            return None
+        url = self.base_url.rstrip("/") + "/chat/completions"
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": 0.3,
+        }
+        last_error = None
+        for attempt in range(self.max_retries):
+            try:
+                req = urllib.request.Request(url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json",
+                             "Authorization": f"Bearer {self.api_key}"})
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                return data["choices"][0]["message"]["content"]
+            except Exception as e:
+                last_error = e
+                # 超时/网络类错误重试；4xx 配置类错误重试无意义
+                if isinstance(e, urllib.error.HTTPError) and e.code < 500:
+                    break
+        print(f"[LLM] 调用失败（已重试{self.max_retries}次，降级为抽取式）: {last_error}")
+        return None

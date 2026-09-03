@@ -5,3 +5,5 @@ __pycache__/
 .env
 .env.*
 !.env.example
+backend/data/.semantic_cache/
+backend/.env.local

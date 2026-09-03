@@ -1,0 +1,40 @@
+name: FireEval CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: 安装依赖
+        run: |
+          pip install -r requirements.txt
+      - name: 缓存 bge 模型
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: bge-models-${{ runner.os }}
+      - name: 单元与回归测试
+        run: |
+          python -m unittest discover -s tests -v
+      - name: FireEval v0 基线（轻量，无模型依赖也须通过）
+        run: |
+          cd backend && python3 scripts/evaluate_fireeval.py --v0 --strict
+        env:
+          USE_HF_MIRROR: "0"
+      - name: FireEval v1 发布门槛（200 题）
+        run: |
+          cd backend && python3 scripts/evaluate_fireeval.py --strict
+        env:
+          HF_ENDPOINT: https://hf-mirror.com

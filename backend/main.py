@@ -4,9 +4,10 @@
 """
 import os
 import json
+import time
 from typing import Optional
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -18,8 +19,23 @@ import rag.pipeline as pipeline_mod
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """请求日志与响应耗时统计（API 访问留痕，便于排查慢查询）。"""
+    start = time.time()
+    response = await call_next(request)
+    elapsed_ms = int((time.time() - start) * 1000)
+    if request.url.path.startswith("/api/"):
+        print(f"[api] {request.method} {request.url.path} -> {response.status_code} "
+              f"({elapsed_ms}ms)", flush=True)
+    response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
+    return response
+
+
 graph = build_if_missing()
 
 # 加载语义句 chunks
@@ -117,6 +133,35 @@ def graph_data(types: str = Query("", description="逗号分隔的类型过滤�
     return {"nodes": nodes, "edges": edges, "matched": len(matched_ids)}
 
 
+@app.get("/api/graph/subgraph")
+def graph_subgraph(articles: str = Query(..., description="逗号分隔的条款 key，如 消防法·第二十八条,消防法·第六十条"),
+                   highlight: str = Query("", description="逗号分隔的高亮实体 id")):
+    """回答-图谱联动：只返回本次回答引用条款相关的局部子图。
+
+    比 /api/graph/data 返回全量 435 条关系更易读：
+    节点 = 引用条款涉及的实体；边 = 这些实体之间的关系；
+    与问题场景直接匹配的实体标记 highlight=true。
+    """
+    article_set = set(a.strip() for a in articles.split(",") if a.strip())
+    highlight_set = set(h.strip() for h in highlight.split(",") if h.strip())
+    # 1) 引用条款直接涉及的边
+    edge_index = {}
+    for i, e in enumerate(graph["edges"]):
+        if e.get("article") in article_set:
+            edge_index[i] = e
+    # 2) 高亮实体的一跳邻居边，保证主体-行为-处罚链完整
+    for i, e in enumerate(graph["edges"]):
+        if i in edge_index:
+            continue
+        if e["source"] in highlight_set or e["target"] in highlight_set:
+            edge_index[i] = e
+    edges = list(edge_index.values())
+    node_ids = {e["source"] for e in edges} | {e["target"] for e in edges}
+    nodes = [dict(n, highlight=n["id"] in highlight_set)
+             for n in graph["nodes"] if n["id"] in node_ids]
+    return {"nodes": nodes, "edges": edges, "articles": sorted(article_set)}
+
+
 @app.get("/api/graph/entity")
 def entity_detail(id: str = Query(...),
                   laws: str = Query("", description="逗号分隔的法规简称"),
@@ -163,8 +208,8 @@ def system_status():
     return {
         "name": "消安智答 FireSage",
         "version": APP_VERSION,
-        "generation_mode": "LLM 生成" if pl.llm.enabled else "本地抽取式回答",
-        "retrieval": "BM25 + TF-IDF向量 + GraphRAG + 法规重排",
+        "generation_mode": "LLM 生成（结构化+引用核验）" if pl.llm.enabled else "本地抽取式回答",
+        "retrieval": "BM25 + bge-m3语义向量 + GraphRAG 三路召回，RRF 融合 + 法规意图重排 + CrossEncoder 精排",
         "retrieval_channels": pl.retriever.channels,
         "knowledge_bases": [source["name"] for source in sources],
         "sources": sources,

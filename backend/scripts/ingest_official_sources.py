@@ -3,11 +3,16 @@
 """从权威网页抓取消防法规，转换为 FireSage 的层级 JSON。
 
 仅收录配置中明确列出的政府站点；每份数据保留来源、发布机关与生效时间。
+
+消防法与 61 号令优先使用 ``data/raw/*.md`` 本地全文（见 ``build_law_corpus.py``）；
+本脚本继续负责高层规定与责任制办法的在线抓取。
 """
 import html
 import json
 import os
 import re
+import subprocess
+import sys
 from html.parser import HTMLParser
 
 import requests
@@ -144,6 +149,10 @@ def ingest(config):
 
 
 if __name__ == "__main__":
+    corpus_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "build_law_corpus.py")
+    if os.path.exists(corpus_script):
+        print("先构建消防法 / 61 号令本地全文…")
+        subprocess.check_call([sys.executable, corpus_script])
     for source in SOURCES:
         path, count = ingest(source)
         print(f"已写入 {os.path.basename(path)}：{count} 条")
