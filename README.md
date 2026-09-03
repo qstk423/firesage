@@ -36,6 +36,8 @@ export LLM_API_KEY="your-key"
 export LLM_MODEL="your-model"
 ```
 
+也可以将 `backend/.env.example` 复制为 `backend/.env.local` 后填写。本地配置已被 Git 忽略。DeepSeek 当前可使用 `LLM_BASE_URL=https://api.deepseek.com` 与 `LLM_MODEL=deepseek-v4-flash`。
+
 未配置时系统自动使用抽取式回答，页面右上角会如实显示当前模式。
 
 ## 主要接口

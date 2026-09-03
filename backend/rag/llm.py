@@ -7,8 +7,25 @@ import urllib.request
 import json
 
 
+def _load_local_env():
+    """加载 backend/.env.local；已有系统环境变量拥有更高优先级。"""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env.local")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as source:
+        for raw_line in source:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip().strip("\"'")
+            if key.startswith("LLM_"):
+                os.environ.setdefault(key, value)
+
+
 class LLMClient:
     def __init__(self):
+        _load_local_env()
         self.base_url = os.getenv("LLM_BASE_URL", "")
         self.api_key = os.getenv("LLM_API_KEY", "")
         self.model = os.getenv("LLM_MODEL", "")
