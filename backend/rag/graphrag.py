@@ -221,6 +221,61 @@ BEHAVIORS = {
         "objects": ["开业", "使用", "营业"],
         "aliases": ["擅自开业", "未经验收投入使用", "未经消防检查开业"],
     },
+    # ---- 39号令 / 公共娱乐场所 ----
+    "住宅楼内改建公共娱乐场所": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["改建", "设置", "开设"],
+        "objects": ["居民住宅楼", "住宅楼"],
+        "aliases": ["住宅楼开娱乐场所", "居民楼改建娱乐场所", "不得在居民住宅楼内改建"],
+    },
+    "文物古建筑内设娱乐场所": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["设置", "开设", "不得设置"],
+        "objects": ["文物古建筑", "博物馆", "图书馆"],
+        "aliases": ["文物建筑开娱乐场所", "博物馆内设娱乐场所"],
+    },
+    "观众厅吸烟明火照明": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["吸烟", "明火照明", "禁止吸烟"],
+        "objects": ["观众厅", "演出", "放映"],
+        "aliases": ["观众厅吸烟", "放映厅吸烟", "影院吸烟", "禁止明火照明"],
+    },
+    "超过额定人数营业": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["超过", "超员", "不得超过"],
+        "objects": ["额定人数", "人数"],
+        "aliases": ["超员营业", "超过额定人数", "超核定人数"],
+    },
+    "超负荷用电拉接临时线": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["超负荷", "拉接", "擅自拉接"],
+        "objects": ["临时电线", "用电"],
+        "aliases": ["超负荷用电", "擅自拉接临时电线", "乱拉临时线"],
+    },
+    "娱乐场所存放易燃易爆物品": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["带入", "存放", "严禁带入"],
+        "objects": ["易燃易爆物品", "易燃易爆"],
+        "aliases": ["娱乐场所带危险品", "严禁带入易燃易爆"],
+    },
+    "卡拉OK厅未设火灾警报": {
+        "kind": TYPE_DUTY,
+        "verbs": ["设置", "应当设置"],
+        "objects": ["声音或者视像警报", "火灾警报", "视像警报"],
+        "aliases": ["卡拉OK厅警报", "包房火灾警报", "视像警报"],
+    },
+    "营业结束安全巡视检查": {
+        "kind": TYPE_DUTY,
+        "verbs": ["巡视", "检查", "指定专人"],
+        "objects": ["安全巡视", "营业结束后"],
+        "aliases": ["营业结束巡查", "专人安全巡视", "营业后巡视检查"],
+    },
+    "全员防火安全责任培训": {
+        "kind": TYPE_DUTY,
+        "verbs": ["建立", "培训", "熟知"],
+        "objects": ["全员防火安全责任", "消防安全培训", "灭火器材"],
+        "aliases": ["全员防火责任", "新职工上岗消防培训", "会使用灭火器材"],
+    },
     # ---- 管理义务 ----
     "开展防火检查": {
         "kind": TYPE_DUTY,
@@ -351,7 +406,13 @@ OBJECTS = {
     "防火防烟分区": ["防火分区", "防烟分区"],
     "装修装饰材料": ["易燃材料", "可燃材料", "装修装饰材料"],
     "公共消防设施": ["消防站", "消防供水", "消防水源", "公共消防设施"],
-    "公共娱乐场所": ["公共娱乐场所", "歌舞娱乐场所"],
+    "公共娱乐场所": [
+        "公共娱乐场所", "歌舞娱乐场所", "娱乐场所",
+        "影剧院", "录像厅", "舞厅", "卡拉OK", "夜总会",
+        "游艺", "保龄球馆", "桑拿浴室",
+    ],
+    "疏散指示标志": ["灯光疏散指示标志", "疏散指示标志", "指示标志"],
+    "火灾事故应急照明": ["火灾事故应急照明灯", "应急照明灯", "应急照明"],
     "避难层": ["避难层", "避难间"],
     "微型消防站": ["微型消防站"],
     "志愿消防队": ["志愿消防队", "志愿消防队员"],
@@ -364,7 +425,7 @@ PENALTIES = {
     "责令停产停业": ["责令停产停业", "停产停业"],
     "临时查封": ["临时查封", "查封"],
     "警告": ["警告"],
-    "强制拆除": ["强制执行", "强制铲除", "拆除"],
+    "强制拆除": ["强制执行", "强制铲除", "强制拆除"],
     "拘留": ["拘留", "行政拘留", "五日以上十日以下拘留"],
 }
 
@@ -559,6 +620,7 @@ class GraphBuilder:
                             self._add_edge(beh_n, pn, REL_PUNISH, num, f"罚则条款传播: {txt[:26]}")
 
         self._dedupe_edges()
+        self._prune_isolated_nodes()
         os.makedirs(DATA_DIR, exist_ok=True)
         with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
             json.dump(self.chunks, f, ensure_ascii=False, indent=2)
@@ -573,6 +635,21 @@ class GraphBuilder:
             if k not in seen:
                 seen.add(k); out.append(e)
         self.edges = out
+
+    def _prune_isolated_nodes(self):
+        """去掉词典预置但语料未连边的孤点，避免全图像「一堆散点」。"""
+        linked = set()
+        for e in self.edges:
+            linked.add(e["source"])
+            linked.add(e["target"])
+        self.nodes = {nid: n for nid, n in self.nodes.items() if nid in linked}
+        for nid, n in self.nodes.items():
+            n["degree"] = 0
+        for e in self.edges:
+            if e["source"] in self.nodes:
+                self.nodes[e["source"]]["degree"] += 1
+            if e["target"] in self.nodes:
+                self.nodes[e["target"]]["degree"] += 1
 
     def stats(self):
         types = {}

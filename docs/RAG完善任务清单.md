@@ -21,7 +21,7 @@
 - [x] BM25 + 向量 + GraphRAG → RRF → 法规意图重排 →（可选 CE）
 - [x] CRAG 低置信拒答 + Out-of-KB + verifier
 - [x] 追问合并上一轮；改写保留 full_question
-- [x] 8 源语料入库；图谱重建（约 104 实体 / 799 边）
+- [x] 8 源语料入库；图谱重建（约 115 实体 / 829 边）
 - [x] FireEval Hit@1 / Hit@3 过门槛（降级环境下快照）
 - [x] 图谱页法规来源与 README 规模同步
 
@@ -37,7 +37,7 @@
 - **验收**：启动日志为 bge-m3 / CrossEncoder；消融表 `degraded_vector=false`
 
 ### T0.2 进程加载新图谱
-- [ ] 改 `graph.json` / `chunks.json` 后重启后端（或热加载）
+- [x] 改 `graph.json` / `chunks.json` 后：`POST /api/kb/reload` 或 ask 时按 mtime 自动热加载；启动日志打印规模
 - **验收**：`/api/graph/stats` 显示 8 源、实体/边与 README 一致
 
 ### T0.3 消融表可一键复跑
@@ -100,9 +100,9 @@
 - **验收**：职责总述类题 Hit@1 稳定；图谱路径可解释
 
 ### T2.3 图谱覆盖与质量
-- [ ] 定期统计：有边条款占比 / 各来源边数 / 枢纽节点度
+- [x] 定期统计：有边条款占比 / 各来源边数 / 枢纽节点度（`scripts/graph_health.py` → `docs/图谱健康度.md`）
 - [ ] 压缩「单位」万能枢纽边（已有策略则继续压）
-- [ ] 39号令边偏少：补娱乐场所专用行为词典
+- [x] 39号令边偏少：补娱乐场所专用行为词典（边 13→29，有边条款 5→11）
 - **验收**：文档中维护一张「图谱健康度」表
 
 ### T2.4 明确不做（防摊薄）
@@ -131,9 +131,9 @@
 - **验收**：扩库来源条款引用准确率不掉
 
 ### T3.4 金标与语料对齐机制
-- [ ] 定期脚本：`expected_articles` 与正文 must 结论一致性检查
-- [ ] 旧条号（如重点单位条号变更）纳入 checklist
-- **落点**：`scripts/` + `eval/fireeval_*.json`  
+- [x] 定期脚本：`expected_articles` 与语料存在性检查（`scripts/check_gold_drift.py`）
+- [ ] 旧条号（如重点单位条号变更）纳入 checklist；must 字面与正文一致性（`--strict-must` 偏严）
+- **落点**：`scripts/check_gold_drift.py` + `eval/fireeval_*.json`  
 - **验收**：CI 或本地一键报告「金标漂移」
 
 ---
@@ -141,8 +141,8 @@
 ## P2 · 数据预处理与工程化
 
 ### T4.1 入库流水线文档化
-- [ ] 统一：`raw → json → dedupe → SOURCE_FILES → GraphBuilder → eval smoke`
-- [ ] README / 本清单交叉链接命令
+- [x] 统一：`raw → json → dedupe → SOURCE_FILES → GraphBuilder → eval smoke`
+- [x] README / 本清单交叉链接命令
 - **参照**：RAGFlow 文档理解流水线（学流程清晰，不学重 PDF）  
 - **落点**：`expand_corpus.py`、`build_law_corpus.py`、README
 
@@ -171,8 +171,8 @@
 - **验收**：答辩有「检索命中 ≠ 忠实回答」两张数
 
 ### T5.3 回归门禁
-- [ ] CI：`evaluate_fireeval.py --split test --strict`（模型可用时）
-- [ ] 无模型时至少跑检索-only Hit 门禁
+- [x] CI：金标漂移 + `gate_retrieval.py --strict`；全链路仍跑 `evaluate_fireeval.py`
+- [x] 无模型时至少跑检索-only Hit 门禁（`gate_retrieval`，阈值 Hit@1≥0.80 / Hit@3≥0.93）
 - **验收**：PR 不能默默打烂 Hit
 
 ---

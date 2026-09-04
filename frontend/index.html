@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#101c2a">
 <title>消安智答 FireSage</title>
 <script src="/static/echarts.min.js"></script>
@@ -17,7 +17,113 @@
 .graph-tools{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:17px 32px;border-bottom:1px solid var(--line)}.statline{display:flex;gap:18px;margin-right:auto}.statline div{min-width:54px}.statline strong{display:block;font-size:17px;font-variant-numeric:tabular-nums}.statline span{color:var(--muted);font-size:10px}.filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.filter{border:1px solid #d2d8dc;border-radius:999px;padding:6px 10px;background:transparent;cursor:pointer;color:#53606b;font-size:11px}.filter.active{border-color:var(--navy);background:var(--navy);color:#fff}.graph-search{width:180px;border:1px solid #d2d8dc;border-radius:10px;padding:7px 10px;background:var(--surface);color:var(--ink);font-size:12px}.graph-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px}.graph-canvas-wrap{position:relative;min-height:360px;background:#f8f6f1}#graph-canvas{position:absolute;inset:0}.graph-state{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:30px;color:var(--muted);text-align:center;pointer-events:none}.graph-state[hidden]{display:none}.detail-panel{min-width:0;overflow-y:auto;padding:22px;border-left:1px solid var(--line);background:var(--surface)}.detail-empty{color:var(--muted);font-size:13px;line-height:1.7}.detail-entity h2{margin:0 0 8px;font-size:19px;overflow-wrap:anywhere}.etype{display:inline-block;padding:3px 7px;border-radius:999px;color:#fff;font-size:10px}.detail-entity h3{margin:22px 0 9px;font-size:12px}.aliases{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.6}.trip{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #ece9e3;font-size:11px;line-height:1.55;overflow-wrap:anywhere}.trip:last-child{border-bottom:0}.trip b{font-size:12px}.rel{font-weight:650}.rel-禁止{color:#b53b2a}.rel-义务{color:#237568}.rel-责任{color:#a86b14}.rel-处罚{color:#6b5ca5}.rel-涉及{color:#2f6f9f}
 .graph-tools{align-items:flex-end}.filter-group{display:grid;gap:5px}.filter-label{color:var(--muted);font-size:10px}.relation-select{border:1px solid #d2d8dc;border-radius:10px;padding:7px 28px 7px 10px;background:var(--surface);color:var(--ink);font-size:11px}.graph-legend{position:absolute;z-index:1;left:18px;bottom:18px;display:flex;gap:13px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,253,249,.94);color:var(--muted);font-size:10px}.graph-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:50%}.source-note{margin-top:7px;color:var(--muted);font-size:10px}.source-link{display:inline-flex;align-items:center;gap:4px;margin-top:7px;color:var(--blue);font-size:10px;text-underline-offset:2px}.source-link .icon{width:12px;height:12px}
 .brand-mark{box-shadow:0 8px 18px rgba(0,0,0,.24)}
-@media(max-width:900px){.app{grid-template-columns:78px minmax(0,1fr)}.sidebar{padding-inline:12px;align-items:center}.brand{margin-inline:0}.brand-copy,.nav button span,.sidebar-foot p,.nav button.active:after{display:none}.nav button{justify-content:center;padding:12px}.sidebar-foot{padding-inline:0}.status span:last-child{display:none}.graph-body{grid-template-columns:minmax(0,1fr) 260px}}
+/* 平板：侧栏收成图标轨，桌面默认布局不变 */
+@media(max-width:900px) and (min-width:769px){
+  .app{grid-template-columns:78px minmax(0,1fr)}
+  .sidebar{padding-inline:12px;align-items:center}
+  .brand{margin-inline:0}
+  .brand-copy,.nav button span,.sidebar-foot p,.nav button.active:after{display:none}
+  .nav button{justify-content:center;padding:12px}
+  .sidebar-foot{padding-inline:0}
+  .status span:last-child{display:none}
+  .graph-body{grid-template-columns:minmax(0,1fr) 260px}
+}
+/* 手机：底部 Tab + 问答全宽；仅影响窄屏 */
+@media(max-width:768px){
+  html,body{min-height:100%;min-height:100dvh}
+  .app{
+    display:flex;flex-direction:column;
+    min-height:100dvh;min-height:100vh;
+    padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));
+  }
+  .sidebar{
+    position:fixed;z-index:40;left:0;right:0;bottom:0;
+    min-height:0;height:auto;
+    flex-direction:row;align-items:stretch;justify-content:center;
+    padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
+    border-top:1px solid rgba(255,255,255,.1);
+    box-shadow:0 -8px 24px rgba(16,28,42,.18);
+    overflow:visible;
+  }
+  .sidebar:after{display:none}
+  .brand,.sidebar-foot{display:none}
+  .nav{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+    width:min(420px,100%);margin:0 auto;
+  }
+  .nav button{
+    flex-direction:column;justify-content:center;align-items:center;
+    gap:3px;padding:8px 6px;border-radius:12px;
+    font-size:11px;transform:none;
+  }
+  .nav button:hover{transform:none}
+  .nav button span{display:block;line-height:1.2}
+  .nav button.active{background:#26384b}
+  .nav button.active:after{display:none}
+  .main{
+    flex:1;min-height:0;width:100%;
+    height:auto;
+    min-height:calc(100dvh - 58px - env(safe-area-inset-bottom,0px));
+  }
+  .page.active{min-height:100%}
+  .topbar{
+    height:auto;min-height:56px;
+    flex-wrap:wrap;gap:8px;
+    padding:10px 14px;
+    padding-top:calc(10px + env(safe-area-inset-top,0px));
+  }
+  .topbar h1{font-size:16px}
+  .topbar p{display:none}
+  .mode-chip{max-width:100%;font-size:10px;padding:5px 8px}
+  .messages{padding:16px 12px 12px}
+  .welcome{padding:12px 0 8px}
+  .welcome h2{font-size:clamp(24px,7vw,34px);max-width:100%}
+  .welcome>p{font-size:13px;margin-top:12px;line-height:1.7}
+  .suggestions{grid-template-columns:1fr;gap:8px;margin-top:18px}
+  .suggestion{padding:12px}
+  .suggestion span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  .bubble{max-width:calc(100% - 40px)}
+  .msg{gap:8px}
+  .avatar{width:30px;height:30px;border-radius:9px}
+  .answer-panel{padding:14px 12px}
+  .composer-wrap{
+    padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  }
+  .composer{border-radius:14px;padding:8px 8px 8px 12px}
+  .sec .body{font-size:12px;padding:10px}
+  .contribution{flex-wrap:wrap;gap:6px}
+  .graph-tools{
+    padding:10px 12px;gap:8px;align-items:stretch;
+  }
+  .statline{width:100%;margin-right:0;gap:10px;overflow-x:auto}
+  .statline div{min-width:48px}
+  .filter-group{width:100%}
+  .filters{max-height:72px;overflow:auto}
+  .graph-search{width:100%}
+  .relation-select{width:100%}
+  .graph-body{
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(240px,42vh) minmax(180px,1fr);
+  }
+  .graph-canvas-wrap{min-height:240px}
+  .detail-panel{
+    border-left:0;border-top:1px solid var(--line);
+    padding:14px 12px;max-height:none;
+  }
+  .graph-legend{
+    left:8px;bottom:8px;right:8px;gap:8px;flex-wrap:wrap;
+    font-size:9px;padding:6px 8px;
+  }
+  .subgraph-banner{margin:0 12px 8px}
+  .subgraph-banner .banner-text{min-width:0}
+}
+@media(max-width:768px){
+  .composer-hint{visibility:hidden;position:relative;height:14px}
+  .composer-hint:after{
+    visibility:visible;position:absolute;left:0;right:0;
+    content:"内容仅作辅助参考 · 紧急请拨 119";
+  }
+}
 .welcome h2{max-width:760px}
 .stages{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.stage{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;border:1px solid #d3d9dd;color:#5c6873;font-size:11px;background:var(--surface)}.stage.active{border-color:var(--ember);color:var(--ember);background:var(--ember-soft)}.stage.done{border-color:var(--sage);color:var(--sage);background:#e2f1ed}.stage.done:after{content:"✓"}.stage-note{width:100%;margin-top:6px;color:var(--muted);font-size:11px}
 .sec{margin-top:14px}.sec h4{display:flex;align-items:center;gap:6px;margin:0 0 7px;font-size:12px;color:#3d4750}.sec h4 .icon{width:14px;height:14px;color:var(--ember)}.sec .body{padding:12px 13px;border-radius:11px;background:#f3f1ec;font-size:13px;line-height:1.85;overflow-wrap:anywhere}.sec.cond .body{background:#eef3f6}.sec.basis .body{background:#f5f1ea}.sec.basis .b{padding:8px 10px;border-radius:9px;background:var(--surface);margin-bottom:7px;line-height:1.7}.sec.basis .b:last-child{margin-bottom:0}.conf{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:650}.conf.high{background:#e2f1ed;color:#176458}.conf.medium{background:#fbf0dd;color:#8a6414}.conf.low{background:var(--ember-soft);color:#96351f}
@@ -31,16 +137,17 @@
 <body>
 <svg class="sr-only" aria-hidden="true"><symbol id="i-flame" viewBox="0 0 24 24"><path d="M13.5 3.5c.4 3-1.4 4.3-2.9 6.1-1.2 1.5-1.6 3.1-.4 4.5.1-2.1 1.4-3.3 2.7-4.5.4 2 2.6 3.5 2.6 6.3A5.5 5.5 0 0 1 4.5 16c0-5.3 4-8.8 9-12.5Z"/><path d="M9.5 19.5c-.1-1.7.8-2.8 2.2-3.8.2 1.6 1.3 2.2 1.3 3.8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 15a4 4 0 0 1-4 4H8l-4 2v-5a4 4 0 0 1-1-2.6V8a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v7Z"/><path d="M8 9h8M8 13h5"/></symbol><symbol id="i-graph" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.1-3.6M8.4 13.2l7.3 3.6M17.7 8.5l.2 7"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.7 3.2 7.8 7.5 9.5 4.3-1.7 7.5-4.8 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-5"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m4 4 17 8-17 8 3-8-3-8Z"/><path d="M7 12h14"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/></symbol></svg>
 <div class="app"><aside class="sidebar"><div class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-flame"/></svg></span><span class="brand-copy"><strong>消安智答</strong><small>FIRE SAGE</small></span></div><nav class="nav" aria-label="主要功能"><button id="nav-qa" class="active" data-page="qa"><svg class="icon"><use href="#i-chat"/></svg><span>可信问答</span></button><button id="nav-graph" data-page="graph"><svg class="icon"><use href="#i-graph"/></svg><span>知识图谱</span></button></nav><div class="sidebar-foot"><div class="status"><i class="status-dot"></i><span>知识服务就绪</span></div><p>回答依据当前知识库生成。紧急情况请直接拨打 119。</p></div></aside>
-<main class="main"><section class="page active" id="page-qa"><div class="page-shell"><header class="topbar"><div><h1>消防法规可信问答</h1><p>用可核验的条款，回答真实场景里的消防问题</p></div><div class="mode-chip" id="mode-chip"><svg class="icon"><use href="#i-shield"/></svg><span>正在读取系统状态</span></div></header><div class="chat-stage"><div class="messages" id="messages" aria-live="polite"><div class="message-list" id="message-list"><div class="welcome" id="welcome"><h2>把每一次消防判断，<span>落到条款上。</span></h2><p>描述你遇到的场景。系统会同时检索法规原文与知识图谱，给出答案、依据和检索路径；证据不足时会明确拒答。</p><div class="suggestions"><button class="suggestion" data-question="楼道堆放杂物违反什么规定"><svg class="icon"><use href="#i-book"/></svg><span>楼道堆放杂物违反什么规定</span></button><button class="suggestion" data-question="占用消防通道怎么处罚"><svg class="icon"><use href="#i-book"/></svg><span>占用消防通道怎么处罚</span></button><button class="suggestion" data-question="消防设施坏了不修违法吗"><svg class="icon"><use href="#i-book"/></svg><span>消防设施坏了不修违法吗</span></button><button class="suggestion" data-question="家里着火了现在怎么办"><svg class="icon"><use href="#i-shield"/></svg><span>家里着火了现在怎么办</span></button></div></div></div></div><div class="composer-wrap"><form class="composer" id="ask-form"><label class="sr-only" for="question">输入消防问题</label><textarea id="question" maxlength="500" rows="1" placeholder="描述场景或询问条款…" required></textarea><div class="composer-actions"><span class="counter" id="counter">0/500</span><button class="send" id="send" type="submit" aria-label="发送问题"><svg class="icon"><use href="#i-send"/></svg></button></div></form><div class="composer-hint">Enter 发送 · Shift + Enter 换行 · 内容仅作辅助参考，紧急情况请拨打 119</div></div></div></div></section>
+<main class="main"><section class="page active" id="page-qa"><div class="page-shell"><header class="topbar"><div><h1>消防法规可信问答</h1><p>用可核验的条款，回答真实场景里的消防问题</p></div><div class="mode-chip" id="mode-chip"><svg class="icon"><use href="#i-shield"/></svg><span>正在读取系统状态</span></div></header><div class="chat-stage"><div class="messages" id="messages" aria-live="polite"><div class="message-list" id="message-list"><div class="welcome" id="welcome"><h2>把每一次消防判断，<span>落到条款上。</span></h2><p>描述你遇到的场景。系统会同时检索法规原文与知识图谱，给出答案、依据和检索路径；问得太宽时会引导你把问题说具体，证据不足才会拒答。</p><div class="suggestions"><button class="suggestion" data-question="楼道堆放杂物违反什么规定"><svg class="icon"><use href="#i-book"/></svg><span>楼道堆放杂物违反什么规定</span></button><button class="suggestion" data-question="占用消防通道怎么处罚"><svg class="icon"><use href="#i-book"/></svg><span>占用消防通道怎么处罚</span></button><button class="suggestion" data-question="消防设施坏了不修违法吗"><svg class="icon"><use href="#i-book"/></svg><span>消防设施坏了不修违法吗</span></button><button class="suggestion" data-question="家里着火了现在怎么办"><svg class="icon"><use href="#i-shield"/></svg><span>家里着火了现在怎么办</span></button></div></div></div></div><div class="composer-wrap"><form class="composer" id="ask-form"><label class="sr-only" for="question">输入消防问题</label><textarea id="question" maxlength="500" rows="1" placeholder="描述场景或询问条款…" required></textarea><div class="composer-actions"><span class="counter" id="counter">0/500</span><button class="send" id="send" type="submit" aria-label="发送问题"><svg class="icon"><use href="#i-send"/></svg></button></div></form><div class="composer-hint">Enter 发送 · Shift + Enter 换行 · 内容仅作辅助参考，紧急情况请拨打 119</div></div></div></div></section>
 <section class="page" id="page-graph"><div class="page-shell"><header class="topbar"><div><h1>法规知识图谱</h1><p>从实体、行为与责任关系中查看条款证据链</p></div><div class="mode-chip"><svg class="icon"><use href="#i-graph"/></svg><span>分簇漂浮 · 点选展开一级+二级关联</span></div></header><div class="graph-tools"><div class="statline" id="stats"></div><div class="filter-group"><span class="filter-label">法规来源</span><div class="filters" id="law-filters"></div></div><div class="filter-group"><span class="filter-label">实体类型</span><div class="filters" id="filters"></div></div><div class="filter-group"><label class="filter-label" for="relation-filter">关系</label><select class="relation-select" id="relation-filter"><option value="">全部关系</option></select></div><div class="filter-group"><label class="filter-label" for="graph-search">实体搜索</label><input class="graph-search" id="graph-search" placeholder="输入名称或别名…"></div></div><div class="subgraph-banner" id="subgraph-banner"><span class="banner-text" id="subgraph-banner-text">正在展示局部关系网。</span><button id="subgraph-exit" type="button">返回全图</button></div><div class="graph-body"><div class="graph-canvas-wrap"><div id="graph-canvas"></div><div class="graph-state" id="graph-state">正在整理知识关系…</div><div class="graph-legend"><span><i style="background:#d84b2a"></i>违规行为</span><span><i style="background:#2f6f9f"></i>管理义务</span><span><i style="background:#6b5ca5"></i>政府职责</span><span><i style="background:#a86b14"></i>主体</span><span><i style="background:#237568"></i>消防对象</span><span><i style="background:#b45309"></i>处罚</span></div></div><aside class="detail-panel" id="detail-panel"><p class="detail-empty">选择一个节点，就能看到它与法规条款之间的关系和官方来源。</p></aside></div></div></section></main></div>
 <script>
 const TYPE_COLOR={"违规行为":"#d84b2a","管理义务":"#2f6f9f","政府职责":"#6b5ca5","主体":"#a86b14","处罚":"#b45309","消防对象":"#237568"},REL_COLOR={"禁止":"#d84b2a","义务":"#237568","责任":"#a86b14","处罚":"#6b5ca5","涉及":"#2f6f9f"};const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const icon=id=>`<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;let chart=null,currentTypes=[],currentLaws=[],lastQuestion='',busy=false,lastFailed='',lastGraphData=null,graphMode='overview',focusCenterId=null;
-$$('.nav button').forEach(btn=>btn.addEventListener('click',()=>switchPage(btn.dataset.page)));function switchPage(name){$$('.page,.nav button').forEach(el=>el.classList.remove('active'));$(`#page-${name}`).classList.add('active');$(`#nav-${name}`).classList.add('active');if(name==='graph')loadGraph()}
+$$('.nav button').forEach(btn=>btn.addEventListener('click',()=>switchPage(btn.dataset.page)));function switchPage(name){$$('.page,.nav button').forEach(el=>el.classList.remove('active'));$(`#page-${name}`).classList.add('active');$(`#nav-${name}`).classList.add('active');if(name==='graph'){loadGraph();setTimeout(()=>chart?.resize(),80)}else{setTimeout(()=>chart?.resize(),80)}}
+window.addEventListener('orientationchange',()=>setTimeout(()=>chart?.resize(),200));
 fetch('/api/system').then(r=>r.ok?r.json():Promise.reject()).then(s=>{$('#mode-chip span').textContent=`${s.retrieval} · ${s.generation_mode} · v${s.version}`}).catch(()=>{$('#mode-chip span').textContent='系统状态暂不可用'});$$('.suggestion').forEach(b=>b.addEventListener('click',()=>ask(b.dataset.question)));const form=$('#ask-form'),input=$('#question'),sendBtn=$('#send');input.addEventListener('input',()=>{$('#counter').textContent=`${input.value.length}/500`;input.style.height='auto';input.style.height=Math.min(input.scrollHeight,128)+'px'});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});form.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 function append(html,cls='bot'){const el=document.createElement('article');el.className=`msg ${cls}`;el.innerHTML=html;$('#message-list').appendChild(el);$('#messages').scrollTop=$('#messages').scrollHeight;return el}function userMessage(q){return `<div class="bubble">${esc(q)}</div>`}function refHTML(r){const b=r.bm25>0?'<span class="badge">关键词</span>':'',v=r.vector>0?'<span class="badge">向量</span>':'',g=r.graph_hit?'<span class="badge graph">图谱路径</span>':'',ce=r.cross_encoder!=null?'<span class="badge graph">精排 '+(r.cross_encoder*100).toFixed(0)+'</span>':'',path=r.path?`<div class="path">${icon('i-graph')} ${esc(r.path)}</div>`:'',source=r.source_url?`<a class="source-link" href="${esc(r.source_url)}" target="_blank" rel="noopener">${icon('i-link')}官方原文 · ${esc(r.authority)}</a>`:'';return `<div class="ref"><div class="ref-head"><strong>${esc(r.article)} · ${esc(r.title)}</strong>${g}${v}${b}${ce}</div>${path}<div class="ref-text">${esc(r.text)}</div><div class="contribution"><span>关键词 ${Math.round((r.bm25_share||0)*100)}%</span><span>向量 ${Math.round((r.vector_share||0)*100)}%</span><span>图谱 ${Math.round((r.graph_share||0)*100)}%</span></div>${source}</div>`}
 const CONF_LABEL={high:'高 · 依据充分',medium:'中 · 建议补充确认',low:'低 · 谨慎参考'};
 function structuredHTML(s){if(!s)return '';const basis=(s.basis||[]).map(b=>`<div class="b">${esc(b)}</div>`).join('')||'<div class="b">见下方支撑条款</div>';const conf=CONF_LABEL[s.confidence]||CONF_LABEL.medium;return `<div class="sec"><h4>${icon('i-shield')}结论</h4><div class="body">${esc(s.conclusion)}</div></div><div class="sec cond"><h4>${icon('i-book')}适用条件</h4><div class="body">${esc(s.conditions||'无特殊限制')}</div></div><div class="sec basis"><h4>${icon('i-link')}法规依据</h4><div class="body">${basis}</div></div><div class="sec"><h4>${icon('i-chat')}补充说明</h4><div class="body">${esc(s.supplement||'无')}</div></div><div class="sec"><h4>可信度</h4><span class="conf ${esc(s.confidence||'medium')}">${esc(conf)}</span></div>`}
-function responseHTML(r){const cragClass=r.refused?'warn':'safe',cragLabel=r.refused?'证据不足，已安全拒答':'证据校验通过',graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'',context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const body=clarify||(r.structured?structuredHTML(r.structured):`<div class="answer">${esc(r.answer)}</div>`);const refs=r.references?.length?`<div class="source-title">支撑条款 <span>${r.references.length} 条</span></div><div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')||'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${links}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
+function responseHTML(r){const isGuide=r.intent==='guide';const cragClass=r.refused?'warn':(isGuide?'warn':'safe'),cragLabel=r.refused?'证据不足，已安全拒答':(isGuide?'问题偏宽，已引导提问':'证据校验通过'),graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'',context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const guide=isGuide?`<div class="clarify-card">${esc(r.answer).replace(/\n/g,'<br>')}<br><small>按示例再问一句，一般就能落到具体条款。</small></div>`:'';const body=clarify||guide||(r.structured?structuredHTML(r.structured):`<div class="answer">${esc(r.answer)}</div>`);const refs=r.references?.length?`<div class="source-title">支撑条款 <span>${r.references.length} 条</span></div><div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')||'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${links}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
 const LOAD_STAGES=['正在检索','正在重排','正在生成','正在核验'];function loadingHTML(){return `<div class="stages" id="load-stages">${LOAD_STAGES.map((s,i)=>`<span class="stage${i===0?' active':''}">${esc(s)}</span>`).join('')}<span class="stage-note" id="load-note"></span></div>`}function runStageAnimation(root){const stages=[...root.querySelectorAll('.stage')];let i=0;const t0=Date.now();const timer=setInterval(()=>{if(i<stages.length-1){stages[i].classList.replace('active','done');stages[i+1].classList.add('active');i++}const note=root.querySelector('#load-note');if(note)note.textContent=`${stages[i].textContent}… 已用时 ${((Date.now()-t0)/1000).toFixed(1)}s`},900);return()=>clearInterval(timer)}
 async function ask(raw){const q=String(raw||'').trim();if(!q||busy)return;$('#welcome')?.remove();append(userMessage(q),'user');input.value='';input.style.height='auto';$('#counter').textContent='0/500';setBusy(true);lastFailed=q;const loading=append(`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${loadingHTML()}</div>`);const stopAnim=runStageAnimation(loading);try{const resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,previous_question:lastQuestion||null})});if(!resp.ok){let detail='';try{detail=(await resp.json()).detail||''}catch{}throw new Error(detail||`服务返回 ${resp.status}`)}const data=await resp.json();stopAnim();loading.innerHTML=responseHTML(data);lastQuestion=q;lastFailed='';loading.querySelector('.graph-link')?.addEventListener('click',()=>openSubgraph(data))}catch(err){stopAnim();loading.innerHTML=`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag warn">连接失败</span></div><div class="answer">${esc(err.message||'暂时无法连接知识服务')}。请检查服务后重试，你的问题已经保留。</div><button class="retry" type="button">重新发送</button></div>`;loading.querySelector('.retry').addEventListener('click',()=>ask(lastFailed))}finally{setBusy(false);input.focus()}}
 async function openSubgraph(data){const articles=(data.references||[]).map(r=>r.article);if(!articles.length)return;const sceneEntities=Object.values(data.scene||{}).flat().filter(v=>typeof v==='string');switchPage('graph');await loadGraph();const state=$('#graph-state');state.hidden=false;state.textContent='正在提取本次回答相关的局部子图…';const p=new URLSearchParams({articles:articles.join(',')});try{const r=await fetch('/api/graph/subgraph?'+p);if(!r.ok)throw new Error();const d=await r.json();graphMode='answer';focusCenterId=null;showBanner(`正在展示回答相关的局部证据链：${articles.map(esc).join('、')}`);if(!d.nodes.length){state.textContent='本次回答的条款在图谱中没有实体关系记录。';return}state.hidden=true;paintGraph(d,{mode:'answer',highlightNames:sceneEntities,articles})}catch{state.textContent='局部子图加载失败，请稍后重试。'}}
@@ -96,10 +203,17 @@ function paintGraph(data,opts={}){
   const el=$('#graph-canvas');
   if(!chart){chart=echarts.init(el);window.addEventListener('resize',()=>chart?.resize())}
   const deg=degreeMap(data);
+  // 全览隐藏度=0 孤点（词典预置未连边）；焦点/回答子图保留原样
+  const nodeSrc=(mode==='overview')
+    ?(data.nodes||[]).filter(n=>(deg[n.id]||0)>0)
+    :(data.nodes||[]);
+  const edgeSrc=(mode==='overview')
+    ?(data.edges||[]).filter(e=>(deg[e.source]||0)>0&&(deg[e.target]||0)>0)
+    :(data.edges||[]);
   const nameOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.name])); // id -> 展示名
-  const coords=layoutStable(data.nodes,mode,centerId);
+  const coords=layoutStable(nodeSrc,mode,centerId);
   const isBeh=t=>['违规行为','管理义务','政府职责'].includes(t);
-  const nodes=data.nodes.map(n=>{
+  const nodes=nodeSrc.map(n=>{
     const isCenter=centerId?n.id===centerId:!!n.highlight;
     const hop=n.hop==null?(isCenter?0:1):n.hop;
     const matched=highlightNames.has(n.name)||(n.aliases||[]).some(a=>highlightNames.has(a));
@@ -131,10 +245,11 @@ function paintGraph(data,opts={}){
       emphasis:{label:{show:true,fontSize:12,fontWeight:'bold',formatter:p=>p.data.displayName||p.name},itemStyle:{opacity:1}}
     };
   });
-  const showLinks=mode!=='overview';
-  const hopOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.hop==null?1:n.hop]));
+  const hopOf=Object.fromEntries(nodeSrc.map(n=>[n.id,n.hop==null?1:n.hop]));
   if(centerId) hopOf[centerId]=0;
-  const edgesFinal=showLinks?data.edges.map(e=>{
+  // 旧交互：全览不画边（分簇漂浮）；点选 focus / 回答子图才连线
+  const showLinks=mode!=='overview';
+  const edgesFinal=showLinks?edgeSrc.map(e=>{
     const touchCenter=centerId&&(e.source===centerId||e.target===centerId);
     const hs=hopOf[e.source], ht=hopOf[e.target];
     const toSecond=(hs===2||ht===2);
@@ -150,7 +265,6 @@ function paintGraph(data,opts={}){
       }
     };
   }):[];
-  // 焦点模式必须立刻画线；growEdges 仅做「先一级实线，再补二级虚线」增强，不再从空边开始
   let edges=edgesFinal;
   if(growEdges&&showLinks){
     edges=edgesFinal.filter(e=>{

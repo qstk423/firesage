@@ -25,10 +25,19 @@ from .verifier import set_article_keys, verify
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# CRAG 阈值
-CRAG_AMBIGUOUS = 0.25   # 疑似明确但质量低 → 拒答
-CRAG_INCORRECT = 0.15   # 完全未见相关 → 拒答
-CRAG_CE_FLOOR = 0.53    # CrossEncoder 低于此分 = 与问题基本无关（库外主题地板分约 0.50）
+# CRAG 阈值（略放宽：概念问/口语问优先引导或作答，避免动辄拒答）
+CRAG_AMBIGUOUS = 0.22   # 疑似明确但质量低
+CRAG_INCORRECT = 0.12   # 完全未见相关
+CRAG_CE_FLOOR = 0.50    # CrossEncoder 低于此分 → 倾向引导而非硬拒
+CRAG_CE_SOFT = 0.47     # 有图谱命中时的软地板
+
+GUIDE_EXAMPLES = (
+    "楼道堆放杂物违反什么规定？",
+    "占用消防通道怎么处罚？",
+    "什么情况下会强制执行（强制拆除）？",
+    "电动车能不能在楼道充电？",
+    "消防设施坏了不修违法吗？",
+)
 
 # 库外主题护栏：知识库为建筑消防管理类法规，以下行政/产品/其他领域主题明确不在范围内
 OUT_OF_KB_TOPICS = (
@@ -69,6 +78,19 @@ class Pipeline:
         self.article_text = self._load_article_text()
         self._cache = {}
         set_article_keys(self.article_text.keys())
+
+    def reload(self, chunks=None):
+        """热加载 chunks / 图谱（改完 data 后无需整进程重启）。"""
+        self.retriever = HybridRetriever(chunks)
+        self.chunk_index = {c["id"]: c for c in chunks or []}
+        self.article_text = self._load_article_text()
+        self._cache.clear()
+        set_article_keys(self.article_text.keys())
+        return {
+            "chunks": len(chunks or []),
+            "articles": len(self.article_text),
+            "channels": self.retriever.channels,
+        }
 
     def _load_article_text(self):
         """条款号 -> {"num","title","text","chapter"}（多部法规，编号带法规前缀）"""
@@ -124,17 +146,79 @@ class Pipeline:
         if top.get("cite_inject"):
             return "Correct"
         ce = top.get("cross_encoder")
-        if ce is not None and ce < CRAG_CE_FLOOR:
-            # CrossEncoder 判定最高分条款也与问题基本无关 → 知识库覆盖不了
-            return "Incorrect"
+        if ce is not None:
+            # 有图谱路径时略放宽：概念问往往 CE 偏低但仍有真条款
+            floor = CRAG_CE_SOFT if top.get("graph_hit") or top.get("direct_match") else CRAG_CE_FLOOR
+            if ce < floor and top["score"] < 0.55:
+                return "Ambiguous"  # 不再直接 Incorrect，交给引导
+            if ce < floor - 0.05 and top["score"] < 0.40:
+                return "Incorrect"
         if (not top.get("graph_hit") and not top.get("direct_match")
                 and top.get("vector", 0) < 0.08
                 and top.get("coverage", 0) < 0.5
-                and top.get("score", 0) <= 0.50):
-            return "Incorrect"
+                and top.get("score", 0) <= 0.45):
+            return "Ambiguous"
         if top["score"] <= CRAG_AMBIGUOUS:
             return "Ambiguous"
         return "Correct"
+
+    def _is_exploratory(self, question: str) -> bool:
+        q = question or ""
+        return any(k in q for k in (
+            "了解", "是什么", "什么意思", "相关知识", "讲讲", "介绍",
+            "有哪些", "怎么回事", "能不能问",
+        ))
+
+    def _needs_guide(self, question: str, scene: dict) -> bool:
+        """问法过宽、缺场景要素：应引导，而不是随便摘一条硬答。"""
+        q = (question or "").strip()
+        if not q:
+            return True
+        if any(k in q for k in ("随便说说", "随便聊", "你自己说", "没事问问")):
+            return True
+        has_scene = bool(
+            scene.get("behaviors") or scene.get("objects") or scene.get("venues")
+        )
+        subjects = [s for s in (scene.get("subjects") or []) if s not in ("个人", "我")]
+        has_scene = has_scene or bool(subjects)
+        # 无指代追问
+        if q in ("这个怎么规定的", "怎么规定的", "有什么规定", "我想了解一下", "了解一下"):
+            return True
+        if len(q) <= 6 and not has_scene:
+            return True
+        # 「了解/介绍」类且没有具体行为对象
+        if self._is_exploratory(q) and not has_scene:
+            concrete = (
+                "处罚", "通道", "楼道", "电动", "拆除", "强制", "责任", "灭火",
+                "隐患", "出口", "消火栓", "物业", "控制室", "罚款", "拘留",
+                "娱乐", "高层", "充电", "堆", "占用", "堵塞",
+            )
+            if not any(k in q for k in concrete):
+                return True
+        return False
+
+    def _guide_answer(self, question, fused, crag):
+        """证据不够硬答时：引导用户把问题说具体，而不是冷冰冰拒答。"""
+        lines = [
+            "我理解你想了解这方面内容，但当前问法偏宽，直接下结论容易答偏。",
+            "",
+            "可以这样问得更具体一些（任选）：",
+        ]
+        tips = list(GUIDE_EXAMPLES)
+        if fused:
+            art = self.article_text.get(fused[0].get("article"), {})
+            title = (art.get("title") or fused[0].get("article") or "").strip()
+            if title and not self._needs_guide(question, {}):
+                tips = [
+                    f"「{title}」适用于什么情形？",
+                    f"「{fused[0].get('article')}」主要规定了什么？",
+                ] + tips[:3]
+        lines.append("· 尽量带上：谁（单位/个人）+ 在哪（楼道/场所）+ 想问什么（能不能做 / 怎么罚 / 谁负责）")
+        for t in tips[:5]:
+            lines.append(f"· {t}")
+        lines.append("")
+        lines.append("你补一句具体场景后，我会按条款给出可核对的依据。")
+        return "\n".join(lines)
 
     # ---------- 生成 ----------
     def _llm_structured(self, question, fused, feedback=None):
@@ -168,7 +252,6 @@ class Pipeline:
         """无 LLM 降级：从最高置信条款抽取结构化回答（原文直接来自条款，天然可信）。"""
         if not fused:
             return None
-        # 处罚类问题：优先选用含「罚款/责令」的条款作为结论来源（仍必须来自召回列表）
         top = fused[0]
         penalty_ask = any(t in question for t in ("处罚", "罚款", "怎么罚", "罚多少", "会怎么样"))
         if penalty_ask:
@@ -177,16 +260,39 @@ class Pipeline:
                 if any(t in (art_c.get("text") or "") for t in ("罚款", "责令", "拘留")):
                     top = cand
                     break
+        force_exec_ask = any(t in question for t in ("强制拆除", "强制执行"))
+        if force_exec_ask:
+            for cand in fused:
+                art_c = self.article_text.get(cand["article"], {})
+                if "强制执行" in (art_c.get("text") or ""):
+                    top = cand
+                    break
         art = self.article_text.get(top["article"], {})
         law_name = art.get("law_name", art.get("law", "消防法规"))
         conditions = "、".join(scene.get("venues") or []) or "无特殊限制"
         if scene.get("subjects"):
             conditions = f"主体：{'、'.join(scene['subjects'])}；场所：{conditions}"
-        # 多条款交叉时可信度更高
         laws = {f["article"].split("·")[0] for f in fused}
         confidence = "high" if len(laws) >= 2 or fused[0].get("graph_hit") else "medium"
         text = art.get("text", "")
-        # 问个人处罚时抽取"个人有前款…"专属罚则段，避免把单位罚款金额误答给个人
+        if force_exec_ask and "强制执行" in text:
+            anchor = "经责令改正拒不改正"
+            idx = text.find(anchor) if anchor in text else text.index("强制执行")
+            prev = text.rfind("。", 0, idx)
+            start = 0 if prev < 0 else prev + 1
+            end = text.find("。", idx)
+            snippet = text[start: end + 1] if end >= 0 else text[start:start + 180]
+            snippet = snippet.strip()
+            return {
+                "conclusion": f"依据《{law_name}》{art.get('num', '')}「{art.get('title', '')}」：{snippet}",
+                "conditions": conditions,
+                "basis": [f"《{art.get('law_name', '')}》{art.get('num', '')}：{snippet}"],
+                "supplement": (
+                    "法条用语为「强制执行」（口语常称强制拆除）。"
+                    "以上内容直接摘自法规条款原文。"
+                ),
+                "confidence": confidence,
+            }
         if "个人" in (scene.get("subjects") or []) and "个人有" in text:
             seg = text[text.index("个人有"):]
             seg = seg[:seg.index("。") + 1] if "。" in seg else seg[:200]
@@ -197,7 +303,6 @@ class Pipeline:
                 "supplement": "以上内容直接摘自法规条款原文。" if len(fused) > 1 else "无",
                 "confidence": confidence,
             }
-        # 优先截取含「应当/不得/罚款」的句子，比盲目截前 150 字更贴近问题
         snippet = text[:150]
         for key in ("不得", "应当", "罚款", "责令", "处"):
             idx = text.find(key)
@@ -228,6 +333,10 @@ class Pipeline:
                     break
             else:
                 return title
+        # 点名未收录的技术标准号
+        m = re.search(r"(?:GB|GB/T|XF|XF/T)\s*[/．.]?\s*\d{3,5}", question or "", re.I)
+        if m:
+            return m.group(0).replace(" ", "")
         return None
 
     # ---------- 主入口 ----------
@@ -346,16 +455,48 @@ class Pipeline:
         graph_ratio = sum(f["graph_share"] for f in fused) / len(fused) if fused else 0.0
         vector_ratio = sum(f.get("vector_share", 0) for f in fused) / len(fused) if fused else 0.0
 
-        # ---- CRAG 低质量 → 拒答 ----
-        if crag in ("Ambiguous", "Incorrect"):
+        # ---- 问法过宽：即使检索偶然命中，也先引导再答 ----
+        top = fused[0] if fused else None
+        if self._needs_guide(full_question, scene) and not (top and top.get("cite_inject")):
+            return self._pack({
+                "intent": "guide",
+                "answer": self._guide_answer(full_question, fused, crag),
+                "refused": False, "crag": "Ambiguous",
+                "references": [],
+                "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
+                "vector_trace": {"matched": bool(summary.get("vector_articles")),
+                                 "vector_ratio": round(vector_ratio, 2)},
+                "strategy": "引导提问（问法偏宽，先帮你把问题问具体）",
+                "context_used": context_used, "scene": scene,
+            }, t0, ["检索", "重排", "置信判定", "引导"])
+
+        # ---- CRAG 低质量 → 引导提问（Ambiguous）/ 仍无证据才拒答（Incorrect）----
+        if crag == "Ambiguous" or (crag == "Incorrect" and fused and fused[0].get("score", 0) >= 0.35):
+            return self._pack({
+                "intent": "guide",
+                "answer": self._guide_answer(full_question, fused, crag),
+                "refused": False, "crag": crag,
+                "references": [],
+                "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
+                "vector_trace": {"matched": bool(summary.get("vector_articles")),
+                                 "vector_ratio": round(vector_ratio, 2)},
+                "strategy": "引导提问（证据不足时先帮你把问题问具体）",
+                "context_used": context_used, "scene": scene,
+            }, t0, ["检索", "重排", "置信判定", "引导"])
+        if crag == "Incorrect":
             return self._pack({
                 "intent": intent,
-                "answer": "很抱歉，针对您的问题，现有知识库中的检索结果置信度不足，为避免误导，暂不回答。建议换个说法，或咨询属地消防救援机构。",
+                "answer": (
+                    "这个问题和当前知识库主题不太贴，我没法从已收录的消防法规里给出可靠依据。\n\n"
+                    "你可以改成具体消防场景，例如：\n"
+                    + "\n".join(f"· {t}" for t in GUIDE_EXAMPLES[:4])
+                    + "\n\n紧急情况请直接拨打 119。"
+                ),
                 "refused": True, "crag": crag,
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
                 "vector_trace": {"matched": bool(summary.get("vector_articles")),
                                  "vector_ratio": round(vector_ratio, 2)},
-                "strategy": f"CRAG自纠错·{crag}（宁可拒答不可答错）",
+                "strategy": f"CRAG自纠错·{crag}（库外/无关主题）",
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "拒答"])
 

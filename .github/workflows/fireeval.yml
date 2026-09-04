@@ -28,11 +28,19 @@ jobs:
       - name: 单元与回归测试
         run: |
           python -m unittest discover -s tests -v
+      - name: 金标漂移（条款仍在语料）
+        run: |
+          cd backend && python3 scripts/check_gold_drift.py --split all --strict
       - name: FireEval v0 基线（轻量，无模型依赖也须通过）
         run: |
           cd backend && python3 scripts/evaluate_fireeval.py --v0 --strict
         env:
           USE_HF_MIRROR: "0"
+      - name: 检索-only Hit 门禁（dev）
+        run: |
+          cd backend && python3 scripts/gate_retrieval.py --split dev --strict
+        env:
+          HF_ENDPOINT: https://hf-mirror.com
       - name: FireEval v1 发布门槛（200 题）
         run: |
           cd backend && python3 scripts/evaluate_fireeval.py --split dev

@@ -88,6 +88,9 @@ class LegalReranker:
                 ("无证", "依法取得相应的职业资格"),
                 ("安排没证的人值班", "处2000元以上10000元以下罚款"),
                 ("第四十五条", "消防救援机构统一组织和指挥火灾现场扑救"),
+                ("强制拆除", "强制执行"),
+                ("强制拆除", "经责令改正拒不改正的，强制执行"),
+                ("强制执行", "强制执行"),
                 ("一时半会改不掉", "不能保障消防安全"),
                 ("改不掉", "停产停业整改"),
                 ("避难层", "避难层"),
@@ -257,6 +260,12 @@ class LegalReranker:
             ):
                 if article in ("61号令·第三十六条", "高层规定·第二十六条", "密集场所·5.1.4"):
                     intent_adjustment += 0.20
+            # 强制拆除（口语）≠ 擅自拆除消防设施
+            if any(k in question for k in ("强制拆除", "强制执行")) and "擅自拆除" not in question:
+                if article in ("消防法·第六十条", "消防法·第七十条") and "强制执行" in text:
+                    intent_adjustment += 0.24
+                if article == "消防法·第二十八条" and "擅自拆除" in text:
+                    intent_adjustment -= 0.18
             # 追问处罚：优先对应罚则条
             if any(k in question for k in ("怎么罚", "会怎么罚", "会被罚", "处罚")):
                 if "停用" in question or "停了" in question:

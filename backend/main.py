@@ -76,10 +76,44 @@ async def security_and_log(request: Request, call_next):
 graph = build_if_missing()
 
 # 加载语义句 chunks
-with open(os.path.join(DATA_DIR, "chunks.json"), encoding="utf-8") as f:
+CHUNKS_PATH = os.path.join(DATA_DIR, "chunks.json")
+GRAPH_PATH = os.path.join(DATA_DIR, "graph.json")
+with open(CHUNKS_PATH, encoding="utf-8") as f:
     CHUNKS = json.load(f)
 
 pl = pipeline_mod.Pipeline(chunks=CHUNKS)
+_kb_mtime = {
+    "chunks": os.path.getmtime(CHUNKS_PATH) if os.path.exists(CHUNKS_PATH) else 0.0,
+    "graph": os.path.getmtime(GRAPH_PATH) if os.path.exists(GRAPH_PATH) else 0.0,
+}
+
+
+def _reload_knowledge(force: bool = False) -> dict:
+    """若 chunks/graph 文件变更则热加载；force=True 强制重读。"""
+    global graph, CHUNKS, pl, _kb_mtime
+    chunks_m = os.path.getmtime(CHUNKS_PATH) if os.path.exists(CHUNKS_PATH) else 0.0
+    graph_m = os.path.getmtime(GRAPH_PATH) if os.path.exists(GRAPH_PATH) else 0.0
+    changed = force or chunks_m > _kb_mtime["chunks"] or graph_m > _kb_mtime["graph"]
+    if not changed:
+        return {"reloaded": False, "reason": "unchanged",
+                "entities": len(graph["nodes"]), "edges": len(graph["edges"]),
+                "semantic_sents": len(CHUNKS)}
+    with open(CHUNKS_PATH, encoding="utf-8") as f:
+        CHUNKS = json.load(f)
+    with open(GRAPH_PATH, encoding="utf-8") as f:
+        graph = json.load(f)
+    info = pl.reload(CHUNKS)
+    _kb_mtime = {"chunks": chunks_m, "graph": graph_m}
+    print(f"[kb] reloaded: {info['chunks']} chunks / "
+          f"{len(graph['nodes'])} entities / {len(graph['edges'])} edges", flush=True)
+    return {
+        "reloaded": True,
+        "entities": len(graph["nodes"]),
+        "edges": len(graph["edges"]),
+        "semantic_sents": len(CHUNKS),
+        "articles": info["articles"],
+        "channels": info["channels"],
+    }
 
 
 class AskBody(BaseModel):
@@ -107,6 +141,16 @@ def source_catalog():
             "source_url": source.get("source_url", ""),
         })
     return sources
+
+
+print(f"[kb] ready: {len(CHUNKS)} chunks / {len(graph['nodes'])} entities / "
+      f"{len(graph['edges'])} edges / {len(source_catalog())} sources", flush=True)
+
+
+@app.post("/api/kb/reload")
+def kb_reload(force: bool = Query(True, description="强制重读 chunks/graph")):
+    """改完 data/chunks.json 或 graph.json 后调用，无需重启进程。"""
+    return _reload_knowledge(force=force)
 
 
 @app.get("/api/graph/stats")
@@ -327,6 +371,8 @@ def entity_detail(id: str = Query(...),
 
 @app.post("/api/ask")
 def ask(body: AskBody, request: Request):
+    # 文件若已更新则自动热加载（演示改语料后免重启）
+    _reload_knowledge(force=False)
     question = body.question.strip()
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
