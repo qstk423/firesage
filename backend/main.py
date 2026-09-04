@@ -97,6 +97,22 @@ def graph_stats():
     }
 
 
+def _dedupe_edges(edges):
+    """可视化去重：同一对实体+关系只保留一条，附带涉及条款列表。"""
+    merged = {}
+    for edge in edges:
+        key = (edge["source"], edge["target"], edge["relation"])
+        if key not in merged:
+            item = dict(edge)
+            item["articles"] = [edge["article"]] if edge.get("article") else []
+            merged[key] = item
+        else:
+            art = edge.get("article")
+            if art and art not in merged[key]["articles"]:
+                merged[key]["articles"].append(art)
+    return list(merged.values())
+
+
 @app.get("/api/graph/data")
 def graph_data(types: str = Query("", description="逗号分隔的类型过滤，如 行为,主体"),
                laws: str = Query("", description="逗号分隔的法规简称"),
@@ -130,7 +146,31 @@ def graph_data(types: str = Query("", description="逗号分隔的类型过滤�
         edges = edge_pool
     visible_ids = {n["id"] for n in nodes}
     edges = [e for e in edges if e["source"] in visible_ids and e["target"] in visible_ids]
+    # 全图默认去重，避免同一关系因多条款重复画线导致“一团乱”
+    edges = _dedupe_edges(edges)
     return {"nodes": nodes, "edges": edges, "matched": len(matched_ids)}
+
+
+@app.get("/api/graph/ego")
+def graph_ego(id: str = Query(..., description="中心实体 id，如 行为:占用疏散通道")):
+    """点击节点后的关系网：中心实体 + 一跳邻居 + 邻居之间的连边。"""
+    center = next((n for n in graph["nodes"] if n["id"] == id), None)
+    if not center:
+        return {"error": "not found", "nodes": [], "edges": []}
+    hop1 = [e for e in graph["edges"] if e["source"] == id or e["target"] == id]
+    node_ids = {id} | {e["source"] for e in hop1} | {e["target"] for e in hop1}
+    edges = _dedupe_edges([e for e in graph["edges"] if e["source"] in node_ids and e["target"] in node_ids])
+    nodes = [dict(n, highlight=(n["id"] == id), degree=sum(
+        1 for e in edges if e["source"] == n["id"] or e["target"] == n["id"]
+    )) for n in graph["nodes"] if n["id"] in node_ids]
+    return {
+        "center": id,
+        "center_name": center.get("name", id),
+        "nodes": nodes,
+        "edges": edges,
+        "neighbor_count": max(0, len(nodes) - 1),
+        "edge_count": len(edges),
+    }
 
 
 @app.get("/api/graph/subgraph")
@@ -155,7 +195,7 @@ def graph_subgraph(articles: str = Query(..., description="逗号分隔的条款
             continue
         if e["source"] in highlight_set or e["target"] in highlight_set:
             edge_index[i] = e
-    edges = list(edge_index.values())
+    edges = _dedupe_edges(list(edge_index.values()))
     node_ids = {e["source"] for e in edges} | {e["target"] for e in edges}
     nodes = [dict(n, highlight=n["id"] in highlight_set)
              for n in graph["nodes"] if n["id"] in node_ids]

@@ -173,6 +173,8 @@ def strict_check(metrics, thresholds):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default=None)
+    parser.add_argument("--split", choices=["train", "dev", "test"], default=None,
+                        help="仅用于评估 FireEval v1：选择 fireeval_v1_{split}.json")
     parser.add_argument("--v0", action="store_true", help="运行旧 18 题基线")
     parser.add_argument("--strict", action="store_true", help="按发布门槛判定（CI 门禁）")
     args = parser.parse_args()
@@ -181,6 +183,8 @@ if __name__ == "__main__":
         dataset = args.dataset
     elif args.v0:
         dataset = os.path.join(BACKEND_DIR, "eval", "fireeval_v0.json")
+    elif args.split:
+        dataset = os.path.join(BACKEND_DIR, "eval", f"fireeval_v1_{args.split}.json")
     else:
         dataset = os.path.join(BACKEND_DIR, "eval", "fireeval_v1.json")
 

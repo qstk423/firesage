@@ -315,6 +315,11 @@ class Pipeline:
                         answer_text = self._render(structured)
                         verification["degraded"] = True
                         stages.append("降级")
+            else:
+                # LLM 未返回结构化 JSON（例如网络/鉴权失败）→ 必须降级，保证 answer/reference 评测可用。
+                structured = self._extractive_structured(retrieval_question, fused, scene)
+                answer_text = self._render(structured)
+                stages.append("降级（LLM无结构输出）")
             strategy = "LLM生成（结构化+引用核验）"
         else:
             structured = self._extractive_structured(retrieval_question, fused, scene)

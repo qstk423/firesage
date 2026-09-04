@@ -89,6 +89,14 @@ def verify(answer, references, question, scene=None):
 
     # 1. 条款存在性：回答引用的条款必须在检索依据内
     cited = _extract_cited_articles(answer, ref_articles)
+    # 1.1 引用覆盖度：对法规问题，答案必须至少抽取到 1 条引用条款
+    #      否则评测中的 citation_accuracy 会退化为 0，且容易导致“看似通过但没有依据”的回答进入系统。
+    if ref_articles and not cited:
+        q = question or ""
+        law_like = any(w in q for w in ("消防", "法规", "规定", "条款", "处罚", "罚款", "责令"))
+        if law_like:
+            checks.append({"rule": "引用条款抽取", "passed": False})
+            issues.append("未能从回答中抽取到任何引用条款（疑似缺少依据引用）")
     # 编造检测：回答引用了知识库中存在、但本次未检索到的条款
     fabricated = set()
     if _ALL_ARTICLE_KEYS:

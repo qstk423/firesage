@@ -1,59 +1,94 @@
 # 消安智答 FireSage
 
-面向真实消防场景的可信法规问答系统。自由描述你遇到的情况（如「楼梯口让纸箱堵得过不去了」），系统回答：谁的责任、什么行为、违反哪条、如何处罚，每个结论都落到条款；证据不足时明确拒答。
+**面向消防法规咨询与火灾应急提示的可信知识问答原型。**
 
-## v0.6 可信检索版
+用自然语言描述真实场景（例如「楼梯口让纸箱堵得过不去了」），系统会检索可溯源的法规条款，说明责任主体、禁止行为与处罚依据；证据不足时主动拒答，不编造条文。
 
+> 本系统仅供辅助参考，**不替代**执法解释、专业咨询或现场消防指挥。紧急情况请直接拨打 **119**。
+
+---
+
+## 作品定位
+
+| 维度 | 说明 |
+|------|------|
+| 赛道叙事 | 大模型微调与 RAG 技术融合的智慧消防应急智能问答 |
+| 当前阶段 | 可演示、可评测的混合 RAG + GraphRAG 可信问答原型（立项 / 展示版） |
+| 设计原则 | **法规事实来自检索，不靠模型背条文**；证据不足则拒答 |
+
+---
+
+## 核心能力
+
+### 1. 可信法规问答
+- 口语场景理解：楼道堆物、占用通道、电动车充电、无证动火等
+- 结构化回答：结论 / 适用条件 / 法规依据 / 补充说明 / 可信度
+- 多轮追问：可结合上一轮问题理解「那具体罚多少钱」
+- 要素不足时先澄清（如通道类型、单位/个人），避免套错条款
+
+### 2. 混合检索（Hybrid RAG）
 ```text
-用户自由提问
-   ↓ 场景结构化（主体＋行为＋场所＋对象＋意图）
-   ↓ 查询改写与同义表达扩展
-   ↓ BM25＋bge-m3 语义向量＋知识图谱 三路召回
-   ↓ CrossEncoder 精确重排
-   ↓ LLM 依据条款生成
-   ↓ 逐项核验结论与引用一致性
-   ↓ 可信回答 / 澄清追问 / 安全拒答
+用户提问
+  → 场景结构化 + 查询改写
+  → BM25 + 语义向量 + GraphRAG 三路召回
+  → RRF 融合 + 法规意图重排 + CrossEncoder 精排
+  → LLM 依据条款生成（可选）
+  → 引用核验；失败则降级原文摘录或拒答
 ```
 
-### 可信度体系
+- **BM25**：关键词精确命中
+- **语义向量**：BAAI/bge-m3（不可用时自动降级 TF-IDF）
+- **GraphRAG**：主体–行为–对象–处罚关系补充口语召回
+- **RRF**：消除不同检索器分数量纲差异
 
-- **语义理解**：BAAI/bge-m3 中文语义向量（FAISS 存储）＋ BAAI/bge-reranker-v2-m3 精排，口语与法规术语即使无相同字词也能建立联系；模型缺失时自动降级 TF-IDF。
-- **答案核验器**：LLM 生成后逐结论独立核验——引用条款是否支持该结论、处罚金额与主体是否匹配、高层规定是否被误用于普通建筑。核验未过则降级为条款原文摘录，绝不编造。
-- **三道拒答护栏**：书名号识别知识库外法规（如《消防设施通用规范》）、CrossEncoder 地板分（无关问题集中在 0.50 附近，库内命中 p25=0.716）、领域主题护栏（报考、森林火灾等）。
-- **澄清追问**：「占用通道罚多少钱」不直接套条款，先确认通道类型（疏散/安全出口/消防车通道）与行为人（单位/个人）——不同组合适用不同处罚条款。
+### 3. 知识图谱可视化
+- 全图浏览：按法规来源、实体类型、关系筛选与搜索
+- **点击节点展开关系网**：以该实体为中心展示邻居与连边，可继续点击邻居切换中心
+- 回答一键跳转「本次证据链」局部子图
+- 节点详情展示支撑条款、发布机关、生效日期与官方原文链接
 
-### 回答形态
+### 4. 安全分流与拒答
+- **法规问答** / **火灾应急指引** / **闲聊引导** / **安全拒答**
+- 知识库外法规或主题：明确说明未收录，避免误导
+- CRAG 低置信检索结果：拒答而非硬答
 
-固定五段式结构：**结论 / 适用条件 / 法规依据 / 补充说明 / 可信度**，附过程状态条（检索→重排→生成→核验）与各检索通道占比。回答底部一键跳转知识图谱，仅展示本次回答相关的局部子图。
+### 5. FireEval 评测闭环
+- **200** 道人工核验题，覆盖口语、处罚、跨条款、多轮、应急、拒答等 8 类
+- 已划分 **train / dev / test**，便于后续微调与回归
+- 指标：Hit@1 / Hit@3 / MRR、路由准确率、拒答准确率、引用准确率、严重错误率
 
-### 知识库
+---
 
-| 法规 | 条款 |
-|------|------|
-| 中华人民共和国消防法（2021 修正） | 74 条全文 |
-| 机关、团体、企业、事业单位消防安全管理规定（61 号令） | 48 条全文 |
-| 高层民用建筑消防安全管理规定 | 全文 |
-| 消防安全责任制实施办法 | 全文 |
+## 知识库规模
 
-合计约 828 个语义句、63 个实体、612 条关系，覆盖 204 个法规条款。仍不是完整消防法规库，不替代执法解释、专业咨询或现场消防指挥。
+| 法规 | 规模 | 来源元数据 |
+|------|------|------------|
+| 《中华人民共和国消防法（2021 修正）》 | **74 条全文** | 发布机关、生效日期、官方链接 |
+| 《机关、团体、企业、事业单位消防安全管理规定》（公安部 61 号令） | **48 条全文** | 同上 |
+| 《高层民用建筑消防安全管理规定》 | 全文 | 同上 |
+| 《消防安全责任制实施办法》 | 全文 | 同上 |
 
-## 启动
+当前索引约 **204** 个条款、**828** 个语义句、**63** 个实体、**600+** 条关系（可视化展示时会按实体对去重，界面更清晰）。
+
+---
+
+## 快速开始
 
 ```bash
+git clone https://github.com/qstk423/firesage.git
+cd firesage
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cd backend
 python3 main.py
 ```
 
-浏览器访问 `http://localhost:8319`。
+浏览器打开：**http://localhost:8319**
 
-首次启动会自动下载 bge-m3 与 bge-reranker-v2-m3 模型（约 4.4GB，国内可 `export HF_ENDPOINT=https://hf-mirror.com` 加速）；模型缺失时不影响启动，自动降级 TF-IDF 检索。
+### 可选：接入大模型
 
-### 接入 LLM
-
-配置兼容 OpenAI Chat Completions 的服务（未配置时使用抽取式回答）：
+未配置时系统使用**抽取式回答**（直接摘录条款，天然可溯源）。配置兼容 OpenAI Chat Completions 的服务后，启用结构化生成 + 引用核验：
 
 ```bash
 export LLM_BASE_URL="https://api.deepseek.com"
@@ -61,81 +96,139 @@ export LLM_API_KEY="your-key"
 export LLM_MODEL="deepseek-v4-flash"
 ```
 
-也可复制 `backend/.env.example` 为 `backend/.env.local` 填写，本地配置已被 Git 忽略。回答带缓存与超时重试。
+也可复制 `backend/.env.example` → `backend/.env.local`（该文件已被 Git 忽略）。
+
+### 可选：中文 Embedding / 精排模型
+
+首次启动可能下载 `bge-m3` 与 `bge-reranker-v2-m3`（体积较大）。国内可加速：
+
+```bash
+export HF_ENDPOINT=https://hf-mirror.com
+```
+
+模型不可用时**不影响启动**，自动降级为 TF-IDF + 规则重排。
+
+---
+
+## 演示建议（3 分钟）
+
+1. **口语法规**：「楼道堆放杂物违反什么规定」→ 看条款依据 + 点「在知识图谱中查看证据链」
+2. **应急分流**：「家里着火了现在怎么办」→ 应急指引，提示拨打 119
+3. **安全拒答**：询问知识库外标准或无关问题 → 明确拒答、不编造
+4. **图谱探索**：进入「知识图谱」页，点击任一节点展开关系网，再点「返回全图」
+
+---
+
+## 评测
+
+```bash
+cd backend
+
+# 全量 v1（200 题）
+python3 scripts/evaluate_fireeval.py
+
+# 按划分评测（推荐日常看 dev）
+python3 scripts/evaluate_fireeval.py --split dev
+python3 scripts/evaluate_fireeval.py --split test
+
+# 旧版 18 题轻量基线
+python3 scripts/evaluate_fireeval.py --v0 --strict
+
+# 重新划分 train/dev/test
+python3 scripts/split_fireeval.py
+```
+
+冒烟测试：
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+CI：推送到 `main` 时自动跑单元测试与 FireEval（见 `.github/workflows/fireeval.yml`）。
+
+---
 
 ## 主要接口
 
-- `POST /api/ask`：问答；参数 `question`，可选 `previous_question`（多轮追问）。
-- `GET /api/system`：版本、检索方式、生成模式与知识来源。
-- `GET /api/graph/stats` `/data` `/entity`：图谱统计、数据（支持 `types`/`query` 过滤）与实体详情。
-- `GET /api/graph/subgraph?articles=...`：按条款提取回答相关局部子图。
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/ask` | 问答；`question`，可选 `previous_question` |
+| `GET` | `/api/system` | 版本、检索通道、生成模式、知识来源 |
+| `GET` | `/api/graph/stats` | 图谱统计 |
+| `GET` | `/api/graph/data` | 图谱数据（`types` / `laws` / `relations` / `query`） |
+| `GET` | `/api/graph/ego?id=` | **节点关系网**（中心 + 一跳邻居） |
+| `GET` | `/api/graph/subgraph?articles=` | 回答相关局部子图 |
+| `GET` | `/api/graph/entity?id=` | 实体详情与支撑条款 |
 
-## FireEval v1 评测
+---
 
-200 道人工核验题，覆盖 8 类题型：直接法规查询 40、生活化口语 40、处罚与责任主体 35、跨条款综合 25、多轮追问 20、应急 15、知识库外消防 15、非消防 10。每题含标准意图、可接受条款、必须/禁止出现的结论、是否拒答。
-
-```bash
-cd backend
-python3 scripts/evaluate_fireeval.py           # 输出全量指标
-python3 scripts/evaluate_fireeval.py --strict  # 回归门禁（未达标退出码 1）
-```
-
-| 指标 | 当前 | 发布门槛 |
-|------|------|----------|
-| Hit@3 | 85% | ≥ 95% |
-| Hit@1 | 72.5% | ≥ 85% |
-| 引用准确率 | 100% | ≥ 95% ✓ |
-| 拒答准确率 | 97.5% | ≥ 95% ✓ |
-| 严重错误率 | 0.5% | ≤ 1% ✓ |
-| 平均响应 | 6.5s | ≤ 8s ✓ |
-
-Hit@1/Hit@3 尚未达标，已定位到召回阶段（部分条款如消防法第五十八条未进候选池），计划通过同义词词典扩充与查询意图分类器解决。GitHub Actions 会在每次推送时自动运行评测（`.github/workflows/fireeval.yml`）。
-
-## 测试
-
-```bash
-python3 -m unittest discover -s tests -v   # 14 项冒烟测试
-```
-
-覆盖场景结构化（口语识别、澄清判定）、核验器（中文数字解析、处罚一致性、伪造引用拦截）与端到端问答（检索命中、澄清、多轮、应急、拒答）。
-
-## 更新官方资料
-
-```bash
-cd backend
-# 消防法 / 61 号令：由 data/raw 全文生成 JSON 并重建图谱
-python3 scripts/build_law_corpus.py
-# 高层规定 / 责任制办法：在线抓取（可与上一命令分开跑）
-python3 scripts/ingest_official_sources.py
-python3 rag/graphrag.py
-```
-
-`build_law_corpus.py` 从 `data/raw/*.md` 生成层级 JSON（保留官方链接、生效日期等元数据）并重建语义句与知识图谱。在线采集器只访问脚本中明确登记的政府地址。
-
-## 目录
+## 项目结构
 
 ```text
 firesage/
 ├── backend/
-│   ├── main.py               # FastAPI 服务
-│   ├── data/                 # 法规 JSON / 原始语料 / 图谱
-│   ├── eval/fireeval_v1.json # 200 题评测集
+│   ├── main.py                 # FastAPI 入口
+│   ├── data/                   # 法规 JSON、chunks、graph、raw 全文
+│   ├── eval/
+│   │   ├── fireeval_v1.json           # 200 题全集
+│   │   ├── fireeval_v1_train.json     # 训练集
+│   │   ├── fireeval_v1_dev.json       # 开发集
+│   │   └── fireeval_v1_test.json      # 测试集
 │   ├── rag/
-│   │   ├── pipeline.py       # 问答主管线（CRAG + 核验 + 澄清）
-│   │   ├── scene.py          # 场景结构化与查询改写
-│   │   ├── retriever.py      # 三路召回 + RRF 融合
-│   │   ├── semantic_index.py # bge-m3 + FAISS + CrossEncoder
-│   │   ├── reranker.py       # 法规意图重排
-│   │   ├── verifier.py       # 答案核验器
-│   │   └── graphrag.py       # 知识图谱构建与检索
-│   └── scripts/              # 评测 / 语料构建 / 采集
+│   │   ├── pipeline.py         # 问答主管线
+│   │   ├── scene.py            # 场景结构化 / 改写
+│   │   ├── intent.py           # 意图路由
+│   │   ├── retriever.py        # 混合检索 + RRF
+│   │   ├── semantic_index.py   # Embedding + CrossEncoder
+│   │   ├── reranker.py         # 法规意图重排
+│   │   ├── verifier.py         # 引用 / 结论核验
+│   │   └── graphrag.py         # 图谱构建与检索
+│   └── scripts/
+│       ├── evaluate_fireeval.py
+│       ├── split_fireeval.py
+│       ├── build_law_corpus.py
+│       └── ingest_official_sources.py
 ├── frontend/
-│   ├── index.html            # 单页应用（问答 + 图谱）
+│   ├── index.html              # 问答 + 图谱单页
 │   └── echarts.min.js
-└── tests/test_smoke.py       # 冒烟测试
+├── tests/
+└── requirements.txt
 ```
 
-## 路线图
+---
 
-- **v0.7 知识工程版**：新消防 Schema（多并列行为、单位/个人处罚分离、义务-处罚条款关联）、法规版本与生效状态管理、扩充官方资料（建设工程消防审验、消防监督检查、电动自行车规范等）。
-- **v1.0 可交付版本**：Docker 部署、管理后台、运行监控、安全与费用控制、正式评测报告。
+## 更新法规语料
+
+```bash
+cd backend
+# 消防法 / 61 号令：从 data/raw 生成 JSON 并重建图谱
+python3 scripts/build_law_corpus.py
+
+# 高层规定 / 责任制办法：从登记的官方地址抓取
+python3 scripts/ingest_official_sources.py
+python3 rag/graphrag.py
+```
+
+---
+
+## 当前局限（展示时请如实说明）
+
+- Hit@1 / Hit@3 仍在提升中；语料扩充后竞争条款变多，需继续优化召回与重排
+- 意图路由仍以规则为主；赛道规划中的「意图 / 重排 / 生成」微调尚未全部落地
+- Embedding / CrossEncoder 依赖本地下载；网络受限时会自动降级
+- 知识库覆盖有限，不构成完整消防法规汇编
+
+---
+
+## 后续路线（简）
+
+1. 修复应急误路由边界，稳住路由准确率  
+2. 完成检索消融表（BM25 / +向量 / +图谱 / +重排）  
+3. 意图分类与重排微调，形成「微调 + RAG」可对比演示  
+4. 一键演示脚本与答辩材料  
+
+---
+
+## License / 声明
+
+原型代码用于学习、课程与创新竞赛展示。法规文本请以官方发布版本为准；使用本系统产生的任何决策后果由使用者自行承担。

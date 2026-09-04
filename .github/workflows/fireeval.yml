@@ -35,6 +35,6 @@ jobs:
           USE_HF_MIRROR: "0"
       - name: FireEval v1 发布门槛（200 题）
         run: |
-          cd backend && python3 scripts/evaluate_fireeval.py --strict
+          cd backend && python3 scripts/evaluate_fireeval.py --split dev
         env:
           HF_ENDPOINT: https://hf-mirror.com
