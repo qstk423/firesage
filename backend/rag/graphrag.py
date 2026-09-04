@@ -582,9 +582,17 @@ class GraphBuilder:
                         behavior, aliases, kind = self._find_behavior(st)
                         if not behavior:
                             continue
-                        # 无明确主体时：仅义务/禁止句才回落「单位」，避免枢纽污染
-                        if not subject and any(k in st for k in ["应当", "必须", "不得", "禁止", "严禁"]):
-                            subject = "单位"
+                        # 无明确主体时：仅在句中点名「单位/本单位/个人」才回落，压缩万能枢纽
+                        if not subject:
+                            if any(k in st for k in ("本单位", "单位应当", "单位不得", "单位必须", "单位违反")):
+                                subject = "单位"
+                            elif any(k in st for k in ("个人不得", "任何个人", "公民", "居民")) and any(
+                                k in st for k in ("应当", "必须", "不得", "禁止", "严禁")
+                            ):
+                                subject = "个人"
+                            elif any(k in st for k in ("应当", "必须", "不得", "禁止", "严禁")):
+                                # 仍建行为→对象边，但不强挂「单位」
+                                subject = None
                         beh_n = self._add_node(behavior, kind, aliases)
                         if subject:
                             sub_n = self._add_node(subject, "主体", SUBJECT_ALIASES.get(subject, []))

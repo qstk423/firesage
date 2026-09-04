@@ -21,7 +21,7 @@
 - [x] BM25 + 向量 + GraphRAG → RRF → 法规意图重排 →（可选 CE）
 - [x] CRAG 低置信拒答 + Out-of-KB + verifier
 - [x] 追问合并上一轮；改写保留 full_question
-- [x] 8 源语料入库；图谱重建（约 115 实体 / 829 边）
+- [x] 8 源语料入库；图谱重建（约 98 实体 / 771 边；「单位」枢纽已压缩）
 - [x] FireEval Hit@1 / Hit@3 过门槛（降级环境下快照）
 - [x] 图谱页法规来源与 README 规模同步
 
@@ -53,11 +53,12 @@
 ## P1 · 召回质量（指标与可维护性）
 
 ### T1.1 收敛手调规则，防过拟合
-- [ ] 盘点 `FORCE_RECALL`、`direct_patterns`、同义词表：只留高通用规则
-- [ ] 评测集专属硬编码改为「数据驱动」或移入 eval fixture，不进主路径
+- [x] 盘点 `FORCE_RECALL`、`direct_patterns`、同义词表：只留高通用规则
+- [x] 评测集专属硬编码改为「数据驱动」或移入 eval fixture，不进主路径
 - **参照**：LlamaIndex 混合检索配置化，少写死题面  
-- **落点**：`retriever.py`、`reranker.py`  
+- **落点**：`retriever.py`、`reranker.py`、`eval/retrieval_boosts.json`（默认不加载，需 `RETRIEVAL_EVAL_BOOSTS=1`）
 - **验收**：删掉一批题面特判后，dev Hit 跌幅 &lt; 约定阈值（建议 &lt; 3pt）
+- **备注（2026-09-04）**：同义词去掉整句键；`DIRECT_EVIDENCE` 改为短线索；题面条号特判外置。收敛后 dev Hit@1 **0.9655** / Hit@3 **1.0**（与收敛前持平）
 
 ### T1.2 查询侧增强（选 1～2 个落地）
 - [ ] 子问题分解（复合问：「谁负责 + 怎么罚」拆两路召回再合并）
@@ -86,10 +87,10 @@
 ## P1 · GraphRAG（对照 LightRAG / MS GraphRAG）
 
 ### T2.1 半自动实体建议（推荐路径，不要上完整 MS GraphRAG）
-- [ ] 新法规入库时：LLM 建议「主体 / 行为 / 对象」候选
+- [x] 新法规入库时：脚本建议「主体 / 行为 / 对象」候选（`scripts/suggest_graph_entities.py`）
 - [ ] 人工审核后写入 `SUBJECTS` / `BEHAVIORS` / `OBJECTS`
 - **参照**：LightRAG 自动抽实体；ChatLaw 图谱+人工筛选  
-- **落点**：`scripts/` 新脚本 + `graphrag.py` 词典  
+- **落点**：`scripts/suggest_graph_entities.py` + `graphrag.py` 词典
 - **验收**：密集场所 / 39号令 孤儿条款占比下降；重建后边数上升且 Hit 不降
 
 ### T2.2 查询模式对齐
@@ -101,9 +102,10 @@
 
 ### T2.3 图谱覆盖与质量
 - [x] 定期统计：有边条款占比 / 各来源边数 / 枢纽节点度（`scripts/graph_health.py` → `docs/图谱健康度.md`）
-- [ ] 压缩「单位」万能枢纽边（已有策略则继续压）
+- [x] 压缩「单位」万能枢纽边（无明确主体时不再一律回落「单位」；度 99→43）
 - [x] 39号令边偏少：补娱乐场所专用行为词典（边 13→29，有边条款 5→11）
 - **验收**：文档中维护一张「图谱健康度」表
+- **备注**：半自动候选脚本 `scripts/suggest_graph_entities.py`（人工审核后再写入词典）
 
 ### T2.4 明确不做（防摊薄）
 - [ ] ~~整仓引入 microsoft/graphrag 重索引~~（成本高、与窄域词典冲突）

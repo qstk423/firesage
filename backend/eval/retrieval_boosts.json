@@ -1,0 +1,16 @@
+{
+  "_comment": "FireEval 题面特判（默认不加载）。仅调试过拟合时设 RETRIEVAL_EVAL_BOOSTS=1。主路径应靠通用同义词与意图规则。",
+  "force_recall": [],
+  "article_boosts": [
+    {"q_any": ["志愿消防队员"], "articles": ["密集场所·6.3"], "delta": 0.22},
+    {"q_any": ["地下", "娱乐"], "articles": ["39号令·第十三条"], "delta": 0.20},
+    {"q_any": ["适用于哪些建筑"], "articles": ["高层规定·第二条"], "delta": 0.22},
+    {"q_any": ["承包租赁"], "articles": ["高层规定·第六条"], "delta": 0.22},
+    {"q_any": ["违法建设逾期"], "articles": ["消防法·第五十八条"], "delta": 0.24},
+    {"q_any": ["消防技术服务机构"], "articles": ["责任制办法·第二十条"], "delta": 0.24},
+    {"q_any": ["多久巡查"], "articles": ["高层规定·第三十四条"], "delta": 0.24},
+    {"q_any": ["老旧高层"], "articles": ["高层规定·第三十八条"], "delta": 0.24},
+    {"q_any": ["检查记录", "签字"], "articles": ["61号令·第二十六条"], "delta": 0.24},
+    {"q_any": ["火灾隐患应当怎么整改"], "articles": ["61号令·第三十二条"], "delta": 0.22}
+  ]
+}

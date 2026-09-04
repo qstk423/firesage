@@ -15,7 +15,7 @@
 .msg{display:flex;gap:12px;min-width:0;animation:reveal .32s ease-out both}.msg.user{justify-content:flex-end}.avatar{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:11px;background:var(--navy);color:#fff}.avatar .icon{width:18px;height:18px}.bubble{min-width:0;max-width:min(720px,calc(100% - 46px))}.msg.user .bubble{padding:11px 15px;border-radius:14px 14px 4px 14px;background:var(--navy2);color:#fff;line-height:1.7;overflow-wrap:anywhere}.answer-panel{padding:19px 20px;border-radius:4px var(--radius) var(--radius);background:var(--surface);box-shadow:var(--shadow)}.answer-topline{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:13px}.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#edf1f3;color:#4d5964;font-size:11px}.tag.graph{background:#eeeaf8;color:#57468f}.tag.safe{background:#e2f1ed;color:#176458}.tag.warn{background:var(--ember-soft);color:#96351f}.tag .icon{width:13px;height:13px}.answer{font-size:14px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}.context-note{margin:12px 0 0;color:var(--violet);font-size:12px}.source-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:19px 0 9px;padding-top:15px;border-top:1px solid var(--line);font-size:12px;font-weight:650}.source-title span{color:var(--muted);font-weight:400}.refs{display:grid;gap:8px}.ref{padding:12px 13px;border-radius:11px;background:#f3f1ec}.ref-head{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}.ref-head strong{margin-right:auto;font-size:12px}.badge{padding:3px 6px;border-radius:999px;font-size:10px;background:#e1e7ea;color:#50606d}.badge.graph{background:#e9e4f6;color:#5b4b91}.path{display:flex;align-items:center;gap:5px;margin-top:7px;color:var(--violet);font-size:11px;overflow-wrap:anywhere}.path .icon{width:13px;height:13px}.ref-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin-top:8px;color:#56616c;font-size:12px;line-height:1.7}.contribution{display:flex;gap:11px;margin-top:9px;color:#7a858f;font-size:10px;font-variant-numeric:tabular-nums}.official-link{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:#315f83;font-size:12px;text-underline-offset:3px}.official-link .icon{width:14px;height:14px}.loading-line{display:flex;gap:5px;align-items:center;min-height:27px}.loading-line i{width:6px;height:6px;border-radius:50%;background:var(--ember);animation:pulse 1s infinite ease-in-out}.loading-line i:nth-child(2){animation-delay:.15s}.loading-line i:nth-child(3){animation-delay:.3s}@keyframes pulse{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}.retry{margin-top:12px;border:0;border-radius:9px;padding:8px 11px;background:var(--ember);color:#fff;cursor:pointer;font-size:12px}
 .composer-wrap{padding:13px clamp(22px,5vw,74px) 22px;background:linear-gradient(to top,var(--paper) 76%,transparent)}.composer{width:min(880px,100%);margin:auto;padding:9px 10px 9px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;border:1px solid #cfd5d9;border-radius:16px;background:var(--surface);box-shadow:0 14px 32px rgba(30,37,45,.1)}.composer textarea{width:100%;min-height:44px;max-height:128px;resize:none;padding:11px 0 7px;border:0;outline:0;color:var(--ink);background:transparent;font-size:14px;line-height:1.55}.composer textarea::placeholder{color:#77818a}.composer-actions{display:flex;align-items:center;gap:8px}.counter{color:#89929a;font-size:10px;font-variant-numeric:tabular-nums}.send{display:grid;place-items:center;width:42px;height:42px;border:0;border-radius:12px;background:var(--ember);color:#fff;cursor:pointer;box-shadow:0 8px 16px rgba(216,75,42,.18);transition:transform .18s ease,opacity .18s ease}.send:hover{transform:translateY(-2px)}.send:disabled{cursor:not-allowed;opacity:.45;transform:none;box-shadow:none}.composer-hint{width:min(880px,100%);margin:8px auto 0;color:#7b858e;font-size:10px;text-align:center}
 .graph-tools{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:17px 32px;border-bottom:1px solid var(--line)}.statline{display:flex;gap:18px;margin-right:auto}.statline div{min-width:54px}.statline strong{display:block;font-size:17px;font-variant-numeric:tabular-nums}.statline span{color:var(--muted);font-size:10px}.filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.filter{border:1px solid #d2d8dc;border-radius:999px;padding:6px 10px;background:transparent;cursor:pointer;color:#53606b;font-size:11px}.filter.active{border-color:var(--navy);background:var(--navy);color:#fff}.graph-search{width:180px;border:1px solid #d2d8dc;border-radius:10px;padding:7px 10px;background:var(--surface);color:var(--ink);font-size:12px}.graph-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px}.graph-canvas-wrap{position:relative;min-height:360px;background:#f8f6f1}#graph-canvas{position:absolute;inset:0}.graph-state{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:30px;color:var(--muted);text-align:center;pointer-events:none}.graph-state[hidden]{display:none}.detail-panel{min-width:0;overflow-y:auto;padding:22px;border-left:1px solid var(--line);background:var(--surface)}.detail-empty{color:var(--muted);font-size:13px;line-height:1.7}.detail-entity h2{margin:0 0 8px;font-size:19px;overflow-wrap:anywhere}.etype{display:inline-block;padding:3px 7px;border-radius:999px;color:#fff;font-size:10px}.detail-entity h3{margin:22px 0 9px;font-size:12px}.aliases{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.6}.trip{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #ece9e3;font-size:11px;line-height:1.55;overflow-wrap:anywhere}.trip:last-child{border-bottom:0}.trip b{font-size:12px}.rel{font-weight:650}.rel-禁止{color:#b53b2a}.rel-义务{color:#237568}.rel-责任{color:#a86b14}.rel-处罚{color:#6b5ca5}.rel-涉及{color:#2f6f9f}
-.graph-tools{align-items:flex-end}.filter-group{display:grid;gap:5px}.filter-label{color:var(--muted);font-size:10px}.relation-select{border:1px solid #d2d8dc;border-radius:10px;padding:7px 28px 7px 10px;background:var(--surface);color:var(--ink);font-size:11px}.graph-legend{position:absolute;z-index:1;left:18px;bottom:18px;display:flex;gap:13px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,253,249,.94);color:var(--muted);font-size:10px}.graph-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:50%}.source-note{margin-top:7px;color:var(--muted);font-size:10px}.source-link{display:inline-flex;align-items:center;gap:4px;margin-top:7px;color:var(--blue);font-size:10px;text-underline-offset:2px}.source-link .icon{width:12px;height:12px}
+.graph-tools{align-items:flex-end}.filter-group{display:grid;gap:5px}.filter-label{color:var(--muted);font-size:10px}.relation-select{border:1px solid #d2d8dc;border-radius:10px;padding:7px 28px 7px 10px;background:var(--surface);color:var(--ink);font-size:11px}.graph-legend{position:absolute;z-index:1;left:18px;bottom:18px;display:flex;gap:13px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,253,249,.94);color:var(--muted);font-size:10px}.graph-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:50%}.graph-hint{display:none}.detail-sheet-handle,.detail-close,.detail-backdrop{display:none}.graph-tools-bar{display:contents}.graph-tools-toggle{display:none}.graph-tools-extra{display:contents}.source-note{margin-top:7px;color:var(--muted);font-size:10px}.source-link{display:inline-flex;align-items:center;gap:4px;margin-top:7px;color:var(--blue);font-size:10px;text-underline-offset:2px}.source-link .icon{width:12px;height:12px}
 .brand-mark{box-shadow:0 8px 18px rgba(0,0,0,.24)}
 /* 平板：侧栏收成图标轨，桌面默认布局不变 */
 @media(max-width:900px) and (min-width:769px){
@@ -92,30 +92,104 @@
   .composer{border-radius:14px;padding:8px 8px 8px 12px}
   .sec .body{font-size:12px;padding:10px}
   .contribution{flex-wrap:wrap;gap:6px}
+  /* 图谱页：画布占满剩余视口，筛选默认收起，详情变底部抽屉 */
+  #page-graph.page.active{
+    flex-direction:column;min-height:0;
+    height:calc(100dvh - 58px - env(safe-area-inset-bottom,0px));
+  }
+  #page-graph .page-shell{flex:1;min-height:0;height:100%}
+  #page-graph .topbar .mode-chip span{display:none}
+  #page-graph .topbar .mode-chip:after{content:"点选展开关系"}
   .graph-tools{
-    padding:10px 12px;gap:8px;align-items:stretch;
+    padding:8px 12px;gap:8px;align-items:center;
+    flex:0 0 auto;
   }
-  .statline{width:100%;margin-right:0;gap:10px;overflow-x:auto}
-  .statline div{min-width:48px}
+  .graph-tools-bar{
+    display:flex;align-items:center;gap:8px;width:100%;
+  }
+  .statline{
+    flex:1;min-width:0;margin-right:0;gap:8px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .statline::-webkit-scrollbar{display:none}
+  .statline div{min-width:42px}
+  .statline strong{font-size:15px}
+  .graph-tools-toggle{
+    display:block;flex:0 0 auto;border:1px solid #d2d8dc;border-radius:10px;
+    padding:8px 12px;background:var(--surface);color:var(--ink);
+    font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  .graph-tools-toggle[aria-expanded="true"]{
+    border-color:var(--navy);background:var(--navy);color:#fff;
+  }
+  .graph-tools-extra{
+    display:none;width:100%;gap:8px;padding-top:4px;
+    border-top:1px dashed var(--line);
+  }
+  .graph-tools.expanded .graph-tools-extra{display:grid}
   .filter-group{width:100%}
-  .filters{max-height:72px;overflow:auto}
-  .graph-search{width:100%}
-  .relation-select{width:100%}
+  .filters{
+    max-height:none;overflow-x:auto;overflow-y:hidden;
+    flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch;
+  }
+  .filter{flex:0 0 auto;padding:8px 12px;font-size:12px}
+  .graph-search,.relation-select{width:100%;min-height:40px;font-size:14px}
   .graph-body{
+    flex:1;min-height:0;
     grid-template-columns:1fr;
-    grid-template-rows:minmax(240px,42vh) minmax(180px,1fr);
+    grid-template-rows:minmax(0,1fr);
   }
-  .graph-canvas-wrap{min-height:240px}
-  .detail-panel{
-    border-left:0;border-top:1px solid var(--line);
-    padding:14px 12px;max-height:none;
-  }
+  .graph-canvas-wrap{min-height:0;height:100%}
   .graph-legend{
-    left:8px;bottom:8px;right:8px;gap:8px;flex-wrap:wrap;
-    font-size:9px;padding:6px 8px;
+    left:8px;right:auto;bottom:12px;gap:6px;flex-wrap:wrap;
+    max-width:min(220px,70vw);font-size:9px;padding:6px 8px;
+    pointer-events:none;
   }
-  .subgraph-banner{margin:0 12px 8px}
-  .subgraph-banner .banner-text{min-width:0}
+  .graph-hint{
+    display:block;position:absolute;z-index:1;left:50%;top:12px;
+    transform:translateX(-50%);padding:6px 10px;border-radius:999px;
+    background:rgba(16,28,42,.72);color:#fff;font-size:11px;
+    pointer-events:none;opacity:1;transition:opacity .4s ease;
+  }
+  .graph-hint.fade{opacity:0}
+  .subgraph-banner{
+    margin:0;border-radius:0;padding:8px 12px;gap:8px;
+    align-items:flex-start;
+  }
+  .subgraph-banner .banner-text{min-width:0;flex:1;font-size:11px;line-height:1.45}
+  .subgraph-banner button{flex:0 0 auto;padding:8px 10px;font-size:12px}
+  .detail-panel{
+    position:fixed;z-index:35;left:0;right:0;
+    bottom:calc(58px + env(safe-area-inset-bottom,0px));
+    max-height:min(52vh,420px);
+    border-left:0;border-top:1px solid var(--line);
+    border-radius:16px 16px 0 0;
+    padding:10px 14px calc(14px + env(safe-area-inset-bottom,0px));
+    box-shadow:0 -12px 32px rgba(16,28,42,.18);
+    transform:translateY(110%);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    background:var(--surface);
+    -webkit-overflow-scrolling:touch;
+  }
+  .detail-panel.open{transform:translateY(0)}
+  .detail-sheet-handle{
+    display:block;width:36px;height:4px;margin:2px auto 10px;
+    border-radius:999px;background:#d2d8dc;
+  }
+  .detail-close{
+    display:grid;place-items:center;
+    position:absolute;top:12px;right:12px;
+    width:36px;height:36px;border:0;border-radius:10px;
+    background:#edf1f3;color:#3f4a55;cursor:pointer;font-size:18px;line-height:1;
+  }
+  .detail-entity{padding-right:28px}
+  .detail-entity h2{font-size:17px}
+  .detail-backdrop{
+    display:none;position:fixed;inset:0;z-index:34;
+    background:rgba(16,28,42,.28);
+  }
+  .detail-backdrop.show{display:block}
 }
 @media(max-width:768px){
   .composer-hint{visibility:hidden;position:relative;height:14px}
@@ -138,10 +212,15 @@
 <svg class="sr-only" aria-hidden="true"><symbol id="i-flame" viewBox="0 0 24 24"><path d="M13.5 3.5c.4 3-1.4 4.3-2.9 6.1-1.2 1.5-1.6 3.1-.4 4.5.1-2.1 1.4-3.3 2.7-4.5.4 2 2.6 3.5 2.6 6.3A5.5 5.5 0 0 1 4.5 16c0-5.3 4-8.8 9-12.5Z"/><path d="M9.5 19.5c-.1-1.7.8-2.8 2.2-3.8.2 1.6 1.3 2.2 1.3 3.8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 15a4 4 0 0 1-4 4H8l-4 2v-5a4 4 0 0 1-1-2.6V8a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v7Z"/><path d="M8 9h8M8 13h5"/></symbol><symbol id="i-graph" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.1-3.6M8.4 13.2l7.3 3.6M17.7 8.5l.2 7"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.7 3.2 7.8 7.5 9.5 4.3-1.7 7.5-4.8 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-5"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m4 4 17 8-17 8 3-8-3-8Z"/><path d="M7 12h14"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.2M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.2"/></symbol></svg>
 <div class="app"><aside class="sidebar"><div class="brand"><span class="brand-mark"><svg class="icon"><use href="#i-flame"/></svg></span><span class="brand-copy"><strong>消安智答</strong><small>FIRE SAGE</small></span></div><nav class="nav" aria-label="主要功能"><button id="nav-qa" class="active" data-page="qa"><svg class="icon"><use href="#i-chat"/></svg><span>可信问答</span></button><button id="nav-graph" data-page="graph"><svg class="icon"><use href="#i-graph"/></svg><span>知识图谱</span></button></nav><div class="sidebar-foot"><div class="status"><i class="status-dot"></i><span>知识服务就绪</span></div><p>回答依据当前知识库生成。紧急情况请直接拨打 119。</p></div></aside>
 <main class="main"><section class="page active" id="page-qa"><div class="page-shell"><header class="topbar"><div><h1>消防法规可信问答</h1><p>用可核验的条款，回答真实场景里的消防问题</p></div><div class="mode-chip" id="mode-chip"><svg class="icon"><use href="#i-shield"/></svg><span>正在读取系统状态</span></div></header><div class="chat-stage"><div class="messages" id="messages" aria-live="polite"><div class="message-list" id="message-list"><div class="welcome" id="welcome"><h2>把每一次消防判断，<span>落到条款上。</span></h2><p>描述你遇到的场景。系统会同时检索法规原文与知识图谱，给出答案、依据和检索路径；问得太宽时会引导你把问题说具体，证据不足才会拒答。</p><div class="suggestions"><button class="suggestion" data-question="楼道堆放杂物违反什么规定"><svg class="icon"><use href="#i-book"/></svg><span>楼道堆放杂物违反什么规定</span></button><button class="suggestion" data-question="占用消防通道怎么处罚"><svg class="icon"><use href="#i-book"/></svg><span>占用消防通道怎么处罚</span></button><button class="suggestion" data-question="消防设施坏了不修违法吗"><svg class="icon"><use href="#i-book"/></svg><span>消防设施坏了不修违法吗</span></button><button class="suggestion" data-question="家里着火了现在怎么办"><svg class="icon"><use href="#i-shield"/></svg><span>家里着火了现在怎么办</span></button></div></div></div></div><div class="composer-wrap"><form class="composer" id="ask-form"><label class="sr-only" for="question">输入消防问题</label><textarea id="question" maxlength="500" rows="1" placeholder="描述场景或询问条款…" required></textarea><div class="composer-actions"><span class="counter" id="counter">0/500</span><button class="send" id="send" type="submit" aria-label="发送问题"><svg class="icon"><use href="#i-send"/></svg></button></div></form><div class="composer-hint">Enter 发送 · Shift + Enter 换行 · 内容仅作辅助参考，紧急情况请拨打 119</div></div></div></div></section>
-<section class="page" id="page-graph"><div class="page-shell"><header class="topbar"><div><h1>法规知识图谱</h1><p>从实体、行为与责任关系中查看条款证据链</p></div><div class="mode-chip"><svg class="icon"><use href="#i-graph"/></svg><span>分簇漂浮 · 点选展开一级+二级关联</span></div></header><div class="graph-tools"><div class="statline" id="stats"></div><div class="filter-group"><span class="filter-label">法规来源</span><div class="filters" id="law-filters"></div></div><div class="filter-group"><span class="filter-label">实体类型</span><div class="filters" id="filters"></div></div><div class="filter-group"><label class="filter-label" for="relation-filter">关系</label><select class="relation-select" id="relation-filter"><option value="">全部关系</option></select></div><div class="filter-group"><label class="filter-label" for="graph-search">实体搜索</label><input class="graph-search" id="graph-search" placeholder="输入名称或别名…"></div></div><div class="subgraph-banner" id="subgraph-banner"><span class="banner-text" id="subgraph-banner-text">正在展示局部关系网。</span><button id="subgraph-exit" type="button">返回全图</button></div><div class="graph-body"><div class="graph-canvas-wrap"><div id="graph-canvas"></div><div class="graph-state" id="graph-state">正在整理知识关系…</div><div class="graph-legend"><span><i style="background:#d84b2a"></i>违规行为</span><span><i style="background:#2f6f9f"></i>管理义务</span><span><i style="background:#6b5ca5"></i>政府职责</span><span><i style="background:#a86b14"></i>主体</span><span><i style="background:#237568"></i>消防对象</span><span><i style="background:#b45309"></i>处罚</span></div></div><aside class="detail-panel" id="detail-panel"><p class="detail-empty">选择一个节点，就能看到它与法规条款之间的关系和官方来源。</p></aside></div></div></section></main></div>
+<section class="page" id="page-graph"><div class="page-shell"><header class="topbar"><div><h1>法规知识图谱</h1><p>从实体、行为与责任关系中查看条款证据链</p></div><div class="mode-chip"><svg class="icon"><use href="#i-graph"/></svg><span>分簇漂浮 · 点选展开一级+二级关联</span></div></header><div class="graph-tools" id="graph-tools"><div class="graph-tools-bar"><div class="statline" id="stats"></div><button type="button" class="graph-tools-toggle" id="graph-tools-toggle" aria-expanded="false" aria-controls="graph-tools-extra">筛选</button></div><div class="graph-tools-extra" id="graph-tools-extra"><div class="filter-group"><span class="filter-label">法规来源</span><div class="filters" id="law-filters"></div></div><div class="filter-group"><span class="filter-label">实体类型</span><div class="filters" id="filters"></div></div><div class="filter-group"><label class="filter-label" for="relation-filter">关系</label><select class="relation-select" id="relation-filter"><option value="">全部关系</option></select></div><div class="filter-group"><label class="filter-label" for="graph-search">实体搜索</label><input class="graph-search" id="graph-search" placeholder="输入名称或别名…" inputmode="search" enterkeyhint="search"></div></div></div><div class="subgraph-banner" id="subgraph-banner"><span class="banner-text" id="subgraph-banner-text">正在展示局部关系网。</span><button id="subgraph-exit" type="button">返回全图</button></div><div class="graph-body"><div class="graph-canvas-wrap"><div id="graph-canvas"></div><div class="graph-state" id="graph-state">正在整理知识关系…</div><div class="graph-hint" id="graph-hint">移动端精选高关联节点 · 筛选查看更多</div><div class="graph-legend"><span><i style="background:#d84b2a"></i>违规行为</span><span><i style="background:#2f6f9f"></i>管理义务</span><span><i style="background:#6b5ca5"></i>政府职责</span><span><i style="background:#a86b14"></i>主体</span><span><i style="background:#237568"></i>消防对象</span><span><i style="background:#b45309"></i>处罚</span></div></div><div class="detail-backdrop" id="detail-backdrop" hidden></div><aside class="detail-panel" id="detail-panel" aria-live="polite"><div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" id="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">选择一个节点，就能看到它与法规条款之间的关系和官方来源。</p></aside></div></div></section></main></div>
 <script>
-const TYPE_COLOR={"违规行为":"#d84b2a","管理义务":"#2f6f9f","政府职责":"#6b5ca5","主体":"#a86b14","处罚":"#b45309","消防对象":"#237568"},REL_COLOR={"禁止":"#d84b2a","义务":"#237568","责任":"#a86b14","处罚":"#6b5ca5","涉及":"#2f6f9f"};const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const icon=id=>`<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;let chart=null,currentTypes=[],currentLaws=[],lastQuestion='',busy=false,lastFailed='',lastGraphData=null,graphMode='overview',focusCenterId=null;
-$$('.nav button').forEach(btn=>btn.addEventListener('click',()=>switchPage(btn.dataset.page)));function switchPage(name){$$('.page,.nav button').forEach(el=>el.classList.remove('active'));$(`#page-${name}`).classList.add('active');$(`#nav-${name}`).classList.add('active');if(name==='graph'){loadGraph();setTimeout(()=>chart?.resize(),80)}else{setTimeout(()=>chart?.resize(),80)}}
+const TYPE_COLOR={"违规行为":"#d84b2a","管理义务":"#2f6f9f","政府职责":"#6b5ca5","主体":"#a86b14","处罚":"#b45309","消防对象":"#237568"},REL_COLOR={"禁止":"#d84b2a","义务":"#237568","责任":"#a86b14","处罚":"#6b5ca5","涉及":"#2f6f9f"};const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const icon=id=>`<svg class="icon" aria-hidden="true"><use href="#${id}"/></svg>`;const isMobile=()=>window.matchMedia('(max-width:768px)').matches;let chart=null,currentTypes=[],currentLaws=[],lastQuestion='',busy=false,lastFailed='',lastGraphData=null,graphMode='overview',focusCenterId=null;
+$$('.nav button').forEach(btn=>btn.addEventListener('click',()=>switchPage(btn.dataset.page)));function switchPage(name){$$('.page,.nav button').forEach(el=>el.classList.remove('active'));$(`#page-${name}`).classList.add('active');$(`#nav-${name}`).classList.add('active');if(name==='graph'){loadGraph();setTimeout(()=>{chart?.resize();fadeGraphHint()},100)}else{closeDetailSheet();setTimeout(()=>chart?.resize(),80)}}
+function openDetailSheet(){if(!isMobile())return;$('#detail-panel').classList.add('open');const bd=$('#detail-backdrop');bd.hidden=false;bd.classList.add('show')}
+function closeDetailSheet(){const panel=$('#detail-panel');panel?.classList.remove('open');const bd=$('#detail-backdrop');if(bd){bd.classList.remove('show');bd.hidden=true}}
+$('#detail-close')?.addEventListener('click',closeDetailSheet);$('#detail-backdrop')?.addEventListener('click',closeDetailSheet);
+$('#graph-tools-toggle')?.addEventListener('click',()=>{const tools=$('#graph-tools'),btn=$('#graph-tools-toggle');const open=!tools.classList.contains('expanded');tools.classList.toggle('expanded',open);btn.setAttribute('aria-expanded',String(open));btn.textContent=open?'收起':'筛选';setTimeout(()=>chart?.resize(),80)});
+function fadeGraphHint(){const hint=$('#graph-hint');if(!hint||!isMobile())return;hint.classList.remove('fade');clearTimeout(window.__graphHintTimer);window.__graphHintTimer=setTimeout(()=>hint.classList.add('fade'),3200)}
 window.addEventListener('orientationchange',()=>setTimeout(()=>chart?.resize(),200));
 fetch('/api/system').then(r=>r.ok?r.json():Promise.reject()).then(s=>{$('#mode-chip span').textContent=`${s.retrieval} · ${s.generation_mode} · v${s.version}`}).catch(()=>{$('#mode-chip span').textContent='系统状态暂不可用'});$$('.suggestion').forEach(b=>b.addEventListener('click',()=>ask(b.dataset.question)));const form=$('#ask-form'),input=$('#question'),sendBtn=$('#send');input.addEventListener('input',()=>{$('#counter').textContent=`${input.value.length}/500`;input.style.height='auto';input.style.height=Math.min(input.scrollHeight,128)+'px'});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});form.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 function append(html,cls='bot'){const el=document.createElement('article');el.className=`msg ${cls}`;el.innerHTML=html;$('#message-list').appendChild(el);$('#messages').scrollTop=$('#messages').scrollHeight;return el}function userMessage(q){return `<div class="bubble">${esc(q)}</div>`}function refHTML(r){const b=r.bm25>0?'<span class="badge">关键词</span>':'',v=r.vector>0?'<span class="badge">向量</span>':'',g=r.graph_hit?'<span class="badge graph">图谱路径</span>':'',ce=r.cross_encoder!=null?'<span class="badge graph">精排 '+(r.cross_encoder*100).toFixed(0)+'</span>':'',path=r.path?`<div class="path">${icon('i-graph')} ${esc(r.path)}</div>`:'',source=r.source_url?`<a class="source-link" href="${esc(r.source_url)}" target="_blank" rel="noopener">${icon('i-link')}官方原文 · ${esc(r.authority)}</a>`:'';return `<div class="ref"><div class="ref-head"><strong>${esc(r.article)} · ${esc(r.title)}</strong>${g}${v}${b}${ce}</div>${path}<div class="ref-text">${esc(r.text)}</div><div class="contribution"><span>关键词 ${Math.round((r.bm25_share||0)*100)}%</span><span>向量 ${Math.round((r.vector_share||0)*100)}%</span><span>图谱 ${Math.round((r.graph_share||0)*100)}%</span></div>${source}</div>`}
@@ -157,10 +236,47 @@ $('#subgraph-exit').addEventListener('click',()=>{hideBanner();if(lastGraphData)
 async function loadGraph(){if(chart&&lastGraphData&&graphMode==='overview'){setTimeout(()=>chart.resize(),30);return}try{const resp=await fetch('/api/graph/stats');if(!resp.ok)throw new Error();const st=await resp.json();$('#stats').innerHTML=stat('来源',st.sources.length)+stat('语义句',st.semantic_sents)+stat('实体',st.entities)+stat('关系',st.edges)+stat('条款',st.articles.length);$('#filters').innerHTML=Object.keys(st.type_dist).map(t=>`<button class="filter" data-type="${esc(t)}">${esc(t)} ${st.type_dist[t]}</button>`).join('');$('#law-filters').innerHTML=st.sources.map(s=>`<button class="filter" data-law="${esc(s.law)}" title="${esc(s.name)}">${esc(s.law)} ${st.law_dist[s.law]||0}</button>`).join('');$('#relation-filter').innerHTML='<option value="">全部关系</option>'+Object.entries(st.relation_dist).map(([rel,count])=>`<option value="${esc(rel)}">${esc(rel)} · ${count}</option>`).join('');$$('#filters .filter').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('active');const t=b.dataset.type;currentTypes.includes(t)?currentTypes=currentTypes.filter(x=>x!==t):currentTypes.push(t);hideBanner();fetchGraph()}));$$('#law-filters .filter').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('active');const law=b.dataset.law;currentLaws.includes(law)?currentLaws=currentLaws.filter(x=>x!==law):currentLaws.push(law);hideBanner();fetchGraph()}));$('#relation-filter').addEventListener('change',()=>{hideBanner();fetchGraph()});await fetchGraph()}catch{$('#graph-state').hidden=false;$('#graph-state').textContent='知识图谱暂时无法加载，请确认后端服务已经启动。'}}function stat(l,v){return `<div><strong>${esc(v)}</strong><span>${l}</span></div>`}let graphTimer;$('#graph-search').addEventListener('input',()=>{clearTimeout(graphTimer);graphTimer=setTimeout(()=>{hideBanner();fetchGraph()},180)});
 async function fetchGraph(){const state=$('#graph-state');state.hidden=false;state.textContent='正在整理知识关系…';const p=new URLSearchParams();if(currentTypes.length)p.set('types',currentTypes.join(','));if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const q=$('#graph-search').value.trim();if(q)p.set('query',q);try{const r=await fetch('/api/graph/data?'+p);if(!r.ok)throw new Error();const d=await r.json();lastGraphData=d;if(!d.nodes.length){state.textContent='没有找到匹配实体，换个筛选条件试试。';if(chart)chart.clear();return}state.hidden=true;graphMode='overview';paintGraph(d,{mode:'overview'})}catch{state.textContent='图谱加载失败，请稍后重试。'}}
 function degreeMap(data){const deg={};(data.nodes||[]).forEach(n=>deg[n.id]=0);(data.edges||[]).forEach(e=>{deg[e.source]=(deg[e.source]||0)+1;deg[e.target]=(deg[e.target]||0)+1});return deg}
+function mobileOverviewNodes(nodes,deg){
+  if(!isMobile()||nodes.length<=24)return nodes;
+  const byType={};
+  nodes.forEach(n=>(byType[n.type]||=[]).push(n));
+  const picked=[];
+  Object.values(byType).forEach(group=>{
+    group.sort((a,b)=>(deg[b.id]||0)-(deg[a.id]||0)||String(a.id).localeCompare(String(b.id)));
+    picked.push(...group.slice(0,4));
+  });
+  return picked.sort((a,b)=>(deg[b.id]||0)-(deg[a.id]||0)).slice(0,24);
+}
+function mobileFocusNodes(nodes,deg,centerId){
+  if(!isMobile()||nodes.length<=14)return nodes;
+  const center=nodes.find(n=>n.id===centerId);
+  const sortByDegree=arr=>arr.sort((a,b)=>(deg[b.id]||0)-(deg[a.id]||0));
+  const hop1=sortByDegree(nodes.filter(n=>n.id!==centerId&&(n.hop===1||n.hop==null))).slice(0,9);
+  const selected=[...(center?[center]:[]),...hop1];
+  const used=new Set(selected.map(n=>n.id));
+  selected.push(...sortByDegree(nodes.filter(n=>!used.has(n.id))).slice(0,14-selected.length));
+  return selected;
+}
 function layoutStable(nodesMeta,mode,centerId){
   // 分簇初值：六类实体各占一个扇区，区内微散布，力导向只做轻推
   const sorted=[...nodesMeta].sort((a,b)=>String(a.id).localeCompare(String(b.id)));
   const pos={};
+  if(isMobile()&&mode==='overview'){
+    const order=['违规行为','管理义务','政府职责','主体','消防对象','处罚'];
+    const buckets={};
+    sorted.forEach(n=>(buckets[n.type||'违规行为']||=[]).push(n));
+    const types=order.filter(t=>buckets[t]?.length);
+    types.forEach((type,row)=>{
+      const arr=buckets[type].sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+      arr.forEach((n,col)=>{
+        pos[n.id]={
+          x:(col-(arr.length-1)/2)*190,
+          y:(row-(types.length-1)/2)*190
+        };
+      });
+    });
+    return pos;
+  }
   if(mode==='focus'&&centerId){
     pos[centerId]={x:0,y:0};
     const hop1=sorted.filter(n=>n.id!==centerId&&(n.hop===1||n.hop==null));
@@ -205,11 +321,10 @@ function paintGraph(data,opts={}){
   const deg=degreeMap(data);
   // 全览隐藏度=0 孤点（词典预置未连边）；焦点/回答子图保留原样
   const nodeSrc=(mode==='overview')
-    ?(data.nodes||[]).filter(n=>(deg[n.id]||0)>0)
-    :(data.nodes||[]);
-  const edgeSrc=(mode==='overview')
-    ?(data.edges||[]).filter(e=>(deg[e.source]||0)>0&&(deg[e.target]||0)>0)
-    :(data.edges||[]);
+    ?mobileOverviewNodes((data.nodes||[]).filter(n=>(deg[n.id]||0)>0),deg)
+    :(mode==='focus'?mobileFocusNodes(data.nodes||[],deg,centerId):(data.nodes||[]));
+  const allowedNodeIds=new Set(nodeSrc.map(n=>n.id));
+  const edgeSrc=(data.edges||[]).filter(e=>allowedNodeIds.has(e.source)&&allowedNodeIds.has(e.target));
   const nameOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.name])); // id -> 展示名
   const coords=layoutStable(nodeSrc,mode,centerId);
   const isBeh=t=>['违规行为','管理义务','政府职责'].includes(t);
@@ -219,8 +334,12 @@ function paintGraph(data,opts={}){
     const matched=highlightNames.has(n.name)||(n.aliases||[]).some(a=>highlightNames.has(a));
     const hot=isCenter||matched||!!n.highlight||hop===1;
     const d=deg[n.id]||0;
-    const showLabel=mode!=='overview'||hot||n.name.length<=8||d>=3;
-    const size=isCenter?54:(hop===1?34:(hop===2?22:(isBeh(n.type)?30:24)));
+    const showLabel=isMobile()
+      ?(mode==='overview'?(d>=20||n.name.length<=4):(isCenter||hop===1))
+      :(mode!=='overview'||hot||n.name.length<=8||d>=3);
+    const size=isMobile()
+      ?(isCenter?46:(hop===1?28:(hop===2?17:(isBeh(n.type)?25:21))))
+      :(isCenter?54:(hop===1?34:(hop===2?22:(isBeh(n.type)?30:24))));
     const xy=coords[n.id]||{x:0,y:0};
     return{
       // echarts 用 name 匹配 links.source/target，必须用唯一 id，展示名放 displayName
@@ -237,7 +356,7 @@ function paintGraph(data,opts={}){
       label:{
         show:mode==='focus'?true:showLabel,position:'bottom',distance:6,
         formatter:p=>p.data.displayName||p.name,
-        fontSize:isCenter?13:(hop===1?11:(hop===2?9:10)),
+        fontSize:isMobile()?(isCenter?12:(hop===1?10:9)):(isCenter?13:(hop===1?11:(hop===2?9:10))),
         fontWeight:isCenter||hop===1?'bold':'normal',
         color:hop===2?'#6a7682':'#2f3a44',
         textBorderColor:'rgba(248,246,241,.92)',textBorderWidth:2
@@ -276,7 +395,7 @@ function paintGraph(data,opts={}){
     ?{repulsion:720,edgeLength:[140,240],gravity:.05,friction:.9,layoutAnimation:true}
     :{repulsion:520,edgeLength:40,gravity:.035,friction:.88,layoutAnimation:true};
   // 焦点模式用固定双环布局，保证中心→一级→二级的连线稳定可见
-  const useFixed=mode==='focus';
+  const useFixed=mode==='focus'||(isMobile()&&mode==='overview');
   if(useFixed){
     nodes.forEach(n=>{n.fixed=true;});
   }
@@ -298,7 +417,7 @@ function paintGraph(data,opts={}){
       label:{show:true,position:'bottom',distance:6,color:'#2f3a44',fontSize:10,formatter:p=>p.data.displayName||p.name},
       edgeSymbol:showLinks?['none','arrow']:['none','none'],
       edgeSymbolSize:8,
-      scaleLimit:{min:.15,max:3},
+      scaleLimit:{min:isMobile()?.35:.15,max:3},
       emphasis:{focus:showLinks?'adjacency':'none',scale:true,lineStyle:{width:4,opacity:1},label:{show:true}},
       blur:{itemStyle:{opacity:.18},lineStyle:{opacity:.08}}
     }]
@@ -313,11 +432,12 @@ function paintGraph(data,opts={}){
   chart.off('click');
   chart.on('click',p=>{
     if(p.dataType==='node'&&p.data?.id){
+      closeDetailSheet();
       if(mode==='overview'||p.data.id!==centerId)focusEgo(p.data.id);
       else showDetail(p.data.id);
     }
   });
 }
-async function focusEgo(id){const state=$('#graph-state');state.hidden=false;state.textContent='正在展开一级 / 二级关联实体…';try{const r=await fetch('/api/graph/ego?'+new URLSearchParams({id,hops:'2',max_nodes:'42'}));if(!r.ok)throw new Error();const d=await r.json();if(d.error||!d.nodes?.length){state.textContent='该节点暂无关联关系（可能是词典预置实体，语料中尚未连边）。';return}if((d.neighbor_count||0)===0&&(d.edge_count||0)===0){state.hidden=true;showBanner(`已选中：<b>${esc(d.center_name)}</b> · 暂无一级关联`);paintGraph(d,{mode:'focus',centerId:id});showDetail(id);return}graphMode='focus';focusCenterId=id;state.hidden=true;const n1=d.neighbor_count||0,n2=d.second_count||0;showBanner(`已展开：<b>${esc(d.center_name)}</b> · 一级 ${n1} · 二级 ${n2} · 关系 ${d.edge_count}（实线=一级，虚线=二级 · 点邻居可切换中心）`);paintGraph(d,{mode:'focus',centerId:id,growEdges:false});showDetail(id)}catch{state.textContent='关系网加载失败，请稍后重试。'}}
-async function showDetail(id){const panel=$('#detail-panel');panel.innerHTML='<p class="detail-empty">正在读取关联条款…</p>';try{const p=new URLSearchParams({id});if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const r=await fetch('/api/graph/entity?'+p);if(!r.ok)throw new Error();const d=await r.json();if(d.error)throw new Error();const e=d.entity,triples=d.triples.slice(0,30),articles=d.articles.slice(0,12);const focusHint=graphMode==='overview'?`<button class="graph-link" type="button" id="focus-from-detail">${icon('i-graph')}点选连线 · 展开关系</button>`:'';panel.innerHTML=`<div class="detail-entity"><h2>${esc(e.name)}</h2><span class="etype" style="background:${TYPE_COLOR[e.type]||'#66717e'}">${esc(e.type)}</span>${e.aliases?.length?`<div class="aliases">常见说法：${e.aliases.map(esc).join('、')}</div>`:''}${focusHint}<h3>关联关系 · ${d.triple_count}</h3>${triples.map(t=>{const other=(t.source===id?t.target:t.source).split(':').slice(1).join(':');return `<div class="trip"><span class="rel rel-${esc(t.relation)}">${esc(t.relation)}</span> ${t.source===id?'→':'←'} ${esc(other)}<br><small>${esc(t.article||'')}</small></div>`}).join('')}${d.triple_count>30?'<div class="source-note">仅展示前 30 条，请使用上方筛选缩小范围。</div>':''}<h3>支撑条款 · ${d.article_count}</h3>${articles.map(a=>`<div class="trip"><b>${esc(a.article)} · ${esc(a.title)}</b><div class="source-note">${esc(a.law_name)} · ${esc(a.authority)}${a.effective_date?' · '+esc(a.effective_date)+' 生效':''}</div><br>${esc((a.text||'').slice(0,150))}${(a.text||'').length>150?'…':''}${a.source_url?`<br><a class="source-link" href="${esc(a.source_url)}" target="_blank" rel="noopener">${icon('i-link')}查看官方原文</a>`:''}</div>`).join('')}${d.article_count>12?'<div class="source-note">仅展示前 12 条，请使用上方筛选缩小范围。</div>':''}</div>`;$('#focus-from-detail')?.addEventListener('click',()=>focusEgo(id))}catch{panel.innerHTML='<p class="detail-empty">详情加载失败，请重新选择节点。</p>'}}
+async function focusEgo(id){const state=$('#graph-state');state.hidden=false;state.textContent='正在展开一级 / 二级关联实体…';try{const r=await fetch('/api/graph/ego?'+new URLSearchParams({id,hops:'2',max_nodes:isMobile()?'14':'42'}));if(!r.ok)throw new Error();const d=await r.json();if(d.error||!d.nodes?.length){state.textContent='该节点暂无关联关系（可能是词典预置实体，语料中尚未连边）。';return}if((d.neighbor_count||0)===0&&(d.edge_count||0)===0){state.hidden=true;showBanner(`已选中：<b>${esc(d.center_name)}</b> · 暂无一级关联`);paintGraph(d,{mode:'focus',centerId:id});showDetail(id);return}graphMode='focus';focusCenterId=id;state.hidden=true;const n1=d.neighbor_count||0,n2=d.second_count||0;showBanner(isMobile()?`已展开：<b>${esc(d.center_name)}</b> · 展示 ${Math.min(13,Math.max(0,d.nodes.length-1))} 个关联 · 再点中心看详情`:`已展开：<b>${esc(d.center_name)}</b> · 一级 ${n1} · 二级 ${n2} · 关系 ${d.edge_count}（实线=一级，虚线=二级 · 点邻居可切换中心）`);paintGraph(d,{mode:'focus',centerId:id,growEdges:false});if(!isMobile())showDetail(id)}catch{state.textContent='关系网加载失败，请稍后重试。'}}
+async function showDetail(id){const panel=$('#detail-panel');panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">正在读取关联条款…</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);openDetailSheet();try{const p=new URLSearchParams({id});if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const r=await fetch('/api/graph/entity?'+p);if(!r.ok)throw new Error();const d=await r.json();if(d.error)throw new Error();const e=d.entity,triples=d.triples.slice(0,isMobile()?12:30),articles=d.articles.slice(0,isMobile()?6:12);const focusHint=graphMode==='overview'?`<button class="graph-link" type="button" id="focus-from-detail">${icon('i-graph')}点选连线 · 展开关系</button>`:'';panel.innerHTML=`<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><div class="detail-entity"><h2>${esc(e.name)}</h2><span class="etype" style="background:${TYPE_COLOR[e.type]||'#66717e'}">${esc(e.type)}</span>${e.aliases?.length?`<div class="aliases">常见说法：${e.aliases.map(esc).join('、')}</div>`:''}${focusHint}<h3>关联关系 · ${d.triple_count}</h3>${triples.map(t=>{const other=(t.source===id?t.target:t.source).split(':').slice(1).join(':');return `<div class="trip"><span class="rel rel-${esc(t.relation)}">${esc(t.relation)}</span> ${t.source===id?'→':'←'} ${esc(other)}<br><small>${esc(t.article||'')}</small></div>`}).join('')}${d.triple_count>triples.length?`<div class="source-note">仅展示前 ${triples.length} 条，请使用筛选缩小范围。</div>`:''}<h3>支撑条款 · ${d.article_count}</h3>${articles.map(a=>`<div class="trip"><b>${esc(a.article)} · ${esc(a.title)}</b><div class="source-note">${esc(a.law_name)} · ${esc(a.authority)}${a.effective_date?' · '+esc(a.effective_date)+' 生效':''}</div><br>${esc((a.text||'').slice(0,150))}${(a.text||'').length>150?'…':''}${a.source_url?`<br><a class="source-link" href="${esc(a.source_url)}" target="_blank" rel="noopener">${icon('i-link')}查看官方原文</a>`:''}</div>`).join('')}${d.article_count>articles.length?`<div class="source-note">仅展示前 ${articles.length} 条，请使用筛选缩小范围。</div>`:''}</div>`;panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);$('#focus-from-detail')?.addEventListener('click',()=>{closeDetailSheet();focusEgo(id)})}catch{panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">详情加载失败，请重新选择节点。</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet)}}
 </script></body></html>

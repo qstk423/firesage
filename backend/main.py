@@ -27,6 +27,8 @@ API_KEY = os.getenv("API_KEY", "").strip()
 # 简易限流：每 IP 每分钟最大请求数（0=关闭）
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60") or "60")
 _rate_bucket: dict[str, list[float]] = {}
+PUBLIC_API_PATHS = {"/api/system"}
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
 
 def _client_ip(request: Request) -> str:
@@ -51,7 +53,7 @@ def _check_rate_limit(ip: str) -> None:
 async def security_and_log(request: Request, call_next):
     """鉴权（可选）+ 限流 + 请求耗时日志。"""
     path = request.url.path
-    if path.startswith("/api/") and path not in ("/api/system",):
+    if path.startswith("/api/") and path not in PUBLIC_API_PATHS:
         if API_KEY:
             key = request.headers.get("x-api-key", "")
             if key != API_KEY:
@@ -406,10 +408,10 @@ def system_status():
 
 @app.get("/")
 def index():
-    return FileResponse(os.path.join(BASE_DIR, "..", "frontend", "index.html"))
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "..", "frontend")), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
 if __name__ == "__main__":

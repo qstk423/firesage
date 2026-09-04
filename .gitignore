@@ -8,3 +8,4 @@ __pycache__/
 backend/data/.semantic_cache/
 backend/.env.local
 backend/data/audit/
+backend/data/survey_responses.jsonl
