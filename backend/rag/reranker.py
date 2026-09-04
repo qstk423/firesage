@@ -77,6 +77,17 @@ class LegalReranker:
                 ("第一责任人", "第一责任人"),
                 ("主要负责人对消防工作", "政府主要负责人为第一责任人"),
                 ("地方各级人民政府主要负责人", "地方各级人民政府负责本行政区域内的消防工作"),
+                ("单位违反", "单位违反本法规定，有下列行为之一的，责令改正，处五千元以上五万元以下罚款"),
+                ("多久要查", "至少每月进行一次防火检查"),
+                ("查一次消防", "防火检查"),
+                ("个体户", "个体工商户"),
+                ("小店", "个体工商户"),
+                ("举报", "消防救援机构应当对机关、团体、企业、事业等单位遵守消防法律、法规的情况依法进行监督检查"),
+                ("哪个部门", "消防救援机构"),
+                ("没证", "依法取得相应的职业资格"),
+                ("无证", "依法取得相应的职业资格"),
+                ("安排没证的人值班", "处2000元以上10000元以下罚款"),
+                ("第四十五条", "消防救援机构统一组织和指挥火灾现场扑救"),
             )
             for query_pattern, evidence_pattern in direct_patterns:
                 if query_pattern in question and evidence_pattern in text:
@@ -95,7 +106,7 @@ class LegalReranker:
                 intent_adjustment += 0.16
             # 仅当问题与高层场景无关时，略降「高层规定」；小区/居委/工地口语常落在高层规定
             highrise_scene = any(k in question for k in (
-                "小区", "居委会", "居民委员会", "工地", "施工", "高层",
+                "小区", "居委会", "居民委员会", "工地", "施工", "高层", "没证", "值班", "控制室",
             ))
             if "高层" not in question and article.startswith("高层规定·") and not highrise_scene:
                 intent_adjustment -= 0.04
@@ -105,6 +116,20 @@ class LegalReranker:
             if ("主要负责人" in question and "第一责任人" in question
                     and "应当履行下列消防安全职责" in text):
                 intent_adjustment -= 0.08
+            # 点名「第X条」时优先召回该条本身（避免错跳到无关罚则）
+            cited = re.findall(r"第[一二三四五六七八九十百零〇两\d]+条", question)
+            for cite in cited:
+                if article.endswith("·" + cite) or article.endswith(cite):
+                    intent_adjustment += 0.24
+            # 单位概括性「违反消防安全规定怎么处罚」优先第六十条单位罚则总述
+            if ("单位" in question and any(t in question for t in PENALTY_TERMS)
+                    and "单位违反本法规定，有下列行为之一的，责令改正，处五千元以上五万元以下罚款" in text):
+                intent_adjustment += 0.18
+            # 无证值班追问：抬升含罚款的罚则条，压低仅资格要求的条款
+            if any(k in question for k in ("没证", "无证")) and "罚款" in text:
+                intent_adjustment += 0.16
+            if any(k in question for k in ("没证", "无证")) and "应当依法取得" in text and "罚款" not in text:
+                intent_adjustment -= 0.06
             rerank_score = (
                 0.62 * candidate["retrieval_score"]
                 + 0.18 * coverage

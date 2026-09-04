@@ -113,14 +113,14 @@
     "question": "违反消防法第四十五条规定的行为怎么处罚？",
     "intent": "law",
     "expected_articles": [
-      "消防法·第五十八条"
+      "消防法·第四十五条"
     ],
     "must_conclusions": [
-      "五千元以上五万元以下"
+      "火灾现场"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "58条违法建设处罚"
+    "review_notes": "45条为火灾现场指挥权；原误链58条已纠正"
   },
   {
     "id": "d09",

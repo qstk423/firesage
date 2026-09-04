@@ -156,6 +156,9 @@ python3 scripts/evaluate_fireeval.py
 python3 scripts/evaluate_fireeval.py --split dev
 python3 scripts/evaluate_fireeval.py --split test
 
+# 一键验收（意图对比 + FireEval + 烟雾 + 演示三问）
+python3 scripts/demo_check.py --quick
+
 # 旧版 18 题轻量基线
 python3 scripts/evaluate_fireeval.py --v0 --strict
 
@@ -238,7 +241,7 @@ python3 rag/graphrag.py
 
 ## 当前局限（展示时请如实说明）
 
-- Hit@1 / Hit@3 仍在提升中（dev 约 **0.87 / 1.00**，降级模式下）；语料扩充后竞争条款变多
+- Hit@1 / Hit@3：dev 约 **0.87 / 1.00**，test 约 **0.92 / 1.00**（本地降级模式）
 - 意图路由仍以规则为主；赛道规划中的「意图 / 重排 / 生成」微调尚未全部落地
 - Embedding / CrossEncoder 依赖本地下载；网络受限时会自动降级，并加大 BM25 权重
 - 知识库覆盖有限，不构成完整消防法规汇编
