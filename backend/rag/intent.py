@@ -41,6 +41,19 @@ EMERGENCY_CONTEXT = ["怎么办", "现在", "现场", "家里", "楼里", "发�
 
 REFUSE_WORDS = ["你多大", "你女朋友", "作弊", "帮我犯罪", "赚钱方法"]
 
+# 明显非消防闲聊 / 娱乐请求：规则硬拒，避免微调分类器误判为 law
+OFF_TOPIC_MARKERS = [
+    "电影", "电视剧", "综艺", "游戏", "音乐", "明星", "八卦",
+    "笑话", "段子", "天气", "旅游", "美食", "菜谱", "股票", "基金",
+    "恋爱", "相亲", "星座", "运势", "足球", "篮球", "世界杯",
+]
+
+
+def _is_off_topic(q: str) -> bool:
+    if any(w in q for w in FIRE_DOMAIN_WORDS):
+        return False
+    return any(w in q for w in OFF_TOPIC_MARKERS)
+
 
 def _is_law_consultation(q: str) -> bool:
     if any(w in q for w in LAW_PRIORITY_MARKERS):
@@ -65,6 +78,8 @@ def route_rules(question):
     """纯规则路由：law / emergency / chitchat / refuse"""
     q = question.lower()
     if any(w in q for w in REFUSE_WORDS) and "消防" not in q:
+        return "refuse"
+    if _is_off_topic(q):
         return "refuse"
     if _is_law_consultation(q):
         return "law"
@@ -103,6 +118,8 @@ def route(question):
     # hybrid：安全硬约束优先，其余交给微调分类器
     q = question.lower()
     if any(w in q for w in REFUSE_WORDS) and "消防" not in q:
+        return "refuse"
+    if _is_off_topic(q):
         return "refuse"
     if _is_law_consultation(q):
         return "law"

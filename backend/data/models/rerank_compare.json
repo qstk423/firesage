@@ -1,0 +1,18 @@
+{
+  "compare": [
+    {
+      "split": "dev",
+      "n_law": 23,
+      "hit1_rules_only": 0.913,
+      "hit1_with_ml": 0.8696,
+      "hit3_with_ml": 0.9565
+    },
+    {
+      "split": "test",
+      "n_law": 24,
+      "hit1_rules_only": 0.6667,
+      "hit1_with_ml": 0.7083,
+      "hit3_with_ml": 0.7917
+    }
+  ]
+}

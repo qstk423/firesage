@@ -130,6 +130,25 @@ class FireSageSmokeTest(unittest.TestCase):
     def test_emergency_route(self):
         self.assertEqual(self.pipeline.ask("家里着火了现在怎么办")["intent"], "emergency")
 
+    def test_hazard_not_emergency(self):
+        result = self.pipeline.ask("发现火灾隐患怎么办")
+        self.assertEqual(result["intent"], "law")
+        self.assertNotEqual(result["intent"], "emergency")
+
+    def test_off_topic_movie_refuse(self):
+        result = self.pipeline.ask("推荐几部好看的电影")
+        self.assertEqual(result["intent"], "refuse")
+        self.assertTrue(result["refused"])
+
+    def test_committee_fire_role(self):
+        result = self.pipeline.ask("我们小区居委会在消防方面能起什么作用？")
+        self.assertFalse(result["refused"])
+        arts = [r["article"] for r in result.get("references", [])[:3]]
+        self.assertTrue(
+            any(a in arts for a in ("高层规定·第十二条", "消防法·第三十二条")),
+            arts,
+        )
+
     def test_out_of_scope_refusal(self):
         self.assertTrue(self.pipeline.ask("红烧肉怎么做")["refused"])
 

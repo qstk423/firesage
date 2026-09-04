@@ -51,6 +51,15 @@ SYNONYMS = {
     "火灾隐患": ["火灾隐患", "整改", "当场改正"],
     "消防演练": ["消防演练", "灭火和应急疏散预案", "组织进行有针对性的消防演练"],
     "着火了往哪跑": ["消防演练", "灭火和应急疏散预案"],
+    # Stage4+：施工现场 / 居委会 / 政府第一责任人
+    "工地": ["施工现场", "施工单位", "建筑工程施工现场", "施工期间"],
+    "施工": ["施工现场", "施工单位", "施工期间", "建设单位应当与施工单位"],
+    "归谁管": ["消防安全责任", "由施工单位负责", "明确施工现场的消防安全责任"],
+    "居委会": ["居民委员会", "村民委员会", "防火安全公约", "消防安全管理人"],
+    "居委会在消防方面": ["居民委员会应当依法组织制定防火安全公约", "组织制定防火安全公约"],
+    "能起什么作用": ["防火安全公约", "防火安全检查", "消防宣传教育"],
+    "第一责任人": ["政府主要负责人为第一责任人", "地方各级人民政府负责本行政区域内的消防工作"],
+    "主要负责人对消防工作": ["政府主要负责人为第一责任人", "分管负责人为主要责任人"],
 }
 
 
@@ -133,8 +142,15 @@ class HybridRetriever:
         self.reranker = LegalReranker(self.chunks)
         self.cross_encoder = CrossEncoderReranker(self.chunks)
         self.degraded_vector = not getattr(self.vector, "available", True)
-        self.channels = ["BM25", self.vector.name, "GraphRAG",
-                         self.reranker.name, self.cross_encoder.name]
+        channels = ["BM25", self.vector.name, "GraphRAG", self.reranker.name]
+        try:
+            from . import rerank_ml
+            if rerank_ml.available():
+                channels.append("微调重排")
+        except Exception:
+            pass
+        channels.append(self.cross_encoder.name)
+        self.channels = channels
 
     def _channel_weights(self):
         return CHANNEL_WEIGHTS_DEGRADED if self.degraded_vector else CHANNEL_WEIGHTS
@@ -204,13 +220,33 @@ class HybridRetriever:
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
         if use_rerank:
             reranked = self.reranker.rerank(question, candidates[:pool_size])
+            # 领域微调重排：对 (问题, 条款) 打分，与规则分融合
+            try:
+                from . import rerank_ml
+                if rerank_ml.available():
+                    pairs = []
+                    for item in reranked:
+                        art = self.reranker.article_text.get(item["article"], {})
+                        blob = (art.get("title", "") + " " + "".join(art.get("parts") or []))[:800]
+                        pairs.append((item["article"], blob))
+                    ml_scores = rerank_ml.score_many(question, pairs)
+                    for item in reranked:
+                        ml = ml_scores.get(item["article"], 0.0)
+                        item["ml_rerank"] = round(ml, 4)
+                        # 小幅加性融合：以规则重排为主，微调只做轻推
+                        item["rerank_score"] = round(item["rerank_score"] + 0.10 * ml, 4)
+                        item["score"] = item["rerank_score"]
+                    reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
+            except Exception:
+                pass
             # CrossEncoder 语义精排：与法规意图重排线性组合（语义为主、规则为辅）
             ce_scores = self.cross_encoder.score(question, reranked)
             if ce_scores:
                 for item in reranked:
                     ce = ce_scores.get(item["article"], 0.0)
                     item["cross_encoder"] = round(ce, 4)
-                    item["rerank_score"] = round(0.55 * ce + 0.45 * item["rerank_score"], 4)
+                    base = item["rerank_score"]
+                    item["rerank_score"] = round(0.50 * ce + 0.50 * base, 4)
                     item["score"] = item["rerank_score"]
                 reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
         else:

@@ -121,6 +121,20 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 ---
 
+## 领域微调（可复现）
+
+当前微调分三层，请按实际完成度表述：
+
+| 层次 | 状态 | 命令 |
+|------|------|------|
+| 意图路由微调 | **已落地**（默认 hybrid） | `python3 backend/scripts/train_intent.py --compare` |
+| 条款重排微调 | **可训练**；默认关闭（`RERANK_ML=1` 开启） | `python3 backend/scripts/train_rerank.py --compare` |
+| 生成式 LoRA | **SFT 数据已就绪**；训练需 GPU/云端 | `python3 backend/scripts/build_gen_sft.py` → `python3 backend/scripts/train_gen_lora.py --dry-run` |
+
+生成 SFT 数据目录：`backend/data/models/sft/gen_sft_*.jsonl`（问题 + 给定条款 → 结构化 JSON，禁止无依据扩写）。
+
+---
+
 ## 演示建议（3 分钟）
 
 1. **口语法规**：「楼道堆放杂物违反什么规定」→ 看条款依据 + 点「在知识图谱中查看证据链」
@@ -224,7 +238,7 @@ python3 rag/graphrag.py
 
 ## 当前局限（展示时请如实说明）
 
-- Hit@1 / Hit@3 仍在提升中（dev 约 0.74 / 0.91，降级模式下）；语料扩充后竞争条款变多
+- Hit@1 / Hit@3 仍在提升中（dev 约 **0.87 / 1.00**，降级模式下）；语料扩充后竞争条款变多
 - 意图路由仍以规则为主；赛道规划中的「意图 / 重排 / 生成」微调尚未全部落地
 - Embedding / CrossEncoder 依赖本地下载；网络受限时会自动降级，并加大 BM25 权重
 - 知识库覆盖有限，不构成完整消防法规汇编

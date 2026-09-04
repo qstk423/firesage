@@ -69,6 +69,14 @@ class LegalReranker:
                 ("多家公司", "同一建筑物由两个以上单位"),
                 ("消防演练", "消防演练"),
                 ("着火了往哪跑", "消防演练"),
+                ("工地", "施工现场的消防安全责任"),
+                ("施工", "施工现场"),
+                ("归谁管", "消防安全责任"),
+                ("居委会", "居民委员会"),
+                ("居委会", "防火安全公约"),
+                ("第一责任人", "第一责任人"),
+                ("主要负责人对消防工作", "政府主要负责人为第一责任人"),
+                ("地方各级人民政府主要负责人", "地方各级人民政府负责本行政区域内的消防工作"),
             )
             for query_pattern, evidence_pattern in direct_patterns:
                 if query_pattern in question and evidence_pattern in text:
@@ -85,8 +93,18 @@ class LegalReranker:
             # 建筑高度定义问：优先「用语的含义」条款
             if any(k in question for k in ("多少米", "几米", "分别是")) and "用语的含义" in text:
                 intent_adjustment += 0.16
-            if "高层" not in question and article.startswith("高层规定·"):
+            # 仅当问题与高层场景无关时，略降「高层规定」；小区/居委/工地口语常落在高层规定
+            highrise_scene = any(k in question for k in (
+                "小区", "居委会", "居民委员会", "工地", "施工", "高层",
+            ))
+            if "高层" not in question and article.startswith("高层规定·") and not highrise_scene:
                 intent_adjustment -= 0.04
+            # 政府第一责任人定义条款优先于具体职责清单
+            if ("主要负责人" in question or "第一责任人" in question) and "第一责任人" in text:
+                intent_adjustment += 0.16
+            if ("主要负责人" in question and "第一责任人" in question
+                    and "应当履行下列消防安全职责" in text):
+                intent_adjustment -= 0.08
             rerank_score = (
                 0.62 * candidate["retrieval_score"]
                 + 0.18 * coverage

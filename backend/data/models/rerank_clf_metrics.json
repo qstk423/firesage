@@ -1,0 +1,23 @@
+{
+  "train_pairs": 627,
+  "pos": 175,
+  "neg": 452,
+  "model_path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/rerank_clf.joblib",
+  "train_acc": 0.7878787878787878,
+  "compare": [
+    {
+      "split": "dev",
+      "n_law": 23,
+      "hit1_rules_only": 0.913,
+      "hit1_with_ml": 0.8696,
+      "hit3_with_ml": 0.9565
+    },
+    {
+      "split": "test",
+      "n_law": 24,
+      "hit1_rules_only": 0.6667,
+      "hit1_with_ml": 0.7083,
+      "hit3_with_ml": 0.7917
+    }
+  ]
+}

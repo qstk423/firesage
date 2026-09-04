@@ -49,11 +49,11 @@
       "消防法·第六十一条"
     ],
     "must_conclusions": [
-      "一万元以上五万元以下"
+      "五千元以上五万元以下"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "61条混设处罚"
+    "review_notes": "61条混设处罚｜金标已按条文修正为五千元以上五万元以下"
   },
   {
     "id": "p17",
@@ -160,7 +160,8 @@
     "question": "小区旁边工地上施工，消防这块归谁管？",
     "intent": "law",
     "expected_articles": [
-      "高层规定·第十四条"
+      "高层规定·第十四条",
+      "61号令·第十二条"
     ],
     "must_conclusions": [
       "施工现场"
@@ -327,7 +328,7 @@
     "intent": "law",
     "expected_articles": [
       "高层规定·第十二条",
-      "责任制办法·第九条"
+      "消防法·第三十二条"
     ],
     "must_conclusions": [
       "防火安全公约"

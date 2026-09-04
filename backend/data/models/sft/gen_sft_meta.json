@@ -1,0 +1,17 @@
+{
+  "splits": {
+    "train": {
+      "n": 139,
+      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_train.jsonl"
+    },
+    "dev": {
+      "n": 29,
+      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_dev.jsonl"
+    },
+    "test": {
+      "n": 32,
+      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_test.jsonl"
+    }
+  },
+  "format": "instruction-input-output JSONL for LoRA/QLoRA"
+}

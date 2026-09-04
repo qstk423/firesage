@@ -1419,11 +1419,11 @@
       "消防法·第六十一条"
     ],
     "must_conclusions": [
-      "一万元以上五万元以下"
+      "五千元以上五万元以下"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "61条停产停业"
+    "review_notes": "61条停产停业｜金标已按条文修正为五千元以上五万元以下"
   },
   {
     "id": "d17",
