@@ -19,18 +19,55 @@ import rag.pipeline as pipeline_mod
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.7.0"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
+
+# 可选鉴权：设置 API_KEY 后，/api/*（除 /api/system）需带 Header: X-API-Key
+API_KEY = os.getenv("API_KEY", "").strip()
+# 简易限流：每 IP 每分钟最大请求数（0=关闭）
+RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60") or "60")
+_rate_bucket: dict[str, list[float]] = {}
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _check_rate_limit(ip: str) -> None:
+    if RATE_LIMIT_PER_MIN <= 0:
+        return
+    now = time.time()
+    window = _rate_bucket.setdefault(ip, [])
+    _rate_bucket[ip] = [t for t in window if now - t < 60]
+    if len(_rate_bucket[ip]) >= RATE_LIMIT_PER_MIN:
+        raise HTTPException(status_code=429, detail="请求过于频繁，请稍后再试")
+    _rate_bucket[ip].append(now)
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """请求日志与响应耗时统计（API 访问留痕，便于排查慢查询）。"""
+async def security_and_log(request: Request, call_next):
+    """鉴权（可选）+ 限流 + 请求耗时日志。"""
+    path = request.url.path
+    if path.startswith("/api/") and path not in ("/api/system",):
+        if API_KEY:
+            key = request.headers.get("x-api-key", "")
+            if key != API_KEY:
+                from fastapi.responses import JSONResponse
+                return JSONResponse(status_code=401, content={"detail": "未授权：需要有效的 X-API-Key"})
+        try:
+            _check_rate_limit(_client_ip(request))
+        except HTTPException as exc:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
     start = time.time()
     response = await call_next(request)
     elapsed_ms = int((time.time() - start) * 1000)
-    if request.url.path.startswith("/api/"):
-        print(f"[api] {request.method} {request.url.path} -> {response.status_code} "
+    if path.startswith("/api/"):
+        print(f"[api] {request.method} {path} -> {response.status_code} "
               f"({elapsed_ms}ms)", flush=True)
     response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
     return response
@@ -289,11 +326,17 @@ def entity_detail(id: str = Query(...),
 
 
 @app.post("/api/ask")
-def ask(body: AskBody):
+def ask(body: AskBody, request: Request):
     question = body.question.strip()
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
-    return pl.ask(question, body.previous_question)
+    result = pl.ask(question, body.previous_question)
+    try:
+        from rag import audit
+        audit.from_response(question, body.previous_question, result, client=_client_ip(request))
+    except Exception as exc:
+        print(f"[audit] write failed: {exc}", flush=True)
+    return result
 
 
 @app.get("/api/system")
@@ -307,6 +350,11 @@ def system_status():
         "retrieval_channels": pl.retriever.channels,
         "knowledge_bases": [source["name"] for source in sources],
         "sources": sources,
+        "security": {
+            "api_key_required": bool(API_KEY),
+            "rate_limit_per_min": RATE_LIMIT_PER_MIN,
+            "audit_enabled": True,
+        },
     }
 
 

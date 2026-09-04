@@ -12,6 +12,7 @@
 
 - 项目概述：[`docs/项目概述-消安智答FireSage.md`](docs/项目概述-消安智答FireSage.md)
 - 解决方案文档（企业命题组）：[`docs/解决方案-消安智答FireSage.md`](docs/解决方案-消安智答FireSage.md)
+- 产品级差距评估：[`docs/产品级差距评估.md`](docs/产品级差距评估.md)
 - 演示截图清单：[`docs/演示截图清单.md`](docs/演示截图清单.md)
 - 意图微调（可复现）：`python3 backend/scripts/train_intent.py --compare`
 

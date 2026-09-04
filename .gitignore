@@ -7,3 +7,4 @@ __pycache__/
 !.env.example
 backend/data/.semantic_cache/
 backend/.env.local
+backend/data/audit/

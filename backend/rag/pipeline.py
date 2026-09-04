@@ -134,7 +134,15 @@ class Pipeline:
         """无 LLM 降级：从最高置信条款抽取结构化回答（原文直接来自条款，天然可信）。"""
         if not fused:
             return None
+        # 处罚类问题：优先选用含「罚款/责令」的条款作为结论来源（仍必须来自召回列表）
         top = fused[0]
+        penalty_ask = any(t in question for t in ("处罚", "罚款", "怎么罚", "罚多少", "会怎么样"))
+        if penalty_ask:
+            for cand in fused:
+                art_c = self.article_text.get(cand["article"], {})
+                if any(t in (art_c.get("text") or "") for t in ("罚款", "责令", "拘留")):
+                    top = cand
+                    break
         art = self.article_text.get(top["article"], {})
         law_name = art.get("law_name", art.get("law", "消防法规"))
         conditions = "、".join(scene.get("venues") or []) or "无特殊限制"
@@ -155,11 +163,24 @@ class Pipeline:
                 "supplement": "以上内容直接摘自法规条款原文。" if len(fused) > 1 else "无",
                 "confidence": confidence,
             }
+        # 优先截取含「应当/不得/罚款」的句子，比盲目截前 150 字更贴近问题
+        snippet = text[:150]
+        for key in ("不得", "应当", "罚款", "责令", "处"):
+            idx = text.find(key)
+            if idx >= 0:
+                start = max(0, idx - 20)
+                snippet = text[start:start + 160]
+                break
+        basis = []
+        for f in fused[:3]:
+            a = self.article_text.get(f["article"], {})
+            if a:
+                basis.append(f"《{a.get('law_name', '')}》{a.get('num', '')}：{(a.get('text') or '')[:160]}")
         return {
-            "conclusion": f"依据《{law_name}》{art.get('num', '')}「{art.get('title', '')}」：{text[:150]}",
+            "conclusion": f"依据《{law_name}》{art.get('num', '')}「{art.get('title', '')}」：{snippet}",
             "conditions": conditions,
-            "basis": [f"《{art.get('law_name', '')}》{art.get('num', '')}：{text[:200]}"],
-            "supplement": "以上内容直接摘自法规条款原文。" if len(fused) > 1 else "无",
+            "basis": basis or [f"《{art.get('law_name', '')}》{art.get('num', '')}：{text[:200]}"],
+            "supplement": "以上内容直接摘自法规条款原文；完整罚则/职责请核对官方原文。" if len(fused) > 1 else "无",
             "confidence": confidence,
         }
 
