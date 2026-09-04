@@ -338,6 +338,7 @@
     "intent": "law",
     "expected_articles": [
       "高层规定·第二十八条",
+      "高层规定·第十条",
       "高层规定·第三十六条"
     ],
     "must_conclusions": [
@@ -622,7 +623,8 @@
     "intent": "law",
     "expected_articles": [
       "消防法·第二十八条",
-      "高层规定·第四十七条"
+      "高层规定·第四十七条",
+      "61号令·第二十八条"
     ],
     "must_conclusions": [
       "停用"
@@ -942,7 +944,8 @@
     "question": "哪些单位属于消防安全重点单位？",
     "intent": "law",
     "expected_articles": [
-      "消防法·第三十二条"
+      "消防法·第十七条",
+      "61号令·第十三条"
     ],
     "must_conclusions": [
       "消防安全重点单位"
@@ -1050,7 +1053,8 @@
     "intent": "law",
     "expected_articles": [
       "消防法·第二十八条",
-      "高层规定·第二十八条"
+      "高层规定·第二十八条",
+      "责任制办法·第十八条"
     ],
     "must_conclusions": [
       "安全出口"
@@ -1144,7 +1148,7 @@
       "消防法·第五十八条"
     ],
     "must_conclusions": [
-      "五万元以上二十万元以下"
+      "三万元以上三十万元以下"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
@@ -1401,10 +1405,11 @@
     "question": "消防安全重点单位为什么要建消防安全档案？",
     "intent": "law",
     "expected_articles": [
-      "消防法·第三十二条"
+      "消防法·第十七条",
+      "61号令·第四十一条"
     ],
     "must_conclusions": [
-      "消防安全档案"
+      "消防档案"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
@@ -1617,7 +1622,9 @@
     "intent": "law",
     "expected_articles": [
       "高层规定·第三十七条",
-      "61号令·第十条"
+      "61号令·第十条",
+      "电动车充电·7.10",
+      "高层规定·第十条"
     ],
     "must_conclusions": [
       "电动自行车"
@@ -1632,12 +1639,13 @@
     "question": "商场作为消防安全重点单位需要履行哪些职责？",
     "intent": "law",
     "expected_articles": [
-      "消防法·第三十二条",
+      "消防法·第十七条",
       "消防法·第十六条",
-      "责任制办法·第十六条"
+      "责任制办法·第十六条",
+      "61号令·第四十一条"
     ],
     "must_conclusions": [
-      "消防安全档案"
+      "消防安全重点单位"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
@@ -1680,9 +1688,9 @@
     "question": "火灾高危单位和消防安全重点单位有什么区别？",
     "intent": "law",
     "expected_articles": [
-      "责任制办法·第十七条",
       "责任制办法·第十六条",
-      "消防法·第三十二条"
+      "消防法·第十七条",
+      "61号令·第十三条"
     ],
     "must_conclusions": [
       "火灾高危单位"
@@ -1724,10 +1732,11 @@
     "intent": "law",
     "expected_articles": [
       "高层规定·第十八条",
-      "消防法·第二十三条"
+      "消防法·第二十三条",
+      "高层规定·第九条"
     ],
     "must_conclusions": [
-      "甲、乙类"
+      "甲、乙类火灾危险性物品"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,

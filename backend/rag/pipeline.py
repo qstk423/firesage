@@ -43,6 +43,8 @@ FOLLOW_UP_MARKERS = [
 
 SYSTEM_TMPL = (
     "你是消防法规领域的专业助手「消安智答」。请严格依据提供的法规条款回答问题，不得编造。"
+    "若依据中含「报批稿」或非正式施行文本，必须在 supplement 中明确提示其非正式效力，"
+    "并优先采信现行有效法规；不得把报批稿写成已生效规章。"
     "回答必须使用以下 JSON 结构（不要输出 JSON 以外的内容）：\n"
     '{"conclusion": "直接回答问题的结论（1-2句）", '
     '"conditions": "该结论适用的条件（主体/场所/建筑类型，如不适用写 无特殊限制）", '
@@ -51,6 +53,9 @@ SYSTEM_TMPL = (
     '"confidence": "high|medium|low，依据条款数量与一致性判断"}\n'
     "所有结论必须能在提供的条款原文中找到依据，引用条款编号必须来自提供的条款。"
 )
+
+DRAFT_STATUS_MARKERS = ("报批稿", "征求意见稿", "草案")
+DRAFT_NOTICE = "所引文本含报批稿/非正式施行材料，仅供参考，不作为已生效执法依据；请以现行有效法规为准。"
 
 
 class Pipeline:
@@ -74,6 +79,8 @@ class Pipeline:
                 law = json.load(f)
             if "law_abbr" in law:
                 law_abbr = law["law_abbr"]
+            status = law.get("status", "")
+            notes = law.get("notes", "")
             for ch in law["chapters"]:
                 for art in ch["articles"]:
                     key = f"{law_abbr}·{art['num']}"
@@ -82,21 +89,48 @@ class Pipeline:
                               "law": law_abbr, "law_name": law.get("law_name", law_abbr),
                               "authority": law.get("authority", ""),
                               "effective_date": law.get("effective_date", ""),
-                              "source_url": law.get("source_url", "")}
+                              "source_url": law.get("source_url", ""),
+                              "status": status, "notes": notes}
         return m
+
+    def _refs_include_draft(self, fused):
+        for item in fused or []:
+            art = self.article_text.get(item.get("article"), {})
+            blob = f"{art.get('status', '')}{art.get('notes', '')}{art.get('law_name', '')}"
+            if any(m in blob for m in DRAFT_STATUS_MARKERS):
+                return True
+        return False
+
+    def _with_draft_notice(self, structured, fused):
+        if not structured or not self._refs_include_draft(fused):
+            return structured
+        out = dict(structured)
+        supplement = (out.get("supplement") or "").strip()
+        if DRAFT_NOTICE in supplement:
+            return out
+        if not supplement or supplement == "无":
+            out["supplement"] = DRAFT_NOTICE
+        else:
+            sep = "" if supplement.endswith(("。", "；", ";", ".")) else "。"
+            out["supplement"] = f"{supplement}{sep}{DRAFT_NOTICE}"
+        return out
 
     # ---------- CRAG ----------
     def _crag_judge(self, fused, question):
         top = fused[0] if fused else None
         if not top or top["score"] <= CRAG_INCORRECT:
             return "Incorrect"
+        # 问句点名条款并已注入命中：直接采信
+        if top.get("cite_inject"):
+            return "Correct"
         ce = top.get("cross_encoder")
         if ce is not None and ce < CRAG_CE_FLOOR:
             # CrossEncoder 判定最高分条款也与问题基本无关 → 知识库覆盖不了
             return "Incorrect"
         if (not top.get("graph_hit") and not top.get("direct_match")
                 and top.get("vector", 0) < 0.08
-                and top.get("coverage", 0) < 0.5):
+                and top.get("coverage", 0) < 0.5
+                and top.get("score", 0) <= 0.50):
             return "Incorrect"
         if top["score"] <= CRAG_AMBIGUOUS:
             return "Ambiguous"
@@ -216,12 +250,14 @@ class Pipeline:
         t0 = time.time()
         question = question.strip()
         previous_question = (previous_question or "").strip()
-        # 短追问合并上一轮：含追问标记词，或自身不含任何消防语义（"每班至少几个人"）
+        # 短追问合并上一轮：有 previous 且问题很短时一律合并（否则「每班至少几个人」
+        # 会被路由成 law、又不含「那/怎么罚」等标记，导致 Hit 丢上下文）
         context_used = bool(
             previous_question
-            and len(question) <= 24
-            and (any(marker in question for marker in FOLLOW_UP_MARKERS)
-                 or route(question) not in ("law", "emergency"))
+            and (
+                len(question) <= 24
+                or any(marker in question for marker in FOLLOW_UP_MARKERS)
+            )
         )
         full_question = f"{previous_question}；追问：{question}" if context_used else question
 
@@ -274,7 +310,8 @@ class Pipeline:
             return self._pack({
                 "intent": intent,
                 "answer": (f"很抱歉，{reason}"
-                           "（当前收录：消防法、61号令、高层规定、责任制办法），"
+                           "（当前收录：消防法、61号令、高层规定、责任制办法、39号令；"
+                           "另含电动车充电/人员密集场所报批稿与广东高层地方规定），"
                            "无法提供准确内容，为避免误导暂不回答。"),
                 "refused": True, "crag": "OutOfKB",
                 "strategy": "知识库范围拒答（宁可拒答不可答错）",
@@ -296,12 +333,13 @@ class Pipeline:
 
         # ---- 第 2 层：查询改写（口语 → 法规术语；与原问题拼接，两者关键词都保留） ----
         if scene["rewrite"] and scene["rewrite"] != question:
-            retrieval_question = f"{scene['rewrite']} {question}"
+            # 追问场景必须保留上一轮原文，否则「停了会怎么罚」会丢掉电动车/楼道上下文
+            retrieval_question = f"{scene['rewrite']} {full_question}"
         else:
             retrieval_question = full_question
 
         # ---- 第 3、4 层：三路召回 + 精排 ----
-        fused, summary = self.retriever.retrieve(retrieval_question, top_k=3)
+        fused, summary = self.retriever.retrieve(retrieval_question, top_k=5)
         crag = self._crag_judge(fused, retrieval_question)
 
         graph_matched = bool(summary["graph_articles"])
@@ -353,6 +391,9 @@ class Pipeline:
             answer_text = self._render(structured)
             strategy = "抽取式回答（未配置LLM降级）"
 
+        structured = self._with_draft_notice(structured, fused)
+        answer_text = self._render(structured) if structured else answer_text
+
         return self._pack({
             "intent": intent,
             "answer": answer_text,
@@ -397,6 +438,7 @@ class Pipeline:
                 "authority": art.get("authority", ""),
                 "effective_date": art.get("effective_date", ""),
                 "source_url": art.get("source_url", ""),
+                "status": art.get("status", ""),
             })
         return refs
 

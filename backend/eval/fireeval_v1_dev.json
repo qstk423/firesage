@@ -382,7 +382,7 @@
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "共用通道责任"
+    "review_notes": "共用疏散通道统一管理"
   },
   {
     "id": "d40",
@@ -431,5 +431,96 @@
     "forbidden_conclusions": [],
     "should_refuse": false,
     "review_notes": "乡镇职责"
+  },
+  {
+    "id": "nx01",
+    "category": "直接法规查询",
+    "question": "公共娱乐场所能不能设在居民住宅楼里？",
+    "intent": "law",
+    "expected_articles": [
+      "39号令·第七条"
+    ],
+    "must_conclusions": [
+      "居民住宅楼"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "39号令禁止居民楼改建娱乐场所"
+  },
+  {
+    "id": "nx02",
+    "category": "直接法规查询",
+    "question": "地下建筑里开公共娱乐场所有什么额外要求？",
+    "intent": "law",
+    "expected_articles": [
+      "39号令·第十三条"
+    ],
+    "must_conclusions": [
+      "地下一层"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "地下仅一层等"
+  },
+  {
+    "id": "nx03",
+    "category": "直接法规查询",
+    "question": "楼道里能不能给电动自行车充电？",
+    "intent": "law",
+    "expected_articles": [
+      "电动车充电·7.10",
+      "高层规定·第三十七条"
+    ],
+    "must_conclusions": [
+      "充电"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "楼道充电禁止"
+  },
+  {
+    "id": "nx04",
+    "category": "直接法规查询",
+    "question": "电动自行车充电场所要不要装24小时视频监控？",
+    "intent": "law",
+    "expected_articles": [
+      "电动车充电·7.7"
+    ],
+    "must_conclusions": [
+      "30天"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "监控存储不少于30天"
+  },
+  {
+    "id": "nx05",
+    "category": "直接法规查询",
+    "question": "人员密集场所志愿消防队员数量怎么要求？",
+    "intent": "law",
+    "expected_articles": [
+      "密集场所·6.3"
+    ],
+    "must_conclusions": [
+      "30%"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "志愿队不少于从业人员30%"
+  },
+  {
+    "id": "nx06",
+    "category": "直接法规查询",
+    "question": "广东省超高层建筑用气场所应当安装什么装置？",
+    "intent": "law",
+    "expected_articles": [
+      "广东高层·第六条"
+    ],
+    "must_conclusions": [
+      "燃气泄漏"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "广东高层第六条"
   }
 ]

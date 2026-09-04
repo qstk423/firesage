@@ -23,6 +23,84 @@ if os.getenv("HF_ENDPOINT") is None and os.getenv("USE_HF_MIRROR", "1") == "1":
     os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
 
+def _hf_cache_ready(model_id: str) -> bool:
+    """本机 HF hub 是否已有该模型快照（有则优先离线加载，避免 403/弱网校验失败）。"""
+    return _local_snapshot_path(model_id) is not None
+
+
+def _local_snapshot_path(model_id: str):
+    """返回可用的本地 snapshot 目录（含 config.json + 权重），否则 None。"""
+    hub = os.path.expanduser("~/.cache/huggingface/hub")
+    dirname = "models--" + model_id.replace("/", "--")
+    snap_root = os.path.join(hub, dirname, "snapshots")
+    if not os.path.isdir(snap_root):
+        return None
+    candidates = []
+    for name in os.listdir(snap_root):
+        path = os.path.join(snap_root, name)
+        if not os.path.isdir(path):
+            continue
+        if not os.path.exists(os.path.join(path, "config.json")):
+            continue
+        has_weight = any(
+            os.path.exists(os.path.join(path, f))
+            for f in ("pytorch_model.bin", "model.safetensors", "model.safetensors.index.json")
+        )
+        if has_weight:
+            candidates.append(path)
+    if not candidates:
+        return None
+    # 选体积更大的完整快照（避免半下载目录）
+    return max(candidates, key=lambda p: sum(
+        os.path.getsize(os.path.join(dp, f))
+        for dp, _, files in os.walk(p) for f in files
+    ))
+
+
+def _load_sentence_transformer(model_id: str):
+    from sentence_transformers import SentenceTransformer
+    local = _local_snapshot_path(model_id)
+    if local:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        try:
+            return SentenceTransformer(local, local_files_only=True)
+        except TypeError:
+            return SentenceTransformer(local)
+        except Exception as e:
+            print(f"[SemanticVectorIndex] 本地快照加载失败（{e}），尝试模型 ID")
+    prefer_offline = os.getenv("EMBED_OFFLINE", "1").strip() in ("1", "true", "True")
+    if prefer_offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        try:
+            return SentenceTransformer(model_id)
+        except Exception:
+            os.environ.pop("HF_HUB_OFFLINE", None)
+    return SentenceTransformer(model_id)
+
+
+def _load_cross_encoder(model_id: str):
+    from sentence_transformers import CrossEncoder
+    local = _local_snapshot_path(model_id)
+    if local:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        try:
+            return CrossEncoder(local, max_length=512, local_files_only=True)
+        except TypeError:
+            return CrossEncoder(local, max_length=512)
+        except Exception as e:
+            print(f"[CrossEncoderReranker] 本地快照加载失败（{e}），尝试模型 ID")
+    prefer_offline = os.getenv("EMBED_OFFLINE", "1").strip() in ("1", "true", "True")
+    if prefer_offline:
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        try:
+            return CrossEncoder(model_id, max_length=512)
+        except Exception:
+            os.environ.pop("HF_HUB_OFFLINE", None)
+    return CrossEncoder(model_id, max_length=512)
+
+
 def _corpus_fingerprint(chunks):
     raw = "|".join(f"{c['article']}:{c.get('text', '')}" for c in (chunks or []))
     return hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
@@ -37,13 +115,7 @@ class _Embedder:
         self.model = None
         self.error = None
         try:
-            from sentence_transformers import SentenceTransformer
-            try:
-                self.model = SentenceTransformer(EMBED_MODEL)
-            except Exception:
-                # 本地已有缓存但在线校验失败（弱网/SSL 中断）→ 离线模式重试
-                os.environ["HF_HUB_OFFLINE"] = "1"
-                self.model = SentenceTransformer(EMBED_MODEL)
+            self.model = _load_sentence_transformer(EMBED_MODEL)
         except Exception as e:  # 模型缺失/依赖缺失/加载失败
             self.error = str(e)
 
@@ -130,12 +202,7 @@ class CrossEncoderReranker:
             record["parts"].append(chunk.get("text", ""))
         self.available = False
         try:
-            from sentence_transformers import CrossEncoder
-            try:
-                self.model = CrossEncoder(RERANK_MODEL, max_length=512)
-            except Exception:
-                os.environ.setdefault("HF_HUB_OFFLINE", "1")
-                self.model = CrossEncoder(RERANK_MODEL, max_length=512)
+            self.model = _load_cross_encoder(RERANK_MODEL)
             self.available = True
         except Exception as e:
             print(f"[CrossEncoderReranker] bge-reranker-v2-m3 不可用（{e}），保留法规意图重排")
