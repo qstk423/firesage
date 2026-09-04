@@ -22,12 +22,13 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 APP_VERSION = "0.7.0"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
 
-# 可选鉴权：设置 API_KEY 后，/api/*（除 /api/system）需带 Header: X-API-Key
+# 可选鉴权：设置 API_KEY 后，/api/*（除公开接口）需带 Header: X-API-Key
 API_KEY = os.getenv("API_KEY", "").strip()
 # 简易限流：每 IP 每分钟最大请求数（0=关闭）
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60") or "60")
 _rate_bucket: dict[str, list[float]] = {}
-PUBLIC_API_PATHS = {"/api/system"}
+PUBLIC_API_PATHS = {"/api/system", "/api/survey"}
+SURVEY_PATH = os.path.join(DATA_DIR, "survey_responses.jsonl")
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
 
@@ -403,12 +404,66 @@ def system_status():
             "rate_limit_per_min": RATE_LIMIT_PER_MIN,
             "audit_enabled": True,
         },
+        "survey_url": "/survey",
     }
+
+
+class SurveyBody(BaseModel):
+    answers: dict = Field(..., description="题号 -> 选项或文本")
+    meta: Optional[dict] = None
+
+
+@app.post("/api/survey")
+def submit_survey(body: SurveyBody, request: Request):
+    """试用反馈问卷：匿名写入 JSONL，供答辩统计。"""
+    answers = body.answers or {}
+    if not answers:
+        raise HTTPException(status_code=422, detail="问卷内容不能为空")
+    required = ("q1", "q3", "q9", "q10")
+    missing = [k for k in required if not str(answers.get(k, "")).strip()]
+    if missing:
+        raise HTTPException(status_code=422, detail=f"请完成必填题：{', '.join(missing)}")
+    record = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "client": _client_ip(request),
+        "answers": answers,
+        "meta": body.meta or {},
+    }
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(SURVEY_PATH, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return {"ok": True, "message": "感谢反馈，已匿名保存。"}
+
+
+@app.get("/api/survey/stats")
+def survey_stats():
+    """简易汇总（本机查看，不对外展示明细）。"""
+    if not os.path.exists(SURVEY_PATH):
+        return {"count": 0, "by_q9": {}, "by_role": {}}
+    rows = []
+    with open(SURVEY_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                rows.append(json.loads(line))
+    by_q9, by_role = {}, {}
+    for row in rows:
+        a = row.get("answers") or {}
+        q9 = str(a.get("q9") or "未填")
+        role = str(a.get("q11") or "未填")
+        by_q9[q9] = by_q9.get(q9, 0) + 1
+        by_role[role] = by_role.get(role, 0) + 1
+    return {"count": len(rows), "by_q9": by_q9, "by_role": by_role}
 
 
 @app.get("/")
 def index():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+
+@app.get("/survey")
+def survey_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "survey.html"))
 
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
@@ -417,4 +472,5 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 if __name__ == "__main__":
     import uvicorn
     print("消安智答 FireSage 启动中 → http://localhost:8319")
+    print("试用反馈问卷 → http://localhost:8319/survey")
     uvicorn.run(app, host="0.0.0.0", port=8319)

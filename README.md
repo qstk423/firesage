@@ -111,6 +111,8 @@ python3 main.py
 
 浏览器打开：**http://localhost:8319**（手机可用同一地址；窄屏自动切底部导航）。
 
+试用反馈问卷：**http://localhost:8319/survey**（答卷写入本机 `backend/data/survey_responses.jsonl`，不入库；穿透后把 `/survey` 发给试用者即可）。
+
 ### 可选：接入大模型
 
 未配置时系统使用**抽取式回答**（直接摘录条款，天然可溯源）。配置兼容 OpenAI Chat Completions 的服务后，启用结构化生成 + 引用核验：
