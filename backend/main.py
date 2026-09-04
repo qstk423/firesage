@@ -152,24 +152,78 @@ def graph_data(types: str = Query("", description="逗号分隔的类型过滤�
 
 
 @app.get("/api/graph/ego")
-def graph_ego(id: str = Query(..., description="中心实体 id，如 行为:占用疏散通道")):
-    """点击节点后的关系网：中心实体 + 一跳邻居 + 邻居之间的连边。"""
+def graph_ego(id: str = Query(..., description="中心实体 id，如 违规行为:占用疏散通道"),
+              hops: int = Query(2, ge=1, le=2, description="展开跳数：1=仅邻居，2=邻居+二级关联"),
+              max_nodes: int = Query(56, ge=8, le=120, description="子图节点上限，防止二级爆炸")):
+    """点击节点后的关系网：中心 + 一跳邻居（+ 可选二跳关联）。"""
     center = next((n for n in graph["nodes"] if n["id"] == id), None)
     if not center:
         return {"error": "not found", "nodes": [], "edges": []}
-    hop1 = [e for e in graph["edges"] if e["source"] == id or e["target"] == id]
-    node_ids = {id} | {e["source"] for e in hop1} | {e["target"] for e in hop1}
-    edges = _dedupe_edges([e for e in graph["edges"] if e["source"] in node_ids and e["target"] in node_ids])
-    nodes = [dict(n, highlight=(n["id"] == id), degree=sum(
-        1 for e in edges if e["source"] == n["id"] or e["target"] == n["id"]
-    )) for n in graph["nodes"] if n["id"] in node_ids]
+
+    # 邻接表
+    adj = {}
+    for e in graph["edges"]:
+        adj.setdefault(e["source"], set()).add(e["target"])
+        adj.setdefault(e["target"], set()).add(e["source"])
+
+    hop_of = {id: 0}
+    hop1 = set(adj.get(id, ()))
+    for nid in hop1:
+        hop_of[nid] = 1
+
+    hop2 = set()
+    if hops >= 2 and hop1:
+        # 二级：一级邻居的邻居，排除中心与一级
+        candidates = []
+        for n1 in hop1:
+            for n2 in adj.get(n1, ()):
+                if n2 == id or n2 in hop1:
+                    continue
+                # 与一级的连接数越高越优先（更“相关”）
+                bridge = sum(1 for x in hop1 if n2 in adj.get(x, ()))
+                candidates.append((bridge, n2))
+        candidates.sort(key=lambda x: (-x[0], x[1]))
+        remain = max(0, max_nodes - 1 - len(hop1))
+        for _, n2 in candidates:
+            if len(hop2) >= remain:
+                break
+            hop2.add(n2)
+            hop_of[n2] = 2
+
+    node_ids = {id} | hop1 | hop2
+    # 只保留子图内部边；二级节点仅保留连到一级/中心的边，避免二级之间乱成一团
+    raw_edges = []
+    for e in graph["edges"]:
+        s, t = e["source"], e["target"]
+        if s not in node_ids or t not in node_ids:
+            continue
+        hs, ht = hop_of.get(s, 99), hop_of.get(t, 99)
+        if min(hs, ht) >= 2:
+            continue  # 丢掉纯二级↔二级边
+        raw_edges.append(e)
+    edges = _dedupe_edges(raw_edges)
+
+    nodes = []
+    for n in graph["nodes"]:
+        if n["id"] not in node_ids:
+            continue
+        hop = hop_of[n["id"]]
+        nodes.append(dict(
+            n,
+            highlight=(n["id"] == id),
+            hop=hop,
+            degree=sum(1 for e in edges if e["source"] == n["id"] or e["target"] == n["id"]),
+        ))
+
     return {
         "center": id,
         "center_name": center.get("name", id),
         "nodes": nodes,
         "edges": edges,
-        "neighbor_count": max(0, len(nodes) - 1),
+        "neighbor_count": len(hop1),
+        "second_count": len(hop2),
         "edge_count": len(edges),
+        "hops": hops,
     }
 
 

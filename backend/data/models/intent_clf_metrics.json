@@ -1,0 +1,13 @@
+{
+  "train_acc": 1.0,
+  "dev_acc": 0.9655,
+  "test_acc": 0.9375,
+  "train_size": 157,
+  "label_dist": {
+    "law": 122,
+    "emergency": 18,
+    "refuse": 11,
+    "chitchat": 6
+  },
+  "model_path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/intent_clf.joblib"
+}

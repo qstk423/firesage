@@ -6,9 +6,44 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "backend"))
 
+from rag.intent import route
 from rag.pipeline import Pipeline
 from rag.scene import structure
 from rag.verifier import _cn_to_int, verify
+
+
+class IntentRouteTest(unittest.TestCase):
+    """真应急 vs 法规咨询：避免“火灾隐患…怎么办”误入应急。"""
+
+    def test_true_emergencies(self):
+        for q in [
+            "家里着火了现在怎么办",
+            "家里厨房着火了怎么办！",
+            "楼下电动车充电着火了，火很大",
+            "地铁车厢里着火了怎么逃生",
+            "楼道里冒烟很大，我现在该怎么逃生？",
+            "房间里全是烟出不去，救命",
+            "宿舍楼发生火灾，现场有爆炸声",
+        ]:
+            self.assertEqual(route(q), "emergency", q)
+
+    def test_law_not_emergency(self):
+        for q in [
+            "火灾隐患不能确保消防安全时单位应当怎么办？",
+            "查出火灾隐患了但是一时半会改不掉，该怎么办？",
+            "公司从来不组织消防演练，员工都不知道着火了往哪跑",
+            "写字楼外面的大广告牌把窗户都挡住了，出了火灾跑不出去怎么办？",
+            "着火点怎么确定",
+            "消防救援机构监督检查中发现火灾隐患应当怎么处理？",
+            "单位对存在的火灾隐患应当怎么整改？",
+            "报警有什么规定",
+            "单位发生火灾时应当怎么做？",
+            "因消防安全责任不落实发生较大火灾事故会追究谁的责任？",
+            "火灾发生时高层公共建筑内谁负责组织引导人员疏散？",
+            "高层民用建筑施工期间发生火灾，消防安全责任在谁？",
+            "单位发生火灾后第一时间应当做什么？可以不报警先自己灭火吗？",
+        ]:
+            self.assertEqual(route(q), "law", q)
 
 
 class SceneTest(unittest.TestCase):
@@ -75,7 +110,8 @@ class FireSageSmokeTest(unittest.TestCase):
         result = self.pipeline.ask("楼道堆放杂物违反什么规定")
         self.assertFalse(result["refused"])
         self.assertIn(result["references"][0]["article"],
-                      ("消防法·第二十八条", "消防法·第六十条", "高层规定·第二十八条"))
+                      ("消防法·第二十八条", "消防法·第六十条", "高层规定·第二十八条",
+                       "61号令·第二十一条"))
 
     def test_structured_answer_shape(self):
         result = self.pipeline.ask("消防控制室必须24小时值班吗")

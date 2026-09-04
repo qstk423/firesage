@@ -212,14 +212,14 @@
     "question": "火灾隐患不能确保消防安全时单位应当怎么办？",
     "intent": "law",
     "expected_articles": [
-      "61号令·第三十三条"
+      "61号令·第三十二条"
     ],
     "must_conclusions": [
-      "停产、停业整改"
+      "停产停业整改"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "61号令33条先撤人"
+    "review_notes": "61号令32条：不能确保消防安全时停产停业整改（原误标33条）"
   },
   {
     "id": "p08",
