@@ -15,7 +15,6 @@
 - 产品级差距评估：[`docs/产品级差距评估.md`](docs/产品级差距评估.md)
 - RAG 完善任务清单：[`docs/RAG完善任务清单.md`](docs/RAG完善任务清单.md)
 - 图谱健康度：[`docs/图谱健康度.md`](docs/图谱健康度.md)
-- 基层试用反馈问卷：[`docs/基层用户调查问卷-消安智答.md`](docs/基层用户调查问卷-消安智答.md)
 - 演示截图清单：[`docs/演示截图清单.md`](docs/演示截图清单.md)
 - 意图微调（可复现）：`python3 backend/scripts/train_intent.py --compare`
 
@@ -110,8 +109,6 @@ python3 main.py
 ```
 
 浏览器打开：**http://localhost:8319**（手机可用同一地址；窄屏自动切底部导航）。
-
-试用反馈问卷：**http://localhost:8319/survey**（答卷写入本机 `backend/data/survey_responses.jsonl`，不入库；穿透后把 `/survey` 发给试用者即可）。
 
 ### 可选：接入大模型
 

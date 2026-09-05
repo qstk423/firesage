@@ -5,31 +5,38 @@
 import os
 import json
 import time
+import threading
 from typing import Optional
 
 from fastapi import FastAPI, Query, HTTPException, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from rag.graphrag import ARCHIVE_PATHS, build_if_missing
-from rag.retriever import HybridRetriever
 import rag.pipeline as pipeline_mod
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.7.0"
+APP_VERSION = "0.7.1"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
+app.add_middleware(GZipMiddleware, minimum_size=400)
 
 # 可选鉴权：设置 API_KEY 后，/api/*（除公开接口）需带 Header: X-API-Key
 API_KEY = os.getenv("API_KEY", "").strip()
 # 简易限流：每 IP 每分钟最大请求数（0=关闭）
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60") or "60")
 _rate_bucket: dict[str, list[float]] = {}
-PUBLIC_API_PATHS = {"/api/system", "/api/survey"}
-SURVEY_PATH = os.path.join(DATA_DIR, "survey_responses.jsonl")
+PUBLIC_API_PATHS = {"/api/system"}
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+# 问答管线（含 embedding）后台加载，避免穿透时首屏一直转圈
+pl = None
+_pl_lock = threading.Lock()
+_pl_ready = threading.Event()
+_pl_error = ""
+_pl_loading = False
 
 
 def _client_ip(request: Request) -> str:
@@ -73,22 +80,75 @@ async def security_and_log(request: Request, call_next):
         print(f"[api] {request.method} {path} -> {response.status_code} "
               f"({elapsed_ms}ms)", flush=True)
     response.headers["X-Process-Time-Ms"] = str(elapsed_ms)
+    # 静态资源缓存：穿透二次访问可少传 echarts 等大文件
+    if path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400, immutable"
+    elif path in ("/",) or path.endswith(".html"):
+        response.headers["Cache-Control"] = "no-cache"
     return response
 
 
 graph = build_if_missing()
 
-# 加载语义句 chunks
+# 加载语义句 chunks（轻量，秒级）；重模型放到后台线程
 CHUNKS_PATH = os.path.join(DATA_DIR, "chunks.json")
 GRAPH_PATH = os.path.join(DATA_DIR, "graph.json")
 with open(CHUNKS_PATH, encoding="utf-8") as f:
     CHUNKS = json.load(f)
 
-pl = pipeline_mod.Pipeline(chunks=CHUNKS)
 _kb_mtime = {
     "chunks": os.path.getmtime(CHUNKS_PATH) if os.path.exists(CHUNKS_PATH) else 0.0,
     "graph": os.path.getmtime(GRAPH_PATH) if os.path.exists(GRAPH_PATH) else 0.0,
 }
+
+
+def _start_pipeline_load() -> None:
+    """后台加载 Pipeline，不阻塞 HTTP 端口。"""
+    global pl, _pl_error, _pl_loading
+    with _pl_lock:
+        if pl is not None or _pl_loading:
+            return
+        _pl_loading = True
+        _pl_ready.clear()
+
+    def _worker():
+        global pl, _pl_error, _pl_loading
+        t0 = time.time()
+        print("[kb] loading retrieval models in background…", flush=True)
+        try:
+            pipe = pipeline_mod.Pipeline(chunks=CHUNKS)
+            with _pl_lock:
+                pl = pipe
+                _pl_error = ""
+            print(f"[kb] pipeline ready in {time.time() - t0:.1f}s · "
+                  f"channels={pipe.retriever.channels}", flush=True)
+        except Exception as exc:
+            with _pl_lock:
+                _pl_error = str(exc)
+            print(f"[kb] pipeline load failed: {exc}", flush=True)
+        finally:
+            with _pl_lock:
+                _pl_loading = False
+            _pl_ready.set()
+
+    threading.Thread(target=_worker, name="pipeline-loader", daemon=True).start()
+
+
+def _get_pipeline(wait_s: float = 90.0):
+    """问答接口取管线；未就绪时短暂等待。"""
+    if pl is not None:
+        return pl
+    _start_pipeline_load()
+    if not _pl_ready.wait(timeout=wait_s):
+        raise HTTPException(status_code=503, detail="知识服务仍在加载模型，请十几秒后再问一次")
+    if pl is None:
+        raise HTTPException(status_code=503, detail=f"知识服务加载失败：{_pl_error or '未知错误'}")
+    return pl
+
+
+@app.on_event("startup")
+def _on_startup():
+    _start_pipeline_load()
 
 
 def _reload_knowledge(force: bool = False) -> dict:
@@ -105,7 +165,8 @@ def _reload_knowledge(force: bool = False) -> dict:
         CHUNKS = json.load(f)
     with open(GRAPH_PATH, encoding="utf-8") as f:
         graph = json.load(f)
-    info = pl.reload(CHUNKS)
+    pipe = _get_pipeline(wait_s=120.0)
+    info = pipe.reload(CHUNKS)
     _kb_mtime = {"chunks": chunks_m, "graph": graph_m}
     print(f"[kb] reloaded: {info['chunks']} chunks / "
           f"{len(graph['nodes'])} entities / {len(graph['edges'])} edges", flush=True)
@@ -146,8 +207,9 @@ def source_catalog():
     return sources
 
 
-print(f"[kb] ready: {len(CHUNKS)} chunks / {len(graph['nodes'])} entities / "
-      f"{len(graph['edges'])} edges / {len(source_catalog())} sources", flush=True)
+print(f"[kb] files ready: {len(CHUNKS)} chunks / {len(graph['nodes'])} entities / "
+      f"{len(graph['edges'])} edges / {len(source_catalog())} sources "
+      f"(models loading in background)", flush=True)
 
 
 @app.post("/api/kb/reload")
@@ -359,9 +421,26 @@ def entity_detail(id: str = Query(...),
         if e.get("article"):
             articles.add(e["article"])
     article_infos = []
+    article_map = pl.article_text if pl is not None else {}
+    if not article_map:
+        # 模型未就绪时用 chunks 凑详情，图谱页仍可点开
+        for chunk in CHUNKS:
+            key = chunk.get("article")
+            if not key or key in article_map:
+                continue
+            article_map[key] = {
+                "num": key,
+                "title": chunk.get("title", ""),
+                "chapter": chunk.get("chapter", ""),
+                "text": chunk.get("text", ""),
+                "law_name": chunk.get("law_name", ""),
+                "authority": chunk.get("authority", ""),
+                "effective_date": chunk.get("effective_date", ""),
+                "source_url": chunk.get("source_url", ""),
+            }
     for a in sorted(articles):
-        if a in pl.article_text:
-            info = pl.article_text[a]
+        if a in article_map:
+            info = article_map[a]
             article_infos.append({"article": info["num"], "title": info["title"],
                                   "chapter": info["chapter"], "text": info["text"],
                                   "law_name": info.get("law_name", ""),
@@ -375,11 +454,12 @@ def entity_detail(id: str = Query(...),
 @app.post("/api/ask")
 def ask(body: AskBody, request: Request):
     # 文件若已更新则自动热加载（演示改语料后免重启）
+    pipe = _get_pipeline()
     _reload_knowledge(force=False)
     question = body.question.strip()
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
-    result = pl.ask(question, body.previous_question)
+    result = pipe.ask(question, body.previous_question)
     try:
         from rag import audit
         audit.from_response(question, body.previous_question, result, client=_client_ip(request))
@@ -391,12 +471,22 @@ def ask(body: AskBody, request: Request):
 @app.get("/api/system")
 def system_status():
     sources = source_catalog()
+    ready = pl is not None and _pl_ready.is_set() and not _pl_error
+    loading = _pl_loading or (pl is None and not _pl_ready.is_set())
+    generation = "加载中…"
+    channels = []
+    if pl is not None:
+        generation = "LLM 生成（结构化+引用核验）" if pl.llm.enabled else "本地抽取式回答"
+        channels = pl.retriever.channels
     return {
         "name": "消安智答 FireSage",
         "version": APP_VERSION,
-        "generation_mode": "LLM 生成（结构化+引用核验）" if pl.llm.enabled else "本地抽取式回答",
+        "ready": ready,
+        "loading": loading,
+        "load_error": _pl_error or None,
+        "generation_mode": generation,
         "retrieval": "BM25 + bge-m3语义向量 + GraphRAG 三路召回，RRF 融合 + 法规意图重排 + CrossEncoder 精排",
-        "retrieval_channels": pl.retriever.channels,
+        "retrieval_channels": channels,
         "knowledge_bases": [source["name"] for source in sources],
         "sources": sources,
         "security": {
@@ -404,66 +494,12 @@ def system_status():
             "rate_limit_per_min": RATE_LIMIT_PER_MIN,
             "audit_enabled": True,
         },
-        "survey_url": "/survey",
     }
-
-
-class SurveyBody(BaseModel):
-    answers: dict = Field(..., description="题号 -> 选项或文本")
-    meta: Optional[dict] = None
-
-
-@app.post("/api/survey")
-def submit_survey(body: SurveyBody, request: Request):
-    """试用反馈问卷：匿名写入 JSONL，供答辩统计。"""
-    answers = body.answers or {}
-    if not answers:
-        raise HTTPException(status_code=422, detail="问卷内容不能为空")
-    required = ("q1", "q3", "q9", "q10")
-    missing = [k for k in required if not str(answers.get(k, "")).strip()]
-    if missing:
-        raise HTTPException(status_code=422, detail=f"请完成必填题：{', '.join(missing)}")
-    record = {
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "client": _client_ip(request),
-        "answers": answers,
-        "meta": body.meta or {},
-    }
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(SURVEY_PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    return {"ok": True, "message": "感谢反馈，已匿名保存。"}
-
-
-@app.get("/api/survey/stats")
-def survey_stats():
-    """简易汇总（本机查看，不对外展示明细）。"""
-    if not os.path.exists(SURVEY_PATH):
-        return {"count": 0, "by_q9": {}, "by_role": {}}
-    rows = []
-    with open(SURVEY_PATH, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                rows.append(json.loads(line))
-    by_q9, by_role = {}, {}
-    for row in rows:
-        a = row.get("answers") or {}
-        q9 = str(a.get("q9") or "未填")
-        role = str(a.get("q11") or "未填")
-        by_q9[q9] = by_q9.get(q9, 0) + 1
-        by_role[role] = by_role.get(role, 0) + 1
-    return {"count": len(rows), "by_q9": by_q9, "by_role": by_role}
 
 
 @app.get("/")
 def index():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-
-
-@app.get("/survey")
-def survey_page():
-    return FileResponse(os.path.join(FRONTEND_DIR, "survey.html"))
 
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
@@ -472,5 +508,4 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 if __name__ == "__main__":
     import uvicorn
     print("消安智答 FireSage 启动中 → http://localhost:8319")
-    print("试用反馈问卷 → http://localhost:8319/survey")
     uvicorn.run(app, host="0.0.0.0", port=8319)

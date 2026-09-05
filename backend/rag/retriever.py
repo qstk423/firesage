@@ -278,7 +278,7 @@ class HybridRetriever:
     def _channel_weights(self):
         return CHANNEL_WEIGHTS_DEGRADED if self.degraded_vector else CHANNEL_WEIGHTS
 
-    def retrieve(self, question, top_k=5, mode="full"):
+    def retrieve(self, question, top_k=5, mode="full", sub_queries=None, query_mode="local"):
         """混合检索。
 
         mode:
@@ -286,30 +286,69 @@ class HybridRetriever:
           - bm25_vector: BM25 + 向量 RRF
           - hybrid: 三路 RRF，不做重排
           - full: 三路 RRF + 法规意图重排 + CrossEncoder（默认）
+        sub_queries: 复合问拆出的多路查询；对各查询通道做 RRF 再平均。
+        query_mode: local=场景条款；global=职责总述（压专题、抬核心库）。
         """
         pool_size = max(12, top_k * 4)
         use_vector = mode in ("bm25_vector", "hybrid", "full")
         use_graph = mode in ("hybrid", "full")
         use_rerank = mode == "full"
+        queries = []
+        for q in (sub_queries or [question]):
+            q = (q or "").strip()
+            if q and q not in queries:
+                queries.append(q)
+        if not queries:
+            queries = [question or ""]
+        primary = question or queries[0]
+        global_mode = (query_mode or "local") == "global"
 
-        bm25_list = self.bm25.search(question, pool_size)
-        needed = _specialty_needed(question)
-        if self.bm25_specialty and needed:
-            # 专题库召回分打折，避免与核心库同主题时抢占 Hit@1（如楼道充电→优先高层规定）
-            spec_hits = [
-                (a, s * 0.72) for a, s in self.bm25_specialty.search(question, pool_size)
-                if a.split("·", 1)[0] in needed
+        bm25_best, vector_best, graph_best = {}, {}, {}
+        graph_paths = {}
+        needed = set()
+        for q in queries:
+            q_needed = set() if global_mode else _specialty_needed(q)
+            needed |= q_needed
+            bm25_q = self.bm25.search(q, pool_size)
+            if self.bm25_specialty and q_needed:
+                # 专题库召回分打折，避免与核心库同主题时抢占 Hit@1
+                spec_hits = [
+                    (a, s * 0.72) for a, s in self.bm25_specialty.search(q, pool_size)
+                    if a.split("·", 1)[0] in q_needed
+                ]
+                bm25_q = _merge_ranked(bm25_q, spec_hits, pool_size)
+            for a, s in bm25_q:
+                bm25_best[a] = max(bm25_best.get(a, 0.0), s)
+            if use_vector:
+                for a, s in self.vector.search(" ".join(_expand(q)), pool_size):
+                    vector_best[a] = max(vector_best.get(a, 0.0), s)
+            if use_graph:
+                allow = CORE_LAWS if global_mode else (CORE_LAWS | q_needed)
+                for a, s, p in self.graph.search(q, pool_size):
+                    if a.split("·", 1)[0] not in allow:
+                        continue
+                    if s >= graph_best.get(a, 0.0):
+                        graph_best[a] = s
+                        graph_paths[a] = p
+
+        bm25_list = sorted(bm25_best.items(), key=lambda x: -x[1])[:pool_size]
+        vector_list = sorted(vector_best.items(), key=lambda x: -x[1])[:pool_size]
+        graph_list = [
+            (a, s, graph_paths.get(a))
+            for a, s in sorted(graph_best.items(), key=lambda x: -x[1])[:pool_size]
+        ]
+        # 全局职责总述：压低专题条款分，抬核心库
+        if global_mode:
+            bm25_list = [
+                (a, s * (1.0 if a.split("·", 1)[0] in CORE_LAWS else 0.55))
+                for a, s in bm25_list
             ]
-            bm25_list = _merge_ranked(bm25_list, spec_hits, pool_size)
-        vector_list = self.vector.search(" ".join(_expand(question)), pool_size) if use_vector else []
-        graph_list = self.graph.search(question, pool_size) if use_graph else []
-        # 图谱扩库后会带回专题条款：通用问句只保留核心库命中
-        if use_graph:
-            allow = CORE_LAWS | needed
-            graph_list = [
-                (a, s, p) for a, s, p in graph_list
-                if a.split("·", 1)[0] in allow
+            bm25_list.sort(key=lambda x: -x[1])
+            vector_list = [
+                (a, s * (1.0 if a.split("·", 1)[0] in CORE_LAWS else 0.55))
+                for a, s in vector_list
             ]
+            vector_list.sort(key=lambda x: -x[1])
 
         base_weights = self._channel_weights()
         weights = {"bm25": base_weights["bm25"]}
@@ -326,7 +365,6 @@ class HybridRetriever:
             "vector": {article: score for article, score in vector_list},
             "graph": {article: score for article, score, _ in graph_list},
         }
-        graph_paths = {article: path for article, _, path in graph_list}
         rrf_parts = {name: {} for name in weights}
         channel_lists = [("bm25", bm25_list)]
         if use_vector:
@@ -343,9 +381,19 @@ class HybridRetriever:
         for article in articles:
             parts = {name: rrf_parts[name].get(article, 0.0) for name in rrf_parts}
             total = sum(parts.values())
+            score = total / max_rrf if max_rrf else 0.0
+            # 全局模式：含「应当履行」「消防安全职责」等枢纽句的核心条轻抬
+            if global_mode and article.split("·", 1)[0] in CORE_LAWS:
+                blob = ""
+                for c in self.chunks:
+                    if c.get("article") == article:
+                        blob = c.get("text", "")
+                        break
+                if any(k in blob for k in ("应当履行下列消防安全职责", "消防安全职责", "重点单位应当")):
+                    score = min(1.0, score * 1.08)
             candidates.append({
                 "article": article,
-                "retrieval_score": total / max_rrf if max_rrf else 0.0,
+                "retrieval_score": score,
                 "bm25": round(raw["bm25"].get(article, 0.0), 3),
                 "vector": round(raw["vector"].get(article, 0.0), 3),
                 "graph": round(raw["graph"].get(article, 0.0), 3),
@@ -358,9 +406,11 @@ class HybridRetriever:
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
         # 点名条款 / 高区分度口语：强制入池（扩库后 BM25 常挤掉金标）
         known = {c["article"] for c in self.chunks}
-        inject = list(dict.fromkeys(
-            _resolve_cited_articles(question, known) + _force_recall_articles(question, known)
-        ))
+        inject = []
+        for q in queries:
+            inject.extend(_resolve_cited_articles(q, known))
+            inject.extend(_force_recall_articles(q, known))
+        inject = list(dict.fromkeys(inject))
         for cited in inject:
             if any(item["article"] == cited for item in candidates):
                 for item in candidates:
@@ -383,7 +433,7 @@ class HybridRetriever:
             })
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
         if use_rerank:
-            reranked = self.reranker.rerank(question, candidates[:pool_size])
+            reranked = self.reranker.rerank(primary, candidates[:pool_size])
             # 领域微调重排：对 (问题, 条款) 打分，与规则分融合
             try:
                 from . import rerank_ml
@@ -393,7 +443,7 @@ class HybridRetriever:
                         art = self.reranker.article_text.get(item["article"], {})
                         blob = (art.get("title", "") + " " + "".join(art.get("parts") or []))[:800]
                         pairs.append((item["article"], blob))
-                    ml_scores = rerank_ml.score_many(question, pairs)
+                    ml_scores = rerank_ml.score_many(primary, pairs)
                     for item in reranked:
                         ml = ml_scores.get(item["article"], 0.0)
                         item["ml_rerank"] = round(ml, 4)
@@ -404,7 +454,7 @@ class HybridRetriever:
             except Exception:
                 pass
             # CrossEncoder 语义精排：与法规意图重排线性组合（语义为主、规则为辅）
-            ce_scores = self.cross_encoder.score(question, reranked)
+            ce_scores = self.cross_encoder.score(primary, reranked)
             if ce_scores:
                 for item in reranked:
                     ce = ce_scores.get(item["article"], 0.0)
@@ -426,5 +476,7 @@ class HybridRetriever:
             "graph_articles": set(raw["graph"]),
             "cross_encoder_used": bool(ce_scores),
             "mode": mode,
+            "query_mode": query_mode or "local",
+            "sub_queries": queries,
         }
         return ranked, summary

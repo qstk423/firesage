@@ -208,3 +208,64 @@ def clarify_question(ambiguity, scene):
     if not asks:
         return None
     return "为了给出准确的处罚依据，请补充两个信息：" + " ".join(asks) if len(asks) > 1 else "为了给出准确的依据，请补充：" + asks[0]
+
+
+# 总述/清单类：走「全局」检索，压专题噪声、抬核心枢纽条款
+_GLOBAL_DUTY_MARKERS = (
+    "有哪些职责", "应当履行哪些", "消防安全职责有哪些", "单位应当履行",
+    "职责有哪些", "需要履行哪些", "消防工作职责",
+)
+_PENALTY_MARKERS = ("怎么处罚", "怎么罚", "罚多少", "罚款", "拘留", "什么后果", "会怎么罚", "处罚标准")
+_DUTY_MARKERS = ("谁负责", "责任主体", "归谁管", "谁的职责", "谁来管", "责任怎么划分", "怎么划分")
+
+
+def detect_query_mode(question, scene=None):
+    """local=实体/场景条款；global=职责总述/清单类。"""
+    q = question or ""
+    if any(m in q for m in _GLOBAL_DUTY_MARKERS):
+        return "global"
+    intents = (scene or {}).get("question_intents") or []
+    if "义务要求" in intents and not any(m in q for m in _PENALTY_MARKERS):
+        if any(k in q for k in ("哪些", "有哪些", "应当履行")):
+            return "global"
+    return "local"
+
+
+def decompose_queries(question, scene=None):
+    """复合问拆子查询：责任划分 + 处罚 等拆两路召回再合并。
+
+    返回去重后的查询列表；单意图时仍为 [原问]。
+    """
+    q = (question or "").strip()
+    if not q:
+        return []
+    scene = scene or structure(q)
+    intents = set(scene.get("question_intents") or [])
+    has_penalty = "处罚" in intents or any(m in q for m in _PENALTY_MARKERS)
+    has_duty = (
+        "责任主体" in intents
+        or "义务要求" in intents
+        or any(m in q for m in _DUTY_MARKERS)
+    )
+    # 显式复合：谁负责……怎么罚 / 责任……处罚
+    compound = has_penalty and has_duty
+    if not compound and ("责任" in q and any(m in q for m in _PENALTY_MARKERS)):
+        compound = True
+    if not compound:
+        base = scene.get("rewrite") or q
+        return [q] if base == q else [base, q]
+
+    # 场景骨架（去掉意图词）再分别挂「责任」「处罚」
+    skeleton_parts = []
+    for key in ("subjects", "behaviors", "objects", "venues"):
+        vals = scene.get(key) or []
+        if vals:
+            skeleton_parts.append(vals[0] if key == "subjects" else " ".join(vals[:2]))
+    skeleton = " ".join(skeleton_parts).strip() or q
+    duty_q = f"{skeleton} 责任主体 职责划分"
+    penalty_q = f"{skeleton} 处罚 罚款"
+    out = []
+    for item in (duty_q, penalty_q, q):
+        if item and item not in out:
+            out.append(item)
+    return out

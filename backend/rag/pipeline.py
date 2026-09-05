@@ -20,7 +20,7 @@ import time
 from .intent import route
 from .retriever import HybridRetriever
 from .llm import LLMClient
-from .scene import clarify_question, structure
+from .scene import clarify_question, decompose_queries, detect_query_mode, structure
 from .verifier import set_article_keys, verify
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -440,15 +440,27 @@ class Pipeline:
                     "context_used": context_used,
                 }, t0, ["场景解析", "澄清追问"])
 
-        # ---- 第 2 层：查询改写（口语 → 法规术语；与原问题拼接，两者关键词都保留） ----
+        # ---- 第 2 层：查询改写 + 复合问子查询分解 + 局部/全局模式 ----
         if scene["rewrite"] and scene["rewrite"] != question:
             # 追问场景必须保留上一轮原文，否则「停了会怎么罚」会丢掉电动车/楼道上下文
             retrieval_question = f"{scene['rewrite']} {full_question}"
         else:
             retrieval_question = full_question
+        sub_queries = decompose_queries(full_question, scene)
+        # 保证改写后的主查询在子查询列表中
+        if retrieval_question not in sub_queries:
+            sub_queries = [retrieval_question] + [q for q in sub_queries if q != retrieval_question]
+        query_mode = detect_query_mode(full_question, scene)
+        scene["query_mode"] = query_mode
+        scene["sub_queries"] = sub_queries
 
         # ---- 第 3、4 层：三路召回 + 精排 ----
-        fused, summary = self.retriever.retrieve(retrieval_question, top_k=5)
+        fused, summary = self.retriever.retrieve(
+            retrieval_question,
+            top_k=5,
+            sub_queries=sub_queries,
+            query_mode=query_mode,
+        )
         crag = self._crag_judge(fused, retrieval_question)
 
         graph_matched = bool(summary["graph_articles"])

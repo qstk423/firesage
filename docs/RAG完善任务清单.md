@@ -61,12 +61,13 @@
 - **备注（2026-09-04）**：同义词去掉整句键；`DIRECT_EVIDENCE` 改为短线索；题面条号特判外置。收敛后 dev Hit@1 **0.9655** / Hit@3 **1.0**（与收敛前持平）
 
 ### T1.2 查询侧增强（选 1～2 个落地）
-- [ ] 子问题分解（复合问：「谁负责 + 怎么罚」拆两路召回再合并）
+- [x] 子问题分解（复合问：「谁负责 + 怎么罚」拆两路召回再合并）
 - [ ] 可选 HyDE / 伪文档扩展（仅 law 意图、有模型时）
-- [ ] 处罚意图 vs 职责意图路由加强（已有雏形，做成显式通道）
+- [x] 处罚意图 vs 职责意图路由加强（已有雏形，做成显式通道）
 - **参照**：LlamaIndex query engines；LangChain multi-query  
 - **落点**：`scene.py`、`pipeline.py`、`retriever.py`  
 - **验收**：跨条款题（FireEval `x*`）Hit@1 提升
+- **备注（2026-09-05）**：`decompose_queries` / `detect_query_mode`；retriever 多查询取 max 融合；global 压专题抬核心枢纽句
 
 ### T1.3 专题门控精细化
 - [x] 复核 `SPECIALTY_GATES`：避免该开不开 / 不该开乱开
@@ -94,11 +95,12 @@
 - **验收**：密集场所 / 39号令 孤儿条款占比下降；重建后边数上升且 Hit 不降
 
 ### T2.2 查询模式对齐
-- [ ] 区分 **局部**（实体→条款）与 **主题/汇总**（多实体社区式）查询入口
-- [ ] 全局类问题（「单位消防职责有哪些」）优先核心枢纽条款，避免被专题噪声淹没
+- [x] 区分 **局部**（实体→条款）与 **主题/汇总**（多实体社区式）查询入口
+- [x] 全局类问题（「单位消防职责有哪些」）优先核心枢纽条款，避免被专题噪声淹没
 - **参照**：LightRAG local/global；MS GraphRAG community summary  
 - **落点**：`graphrag.py` `GraphRetriever`、`pipeline.py`  
 - **验收**：职责总述类题 Hit@1 稳定；图谱路径可解释
+- **备注**：`query_mode=global|local` 经 scene → pipeline → retriever；global 关闭专题门控并抬核心职责句
 
 ### T2.3 图谱覆盖与质量
 - [x] 定期统计：有边条款占比 / 各来源边数 / 枢纽节点度（`scripts/graph_health.py` → `docs/图谱健康度.md`）
