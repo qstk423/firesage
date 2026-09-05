@@ -10,8 +10,8 @@
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--paper);color:var(--ink)}button,input,textarea{font:inherit}button{color:inherit}::selection{background:#f1b8a8;color:#35160e}:focus-visible{outline:3px solid rgba(216,75,42,.28);outline-offset:3px}*{scrollbar-width:thin;scrollbar-color:#aab1b7 transparent}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
 .sidebar{position:relative;display:flex;flex-direction:column;min-height:100vh;padding:26px 18px 20px;color:#e8edf1;background:var(--navy);overflow:hidden}.sidebar:after{content:"";position:absolute;width:180px;height:180px;right:-115px;top:20%;border:28px solid rgba(216,75,42,.16);border-radius:50%}.brand{position:relative;z-index:1;display:flex;gap:11px;align-items:center;margin:0 8px 34px}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--ember);color:#fff;box-shadow:0 8px 18px rgba(216,75,42,.24)}.brand-mark .icon{width:22px;height:22px}.brand strong{display:block;font-size:17px;letter-spacing:-.02em}.brand small{display:block;margin-top:2px;color:#97a4b1;font-size:11px;letter-spacing:.04em}.nav{position:relative;z-index:1;display:grid;gap:7px}.nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;border-radius:11px;padding:11px 12px;background:transparent;color:#aeb8c2;cursor:pointer;text-align:left;transition:background .18s ease,color .18s ease,transform .18s ease}.nav button:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateX(2px)}.nav button.active{background:#26384b;color:#fff}.nav button.active:after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--ember)}.sidebar-foot{position:relative;z-index:1;margin-top:auto;padding:16px 10px 0;border-top:1px solid rgba(255,255,255,.1)}.status{display:flex;align-items:center;gap:8px;color:#cbd4dc;font-size:12px}.status-dot{width:7px;height:7px;border-radius:50%;background:#62c7a8;box-shadow:0 0 0 4px rgba(98,199,168,.1)}.sidebar-foot p{margin:9px 0 0;color:#8d9aa7;font-size:11px;line-height:1.55}
 .main{min-width:0;height:100vh}.page{display:none;height:100%}.page.active{display:flex}.page-shell{width:100%;display:flex;flex-direction:column;min-width:0}.topbar{height:74px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 32px;border-bottom:1px solid var(--line);background:rgba(244,242,237,.94)}.topbar h1{margin:0;font-size:18px;letter-spacing:-.02em}.topbar p{margin:4px 0 0;color:var(--muted);font-size:12px}.mode-chip{display:inline-flex;align-items:center;gap:7px;max-width:300px;padding:7px 10px;border:1px solid #d3d9dd;border-radius:999px;color:#3f4a55;background:var(--surface);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-chip .icon{width:14px;height:14px;color:var(--sage)}
-.chat-stage{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto}.messages{min-height:0;overflow-y:auto;padding:34px clamp(22px,5vw,74px)}.message-list{width:min(880px,100%);margin:0 auto;display:grid;gap:23px}.welcome{padding:clamp(22px,5vh,54px) 0 18px;animation:reveal .55s cubic-bezier(.2,.8,.2,1) both}@keyframes reveal{from{opacity:.2;transform:translateY(10px);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}.welcome h2{max-width:650px;margin:0;font-size:clamp(30px,5vw,55px);line-height:1.08;letter-spacing:-.04em;text-wrap:balance}.welcome h2 span{color:var(--ember)}.welcome>p{max-width:620px;margin:18px 0 0;color:var(--muted);font-size:15px;line-height:1.85}.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:31px}.suggestion{display:flex;align-items:center;gap:12px;min-width:0;padding:14px 15px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(255,253,249,.55);cursor:pointer;text-align:left;transition:background .18s ease,border-color .18s ease,transform .18s ease}.suggestion:hover{background:var(--surface);border-color:#c3cbd0;transform:translateY(-2px)}.suggestion .icon{color:var(--ember)}.suggestion span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.msg{display:flex;gap:12px;min-width:0;animation:reveal .32s ease-out both}.msg.user{justify-content:flex-end}.avatar{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:11px;background:var(--navy);color:#fff}.avatar .icon{width:18px;height:18px}.bubble{min-width:0;max-width:min(720px,calc(100% - 46px))}.msg.user .bubble{padding:11px 15px;border-radius:14px 14px 4px 14px;background:var(--navy2);color:#fff;line-height:1.7;overflow-wrap:anywhere}.answer-panel{padding:19px 20px;border-radius:4px var(--radius) var(--radius);background:var(--surface);box-shadow:var(--shadow)}.answer-topline{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:13px}.risk-row{margin:0 0 12px}.risk-row .tag{padding:7px 12px;font-size:12.5px;font-weight:650;letter-spacing:.01em}.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#edf1f3;color:#4d5964;font-size:11px}.tag.graph{background:#eeeaf8;color:#57468f}.tag.safe{background:#e2f1ed;color:#176458}.tag.warn{background:var(--ember-soft);color:#96351f}.tag.risk-emergency{background:#fde3e3;color:#b91c1c}.tag.risk-high{background:#fcecd9;color:#b45309}.tag.risk-medium{background:#faf3d3;color:#a16207}.tag.risk-low{background:#e2f1ed;color:#176458}.tag .icon{width:13px;height:13px}.answer{font-size:14px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}.context-note{margin:12px 0 0;color:var(--violet);font-size:12px}.source-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:19px 0 9px;padding-top:15px;border-top:1px solid var(--line);font-size:12px;font-weight:650}.source-title span{color:var(--muted);font-weight:400}.refs{display:grid;gap:8px}details.refs-box{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}details.refs-box summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;font-weight:650}details.refs-box summary::-webkit-details-marker{display:none}details.refs-box summary:after{content:"展开 ▾";color:var(--muted);font-size:10px;font-weight:400}details.refs-box[open] summary:after{content:"收起 ▴"}details.refs-box .refs{margin-top:10px}details.refs-box .cite-links{display:grid;gap:4px;margin-top:6px}.ref{padding:12px 13px;border-radius:11px;background:#f3f1ec}.ref-head{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}.ref-head strong{margin-right:auto;font-size:12px}.badge{padding:3px 6px;border-radius:999px;font-size:10px;background:#e1e7ea;color:#50606d}.badge.graph{background:#e9e4f6;color:#5b4b91}.path{display:flex;align-items:center;gap:5px;margin-top:7px;color:var(--violet);font-size:11px;overflow-wrap:anywhere}.path .icon{width:13px;height:13px}.ref-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin-top:8px;color:#56616c;font-size:12px;line-height:1.7}.contribution{display:flex;gap:11px;margin-top:9px;color:#7a858f;font-size:10px;font-variant-numeric:tabular-nums}.official-link{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:#315f83;font-size:12px;text-underline-offset:3px}.official-link .icon{width:14px;height:14px}.loading-line{display:flex;gap:5px;align-items:center;min-height:27px}.loading-line i{width:6px;height:6px;border-radius:50%;background:var(--ember);animation:pulse 1s infinite ease-in-out}.loading-line i:nth-child(2){animation-delay:.15s}.loading-line i:nth-child(3){animation-delay:.3s}@keyframes pulse{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}.retry{margin-top:12px;border:0;border-radius:9px;padding:8px 11px;background:var(--ember);color:#fff;cursor:pointer;font-size:12px}
+.chat-stage{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto}.messages{min-height:0;overflow-y:auto;padding:34px clamp(22px,5vw,74px)}.message-list{width:min(880px,100%);margin:0 auto;display:grid;gap:23px}.welcome{padding:clamp(22px,5vh,54px) 0 18px;animation:reveal .55s cubic-bezier(.2,.8,.2,1) both}@keyframes reveal{from{opacity:.2;transform:translateY(10px);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}.welcome h2{max-width:650px;margin:0;font-size:clamp(30px,5vw,55px);line-height:1.08;letter-spacing:-.04em;text-wrap:balance}.welcome h2 span{color:var(--ember)}.welcome>p{max-width:620px;margin:18px 0 0;color:var(--muted);font-size:15px;line-height:1.85}.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:31px}.suggestion{display:flex;align-items:center;gap:12px;min-width:0;padding:14px 15px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(255,253,249,.55);cursor:pointer;text-align:left;transition:background .18s ease,border-color .18s ease,transform .18s ease}.suggestion:hover{background:var(--surface);border-color:#c3cbd0;transform:translateY(-2px)}.followups{width:min(880px,100%);margin:2px auto 10px;padding:12px 12px 12px 46px;box-sizing:border-box;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;border-radius:18px;background:rgba(255,255,255,.18)}.followups-label{grid-column:1/-1;font-size:11px;color:var(--muted);letter-spacing:.02em;margin:0 0 2px}.followup{position:relative;display:block;min-width:0;padding:12px 13px;border:1px solid rgba(216,75,42,.72);border-radius:16px;background:rgba(255,255,255,.32);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 8px 18px rgba(16,28,42,.06);color:var(--ink);cursor:pointer;text-align:left;font-size:12.5px;line-height:1.4;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}.followup:hover{background:rgba(255,255,255,.45);border-color:rgba(216,75,42,.95);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 22px rgba(216,75,42,.12);transform:translateY(-1px)}.followup:active{transform:none}.suggestion .icon{color:var(--ember)}.suggestion span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.msg{display:flex;gap:12px;min-width:0;animation:reveal .32s ease-out both}.msg.user{justify-content:flex-end}.avatar{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:11px;background:var(--navy);color:#fff}.avatar .icon{width:18px;height:18px}.bubble{min-width:0;max-width:min(720px,calc(100% - 46px))}.msg.user .bubble{padding:11px 15px;border-radius:14px 14px 4px 14px;background:var(--navy2);color:#fff;line-height:1.7;overflow-wrap:anywhere}.answer-panel{padding:19px 20px;border-radius:4px var(--radius) var(--radius);background:var(--surface);box-shadow:var(--shadow)}.answer-topline{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:13px}.risk-row{margin:0 0 14px;display:flex}.risk-row .tag{padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.01em;border-radius:10px}.tag{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:#edf1f3;color:#4d5964;font-size:11px}.tag.graph{background:#eeeaf8;color:#57468f}.tag.safe{background:#e2f1ed;color:#176458}.tag.warn{background:var(--ember-soft);color:#96351f}.tag.risk-emergency{background:#fde3e3;color:#b91c1c}.tag.risk-high{background:#fcecd9;color:#b45309}.tag.risk-medium{background:#faf3d3;color:#a16207}.tag.risk-low{background:#e2f1ed;color:#176458}.tag .icon{width:13px;height:13px}.answer{font-size:14px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}.context-note{margin:12px 0 0;color:var(--violet);font-size:12px}.source-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:19px 0 9px;padding-top:15px;border-top:1px solid var(--line);font-size:12px;font-weight:650}.source-title span{color:var(--muted);font-weight:400}.refs{display:grid;gap:8px}details.refs-box{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}details.refs-box summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;font-weight:650}details.refs-box summary::-webkit-details-marker{display:none}details.refs-box summary:after{content:"展开 ▾";color:var(--muted);font-size:10px;font-weight:400}details.refs-box[open] summary:after{content:"收起 ▴"}details.refs-box .refs{margin-top:10px}details.refs-box .cite-links{display:grid;gap:4px;margin-top:6px}.ref{padding:12px 13px;border-radius:11px;background:#f3f1ec}.ref-head{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}.ref-head strong{margin-right:auto;font-size:12px}.badge{padding:3px 6px;border-radius:999px;font-size:10px;background:#e1e7ea;color:#50606d}.badge.graph{background:#e9e4f6;color:#5b4b91}.path{display:flex;align-items:center;gap:5px;margin-top:7px;color:var(--violet);font-size:11px;overflow-wrap:anywhere}.path .icon{width:13px;height:13px}.ref-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin-top:8px;color:#56616c;font-size:12px;line-height:1.7}.contribution{display:flex;gap:11px;margin-top:9px;color:#7a858f;font-size:10px;font-variant-numeric:tabular-nums}.official-link{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:#315f83;font-size:12px;text-underline-offset:3px}.official-link .icon{width:14px;height:14px}.loading-line{display:flex;gap:5px;align-items:center;min-height:27px}.loading-line i{width:6px;height:6px;border-radius:50%;background:var(--ember);animation:pulse 1s infinite ease-in-out}.loading-line i:nth-child(2){animation-delay:.15s}.loading-line i:nth-child(3){animation-delay:.3s}@keyframes pulse{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}.retry{margin-top:12px;border:0;border-radius:9px;padding:8px 11px;background:var(--ember);color:#fff;cursor:pointer;font-size:12px}
 .composer-wrap{padding:13px clamp(22px,5vw,74px) 22px;background:linear-gradient(to top,var(--paper) 76%,transparent)}.composer{width:min(880px,100%);margin:auto;padding:9px 10px 9px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;border:1px solid #cfd5d9;border-radius:16px;background:var(--surface);box-shadow:0 14px 32px rgba(30,37,45,.1)}.composer textarea{width:100%;min-height:44px;max-height:128px;resize:none;padding:11px 0 7px;border:0;outline:0;color:var(--ink);background:transparent;font-size:14px;line-height:1.55}.composer textarea::placeholder{color:#77818a}.composer-actions{display:flex;align-items:center;gap:8px}.counter{color:#89929a;font-size:10px;font-variant-numeric:tabular-nums}.send{display:grid;place-items:center;width:42px;height:42px;border:0;border-radius:12px;background:var(--ember);color:#fff;cursor:pointer;box-shadow:0 8px 16px rgba(216,75,42,.18);transition:transform .18s ease,opacity .18s ease}.send:hover{transform:translateY(-2px)}.send:disabled{cursor:not-allowed;opacity:.45;transform:none;box-shadow:none}.composer-hint{width:min(880px,100%);margin:8px auto 0;color:#7b858e;font-size:10px;text-align:center}
 .graph-tools{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:17px 32px;border-bottom:1px solid var(--line)}.statline{display:flex;gap:18px;margin-right:auto}.statline div{min-width:54px}.statline strong{display:block;font-size:17px;font-variant-numeric:tabular-nums}.statline span{color:var(--muted);font-size:10px}.filters{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.filter{border:1px solid #d2d8dc;border-radius:999px;padding:6px 10px;background:transparent;cursor:pointer;color:#53606b;font-size:11px}.filter.active{border-color:var(--navy);background:var(--navy);color:#fff}.graph-search{width:180px;border:1px solid #d2d8dc;border-radius:10px;padding:7px 10px;background:var(--surface);color:var(--ink);font-size:12px}.graph-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px}.graph-canvas-wrap{position:relative;min-height:360px;background:#f8f6f1}#graph-canvas{position:absolute;inset:0}.graph-state{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:30px;color:var(--muted);text-align:center;pointer-events:none}.graph-state[hidden]{display:none}.detail-panel{min-width:0;overflow-y:auto;padding:22px;border-left:1px solid var(--line);background:var(--surface)}.detail-empty{color:var(--muted);font-size:13px;line-height:1.7}.detail-entity h2{margin:0 0 8px;font-size:19px;overflow-wrap:anywhere}.etype{display:inline-block;padding:3px 7px;border-radius:999px;color:#fff;font-size:10px}.detail-entity h3{margin:22px 0 9px;font-size:12px}.aliases{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.6}.trip{margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #ece9e3;font-size:11px;line-height:1.55;overflow-wrap:anywhere}.trip:last-child{border-bottom:0}.trip b{font-size:12px}.rel{font-weight:650}.rel-禁止{color:#b53b2a}.rel-义务{color:#237568}.rel-责任{color:#a86b14}.rel-处罚{color:#6b5ca5}.rel-涉及{color:#2f6f9f}
 .graph-tools{align-items:flex-end}.filter-group{display:grid;gap:5px}.filter-label{color:var(--muted);font-size:10px}.relation-select{border:1px solid #d2d8dc;border-radius:10px;padding:7px 28px 7px 10px;background:var(--surface);color:var(--ink);font-size:11px}.graph-legend{position:absolute;z-index:1;left:18px;bottom:18px;display:flex;gap:13px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,253,249,.94);color:var(--muted);font-size:10px}.graph-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:50%}.graph-hint{display:none}.detail-sheet-handle,.detail-close,.detail-backdrop{display:none}.graph-tools-bar{display:contents}.graph-tools-toggle{display:none}.graph-tools-extra{display:contents}.source-note{margin-top:7px;color:var(--muted);font-size:10px}.source-link{display:inline-flex;align-items:center;gap:4px;margin-top:7px;color:var(--blue);font-size:10px;text-underline-offset:2px}.source-link .icon{width:12px;height:12px}
@@ -79,6 +79,8 @@
   .welcome h2{font-size:clamp(24px,7vw,34px);max-width:100%}
   .welcome>p{font-size:13px;margin-top:12px;line-height:1.7}
   .suggestions{grid-template-columns:1fr;gap:8px;margin-top:18px}
+  .followups{margin:4px auto 8px;padding:10px 8px;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .followup{padding:10px 11px;font-size:12px}
   .suggestion{padding:12px}
   .suggestion span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .bubble{max-width:calc(100% - 40px)}
@@ -226,10 +228,10 @@ function refreshSystemChip(){fetch('/api/system').then(r=>r.ok?r.json():Promise.
 refreshSystemChip();$$('.suggestion').forEach(b=>b.addEventListener('click',()=>ask(b.dataset.question)));const form=$('#ask-form'),input=$('#question'),sendBtn=$('#send');input.addEventListener('input',()=>{$('#counter').textContent=`${input.value.length}/500`;input.style.height='auto';input.style.height=Math.min(input.scrollHeight,128)+'px'});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});form.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 function append(html,cls='bot'){const el=document.createElement('article');el.className=`msg ${cls}`;el.innerHTML=html;$('#message-list').appendChild(el);$('#messages').scrollTop=$('#messages').scrollHeight;return el}function userMessage(q){return `<div class="bubble">${esc(q)}</div>`}function refHTML(r){const b=r.bm25>0?'<span class="badge">关键词</span>':'',v=r.vector>0?'<span class="badge">向量</span>':'',g=r.graph_hit?'<span class="badge graph">图谱路径</span>':'',ce=r.cross_encoder!=null?'<span class="badge graph">精排 '+(r.cross_encoder*100).toFixed(0)+'</span>':'',path=r.path?`<div class="path">${icon('i-graph')} ${esc(r.path)}</div>`:'',source=r.source_url?`<a class="source-link" href="${esc(r.source_url)}" target="_blank" rel="noopener">${icon('i-link')}官方原文 · ${esc(r.authority)}</a>`:'';return `<div class="ref"><div class="ref-head"><strong>${esc(r.article)} · ${esc(r.title)}</strong>${g}${v}${b}${ce}</div>${path}<div class="ref-text">${esc(r.text)}</div><div class="contribution"><span>关键词 ${Math.round((r.bm25_share||0)*100)}%</span><span>向量 ${Math.round((r.vector_share||0)*100)}%</span><span>图谱 ${Math.round((r.graph_share||0)*100)}%</span></div>${source}</div>`}
 const CONF_LABEL={high:'高 · 依据充分',medium:'中 · 建议补充确认',low:'低 · 谨慎参考'};
-const RISK_META={emergency:['risk-emergency','紧急'],high:['risk-high','高风险隐患'],medium:['risk-medium','中风险'],low:['risk-low','低风险']};function riskChip(risk,withReasons){const info=RISK_META[risk?.risk_level];if(!info)return '';const reasons=(risk.risk_reasons||[]).join('；');return `<span class="tag ${info[0]}"${reasons&&!withReasons?` title="${esc(reasons)}"`:''}>风险：${info[1]}${withReasons&&reasons?` · ${esc(reasons)}`:''}</span>`}function structuredHTML(s,risk){if(!s)return '';const basis=(s.basis||[]).map(b=>`<div class="b">${esc(b)}</div>`).join('')||'<div class="b">见下方支撑条款</div>';const conf=CONF_LABEL[s.confidence]||CONF_LABEL.medium;return `<div class="sec"><h4>${icon('i-shield')}结论</h4><div class="body">${esc(s.conclusion)}</div></div><div class="sec cond"><h4>${icon('i-book')}适用条件</h4><div class="body">${esc(s.conditions||'无特殊限制')}</div></div><details class="sec basis"><summary>${icon('i-link')}法规依据</summary><div class="body">${basis}</div></details><div class="sec"><h4>${icon('i-chat')}补充说明</h4><div class="body">${esc(s.supplement||'无')}</div></div><div class="sec"><h4>风险 / 可信度</h4>${riskChip(risk)}<span class="conf ${esc(s.confidence||'medium')}">${esc(conf)}</span></div>`}
-function responseHTML(r){const isGuide=r.intent==='guide';const cragClass=r.refused?'warn':(isGuide?'warn':'safe');const cragLabel=r.refused?(r.crag==='OutOfKB'?'超出知识库，已拒答':(r.crag==='Refuse'?'超出范围 / 无法理解，已拒答':'证据不足，已安全拒答')):(isGuide?'问题偏宽，已引导提问':'证据校验通过');const graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'';const context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const riskTag=riskChip(r.risk,true);const riskRow=riskTag?`<div class="risk-row">${riskTag}</div>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const guide=isGuide?`<div class="clarify-card">${esc(r.answer).replace(/\n/g,'<br>')}<br><small>按示例再问一句，一般就能落到具体条款。</small></div>`:'';const body=clarify||guide||(r.structured?structuredHTML(r.structured,r.risk):`<div class="answer">${esc(r.answer)}</div>`);const refCards=r.references?.length?`<div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.length?`<div class="cite-links">${r.citations.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')}</div>`:'';const refs=(refCards||links)?`<details class="refs-box"><summary><span>支撑条款与引用依据${r.references?.length?` · ${r.references.length} 条`:''}${r.citations?.length?` · ${r.citations.length} 个官方链接`:''}</span></summary>${refCards}${links}</details>`:'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${riskRow}<div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
+const RISK_META={emergency:['risk-emergency','紧急'],high:['risk-high','高风险隐患'],medium:['risk-medium','中风险'],low:['risk-low','低风险']};function riskChip(risk,withReasons){const info=RISK_META[risk?.risk_level];if(!info)return '';const reasons=(risk.risk_reasons||[]).join('；');return `<span class="tag ${info[0]}"${reasons&&!withReasons?` title="${esc(reasons)}"`:''}>风险：${info[1]}${withReasons&&reasons?` · ${esc(reasons)}`:''}</span>`}function structuredHTML(s,risk){if(!s)return '';const basis=(s.basis||[]).map(b=>`<div class="b">${esc(b)}</div>`).join('')||'<div class="b">见下方支撑条款</div>';const conf=CONF_LABEL[s.confidence]||CONF_LABEL.medium;return `<div class="sec"><h4>${icon('i-shield')}结论</h4><div class="body">${esc(s.conclusion)}</div></div><div class="sec cond"><h4>${icon('i-book')}适用条件</h4><div class="body">${esc(s.conditions||'无特殊限制')}</div></div><details class="sec basis"><summary>${icon('i-link')}法规依据</summary><div class="body">${basis}</div></details><div class="sec"><h4>${icon('i-chat')}补充说明</h4><div class="body">${esc(s.supplement||'无')}</div></div><div class="sec"><h4>可信度</h4><span class="conf ${esc(s.confidence||'medium')}">${esc(conf)}</span></div>`}
+function responseHTML(r){const isGuide=r.intent==='guide';const cragClass=r.refused?'warn':(isGuide?'warn':'safe');const cragLabel=r.refused?(r.crag==='OutOfKB'?'超出知识库，已拒答':(r.crag==='Refuse'?'超出范围 / 无法理解，已拒答':'证据不足，已安全拒答')):(isGuide?'问题偏宽，已引导提问':'证据校验通过');const graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'';const context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const riskTag=riskChip(r.risk,true);const riskRow=riskTag?`<div class="risk-row" role="status">${riskTag}</div>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const guide=isGuide?`<div class="clarify-card">${esc(r.answer).replace(/\n/g,'<br>')}<br><small>按示例再问一句，一般就能落到具体条款。</small></div>`:'';const body=clarify||guide||(r.structured?structuredHTML(r.structured,r.risk):`<div class="answer">${esc(r.answer)}</div>`);const refCards=r.references?.length?`<div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.length?`<div class="cite-links">${r.citations.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')}</div>`:'';const refs=(refCards||links)?`<details class="refs-box"><summary><span>支撑条款与引用依据${r.references?.length?` · ${r.references.length} 条`:''}${r.citations?.length?` · ${r.citations.length} 个官方链接`:''}</span></summary>${refCards}${links}</details>`:'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${riskRow}<div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
 const LOAD_STAGES=['正在检索','正在重排','正在生成','正在核验'];function loadingHTML(){return `<div class="stages" id="load-stages">${LOAD_STAGES.map((s,i)=>`<span class="stage${i===0?' active':''}">${esc(s)}</span>`).join('')}<span class="stage-note" id="load-note"></span></div>`}function runStageAnimation(root){const stages=[...root.querySelectorAll('.stage')];let i=0;const t0=Date.now();const timer=setInterval(()=>{if(i<stages.length-1){stages[i].classList.replace('active','done');stages[i+1].classList.add('active');i++}const note=root.querySelector('#load-note');if(note)note.textContent=`${stages[i].textContent}… 已用时 ${((Date.now()-t0)/1000).toFixed(1)}s`},900);return()=>clearInterval(timer)}
-async function ask(raw){const q=String(raw||'').trim();if(!q||busy)return;$('#welcome')?.remove();append(userMessage(q),'user');input.value='';input.style.height='auto';$('#counter').textContent='0/500';setBusy(true);lastFailed=q;const loading=append(`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${loadingHTML()}</div>`);const stopAnim=runStageAnimation(loading);try{const resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,previous_question:lastQuestion||null})});if(!resp.ok){let detail='';try{detail=(await resp.json()).detail||''}catch{}throw new Error(detail||`服务返回 ${resp.status}`)}const data=await resp.json();stopAnim();loading.innerHTML=responseHTML(data);lastQuestion=q;lastFailed='';loading.querySelector('.graph-link')?.addEventListener('click',()=>openSubgraph(data))}catch(err){stopAnim();loading.innerHTML=`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag warn">连接失败</span></div><div class="answer">${esc(err.message||'暂时无法连接知识服务')}。请检查服务后重试，你的问题已经保留。</div><button class="retry" type="button">重新发送</button></div>`;loading.querySelector('.retry').addEventListener('click',()=>ask(lastFailed))}finally{setBusy(false);input.focus()}}
+async function ask(raw){const q=String(raw||'').trim();if(!q||busy)return;$('#welcome')?.remove();append(userMessage(q),'user');input.value='';input.style.height='auto';$('#counter').textContent='0/500';setBusy(true);lastFailed=q;const loading=append(`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${loadingHTML()}</div>`);const stopAnim=runStageAnimation(loading);try{const resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,previous_question:lastQuestion||null})});if(!resp.ok){let detail='';try{detail=(await resp.json()).detail||''}catch{}throw new Error(detail||`服务返回 ${resp.status}`)}const data=await resp.json();stopAnim();loading.innerHTML=responseHTML(data);lastQuestion=q;lastFailed='';loading.querySelector('.graph-link')?.addEventListener('click',()=>openSubgraph(data));document.querySelectorAll('.followups').forEach(el=>el.remove());if(data.followups&&data.followups.length){const row=document.createElement('div');row.className='followups';row.innerHTML='<div class="followups-label">你可以继续问</div>'+data.followups.slice(0,4).map(q=>'<button type="button" class="followup" data-question="'+esc(q)+'">'+esc(q)+'</button>').join('');loading.after(row);row.querySelectorAll('.followup').forEach(b=>b.addEventListener('click',()=>ask(b.dataset.question)));}}catch(err){stopAnim();loading.innerHTML=`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag warn">连接失败</span></div><div class="answer">${esc(err.message||'暂时无法连接知识服务')}。请检查服务后重试，你的问题已经保留。</div><button class="retry" type="button">重新发送</button></div>`;loading.querySelector('.retry').addEventListener('click',()=>ask(lastFailed))}finally{setBusy(false);input.focus()}}
 async function openSubgraph(data){const articles=(data.references||[]).map(r=>r.article);if(!articles.length)return;const sceneEntities=Object.values(data.scene||{}).flat().filter(v=>typeof v==='string');switchPage('graph');graphMode='answer';await loadGraph({skipData:true});const state=$('#graph-state');state.hidden=false;state.textContent='正在提取本次回答相关的局部子图…';const p=new URLSearchParams({articles:articles.join(',')});try{const r=await fetch('/api/graph/subgraph?'+p);if(!r.ok)throw new Error();const d=await r.json();focusCenterId=null;showBanner(`正在展示回答相关的局部证据链：${articles.map(esc).join('、')}`);if(!d.nodes.length){state.textContent='本次回答的条款在图谱中没有实体关系记录。';return}state.hidden=true;paintGraph(d,{mode:'answer',highlightNames:sceneEntities,articles})}catch{state.textContent='局部子图加载失败，请稍后重试。'}}
 function showBanner(text){const banner=$('#subgraph-banner');$('#subgraph-banner-text').innerHTML=text;banner.classList.add('show')}
 function hideBanner(){$('#subgraph-banner').classList.remove('show');graphMode='overview';focusCenterId=null}
@@ -362,15 +364,59 @@ function layoutStable(nodesMeta,mode,centerId){
   });
   return pos;
 }
+function captureNodePositions(){
+  if(!chart)return{};
+  try{
+    const data=chart.getOption()?.series?.[0]?.data||[];
+    const map={};
+    data.forEach(n=>{
+      if(n?.id!=null&&Number.isFinite(+n.x)&&Number.isFinite(+n.y))map[n.id]={x:+n.x,y:+n.y};
+    });
+    return map;
+  }catch{return{};}
+}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+function rotateCoords(coords,angle){
+  if(!angle)return coords;
+  const c=Math.cos(angle),s=Math.sin(angle),out={};
+  Object.entries(coords).forEach(([id,p])=>{
+    out[id]={x:p.x*c-p.y*s,y:p.x*s+p.y*c};
+  });
+  return out;
+}
+function runFocusMorph(nodes,links,token,duration=860){
+  if(!chart)return;
+  cancelAnimationFrame(window.__focusMorphRaf);
+  const tracks=nodes.map(n=>({
+    base:(({_tx,_ty,...rest})=>rest)(n),
+    x0:+n.x,y0:+n.y,x1:+n._tx,y1:+n._ty
+  }));
+  const t0=performance.now();
+  const tick=now=>{
+    if(token!==window.__focusMorphToken||!chart)return;
+    const p=easeInOutCubic(Math.min(1,(now-t0)/duration));
+    const data=tracks.map(tr=>({
+      ...tr.base,
+      x:tr.x0+(tr.x1-tr.x0)*p,
+      y:tr.y0+(tr.y1-tr.y0)*p,
+      fixed:true
+    }));
+    chart.setOption({animation:false,series:[{id:'kg',layout:'none',data,links}]},false);
+    if(p<1)window.__focusMorphRaf=requestAnimationFrame(tick);
+  };
+  window.__focusMorphRaf=requestAnimationFrame(tick);
+}
 function paintGraph(data,opts={}){
   const mode=opts.mode||'overview';
   const centerId=opts.centerId||null;
   const highlightNames=new Set(opts.highlightNames||[]);
   const growEdges=!!opts.growEdges;
+  const fromPositions=opts.fromPositions||null;
+  const prevCenterId=opts.prevCenterId||null;
   const el=$('#graph-canvas');
   if(!chart){chart=echarts.init(el);window.addEventListener('resize',()=>chart?.resize())}
   const deg=degreeMap(data);
-  // 全览隐藏度=0 孤点；焦点裁剪；证据链再控规模（疏朗可读，参考 ECharts force + 局部子图思路）
+  // 全览隐藏度=0 孤点；焦点裁剪；证据链再控规模
   let nodeSrc=(mode==='overview')
     ?mobileOverviewNodes((data.nodes||[]).filter(n=>(deg[n.id]||0)>0),deg)
     :(mode==='focus'?mobileFocusNodes(data.nodes||[],deg,centerId):(data.nodes||[]));
@@ -403,9 +449,20 @@ function paintGraph(data,opts={}){
     nodeSrc=nodeSrc.filter(n=>keep.has(n.id)||n.highlight);
   }
   const nameOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.name]));
-  const coords=layoutStable(nodeSrc,mode,centerId);
+  let coords=layoutStable(nodeSrc,mode,centerId);
+  // 点次级球：旧坐标平移到新中心为原点，再手动插值滑到环位（无力导向）
+  const morphFocus=mode==='focus'&&fromPositions&&Object.keys(fromPositions).length>0;
+  const origin=(centerId&&fromPositions?.[centerId])||{x:0,y:0};
+  // 旧中心若还在环上：旋转目标环，缩短滑动距离
+  if(morphFocus&&prevCenterId&&coords[prevCenterId]&&fromPositions[prevCenterId]){
+    const cur={x:fromPositions[prevCenterId].x-origin.x,y:fromPositions[prevCenterId].y-origin.y};
+    const tgt=coords[prevCenterId];
+    if((cur.x||cur.y)&&(tgt.x||tgt.y)){
+      coords=rotateCoords(coords,Math.atan2(cur.y,cur.x)-Math.atan2(tgt.y,tgt.x));
+    }
+  }
   const isBeh=t=>['违规行为','管理义务','政府职责'].includes(t);
-  const nodes=nodeSrc.map(n=>{
+  const nodes=nodeSrc.map((n,idx)=>{
     const matched=highlightNames.has(n.name)||(n.aliases||[]).some(a=>highlightNames.has(a));
     const isCenter=centerId?n.id===centerId:!!(n.highlight||matched);
     const hop=n.hop==null?(isCenter?0:1):n.hop;
@@ -413,7 +470,6 @@ function paintGraph(data,opts={}){
     const d=deg[n.id]||0;
     let showLabel,size;
     if(mode==='answer'){
-      // 证据链：少标、节点偏小，留白给动态力导向
       showLabel=isCenter||matched||!!n.highlight||n.name.length<=4||d>=6;
       size=isMobile()
         ?(isCenter||matched?32:(hot?20:14))
@@ -426,11 +482,21 @@ function paintGraph(data,opts={}){
         ?(isCenter?46:(hop===1||matched?28:(hop===2?17:(isBeh(n.type)?25:21))))
         :(isCenter?54:(hop===1||matched?34:(hop===2?22:(isBeh(n.type)?30:24))));
     }
-    const xy=coords[n.id]||{x:0,y:0};
+    const target=coords[n.id]||{x:0,y:0};
+    let start=target;
+    if(morphFocus){
+      if(fromPositions[n.id]){
+        start={x:fromPositions[n.id].x-origin.x,y:fromPositions[n.id].y-origin.y};
+      }else{
+        // 新球从目标位附近淡入式出现，避免从中心炸出
+        const a=Math.atan2(target.y,target.x)||(-Math.PI/2+2*Math.PI*(idx+0.5)/Math.max(nodeSrc.length,1));
+        const r=Math.hypot(target.x,target.y)||180;
+        start={x:Math.cos(a)*r*0.55,y:Math.sin(a)*r*0.55};
+      }
+    }
     return{
       id:n.id,name:n.id,displayName:n.name,category:n.type,hop,symbolSize:size,
-      x:xy.x,y:xy.y,
-      // 焦点钉死；证据链交给 force（circular 初值 + 疏朗斥力），保留动态又不至于炸
+      x:start.x,y:start.y,_tx:target.x,_ty:target.y,
       fixed:mode==='focus',
       itemStyle:{
         color:TYPE_COLOR[n.type]||'#71808c',
@@ -479,7 +545,7 @@ function paintGraph(data,opts={}){
       return !(hs===2||ht===2);
     });
   }
-  // 参照 apache/echarts graph force：circular 初值 + 平衡 repulsion/gravity/friction，疏朗且可动
+  // 焦点：固定环（无力网）；证据链：circular + 疏朗 force（沿用之前方案）
   const forceAnswer={
     initLayout:'circular',
     repulsion:isMobile()?1100:1700,
@@ -491,27 +557,27 @@ function paintGraph(data,opts={}){
   const forceOverview={
     repulsion:520,edgeLength:40,gravity:.035,friction:.88,layoutAnimation:true
   };
-  const forceFocus={
-    repulsion:720,edgeLength:[140,240],gravity:.05,friction:.9,layoutAnimation:false
-  };
   const useFixed=mode==='focus'||(isMobile()&&mode==='overview');
   if(useFixed) nodes.forEach(n=>{n.fixed=true});
-  const forceCfg=mode==='answer'?forceAnswer:(mode==='overview'?forceOverview:forceFocus);
+  const forceCfg=mode==='answer'?forceAnswer:forceOverview;
+  const stripTarget=list=>list.map(({_tx,_ty,...rest})=>rest);
+  const morphToken=(window.__focusMorphToken=(window.__focusMorphToken||0)+1);
+  cancelAnimationFrame(window.__focusMorphRaf);
+  clearTimeout(window.__edgeGrowTimer);
   chart.setOption({
-    animation:true,
-    animationDuration:mode==='answer'?800:560,
-    animationDurationUpdate:mode==='answer'?700:480,
-    animationEasingUpdate:'cubicOut',
+    animation:false,
+    animationDuration:0,
+    animationDurationUpdate:0,
     tooltip:{confine:true,formatter:p=>{
       if(p.dataType==='node')return`<b>${esc(p.data.displayName||p.data.name)}</b><br>类型：${esc(p.data.category)}<br>潜在连接：${deg[p.data.id]||0}${mode==='overview'?'<br><span style="color:#7a8792">点击后展开关联并连线</span>':''}`;
       const arts=(p.data.articles&&p.data.articles.length)?p.data.articles.slice(0,3).map(esc).join('、'):esc(p.data.article||'');
       return`<b>${esc(p.data.relation||'关联')}</b><br>${esc(nameOf[p.data.source]||'')} → ${esc(nameOf[p.data.target]||'')}<br>${arts}`;
     }},
     series:[{
-      type:'graph',
+      id:'kg',type:'graph',
       layout:useFixed?'none':'force',
       roam:true,draggable:true,
-      data:nodes,
+      data:stripTarget(nodes),
       links:edges,
       force:useFixed?undefined:forceCfg,
       lineStyle:{color:'#6b7782',width:2,opacity:0.85,curveness:0.08},
@@ -522,13 +588,24 @@ function paintGraph(data,opts={}){
       emphasis:{focus:showLinks?'adjacency':'none',scale:true,lineStyle:{width:4,opacity:1},label:{show:true}},
       blur:{itemStyle:{opacity:.18},lineStyle:{opacity:.08}}
     }]
-  },true);
+  },{replaceMerge:['series']});
+  if(morphFocus){
+    // 等一帧把起点画上，再 RAF 插值，避免 ECharts 自带 update 动画丢帧
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(morphToken!==window.__focusMorphToken)return;
+      runFocusMorph(nodes,edges,morphToken,860);
+    }));
+  }else if(mode==='answer'){
+    chart.setOption({animation:true,animationDuration:800,animationDurationUpdate:700},false);
+  }
   if(growEdges&&edgesFinal.length&&edges.length<edgesFinal.length){
-    clearTimeout(window.__edgeGrowTimer);
     window.__edgeGrowTimer=setTimeout(()=>{
       if(!chart)return;
-      chart.setOption({animationDurationUpdate:650,series:[{links:edgesFinal}]},false);
-    },320);
+      chart.setOption({
+        animation:true,animationDurationUpdate:520,animationEasingUpdate:'cubicOut',
+        series:[{id:'kg',links:edgesFinal}]
+      },false);
+    },morphFocus?480:260);
   }
   chart.off('click');
   chart.on('click',p=>{
@@ -538,10 +615,38 @@ function paintGraph(data,opts={}){
       else showDetail(p.data.id);
     }
   });
-  if(mode==='answer'||mode==='focus'){
+  // 切换动画期间不 resize，避免打断插值
+  if(mode==='answer'||(mode==='focus'&&!morphFocus)){
     requestAnimationFrame(()=>{chart?.resize();setTimeout(()=>chart?.resize(),120)});
   }
 }
-async function focusEgo(id){const state=$('#graph-state');state.hidden=false;state.textContent='正在展开一级 / 二级关联实体…';try{const r=await fetch('/api/graph/ego?'+new URLSearchParams({id,hops:'2',max_nodes:isMobile()?'14':'42'}));if(!r.ok)throw new Error();const d=await r.json();if(d.error||!d.nodes?.length){state.textContent='该节点暂无关联关系（可能是词典预置实体，语料中尚未连边）。';return}if((d.neighbor_count||0)===0&&(d.edge_count||0)===0){state.hidden=true;showBanner(`已选中：<b>${esc(d.center_name)}</b> · 暂无一级关联`);paintGraph(d,{mode:'focus',centerId:id});showDetail(id);return}graphMode='focus';focusCenterId=id;state.hidden=true;const n1=d.neighbor_count||0,n2=d.second_count||0;showBanner(isMobile()?`已展开：<b>${esc(d.center_name)}</b> · 展示 ${Math.min(13,Math.max(0,d.nodes.length-1))} 个关联 · 再点中心看详情`:`已展开：<b>${esc(d.center_name)}</b> · 一级 ${n1} · 二级 ${n2} · 关系 ${d.edge_count}（实线=一级，虚线=二级 · 点邻居可切换中心）`);paintGraph(d,{mode:'focus',centerId:id,growEdges:false});if(!isMobile())showDetail(id)}catch{state.textContent='关系网加载失败，请稍后重试。'}}
+async function focusEgo(id){
+  const state=$('#graph-state');
+  state.hidden=false;
+  state.textContent='正在展开一级 / 二级关联实体…';
+  const fromPositions=captureNodePositions();
+  const prevCenterId=focusCenterId;
+  try{
+    const r=await fetch('/api/graph/ego?'+new URLSearchParams({id,hops:'2',max_nodes:isMobile()?'14':'42'}));
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    if(d.error||!d.nodes?.length){state.textContent='该节点暂无关联关系（可能是词典预置实体，语料中尚未连边）。';return}
+    if((d.neighbor_count||0)===0&&(d.edge_count||0)===0){
+      state.hidden=true;
+      showBanner(`已选中：<b>${esc(d.center_name)}</b> · 暂无一级关联`);
+      paintGraph(d,{mode:'focus',centerId:id,fromPositions,prevCenterId});
+      showDetail(id);
+      return;
+    }
+    graphMode='focus';focusCenterId=id;state.hidden=true;
+    const n1=d.neighbor_count||0,n2=d.second_count||0;
+    showBanner(isMobile()
+      ?`已展开：<b>${esc(d.center_name)}</b> · 展示 ${Math.min(13,Math.max(0,d.nodes.length-1))} 个关联 · 再点中心看详情`
+      :`已展开：<b>${esc(d.center_name)}</b> · 一级 ${n1} · 二级 ${n2} · 关系 ${d.edge_count}（实线=一级，虚线=二级 · 点邻居可切换中心）`);
+    paintGraph(d,{mode:'focus',centerId:id,growEdges:true,fromPositions,prevCenterId});
+    // 详情稍晚打开，避免侧栏重排打断球位移动画
+    if(!isMobile())setTimeout(()=>showDetail(id),520);
+  }catch{state.textContent='关系网加载失败，请稍后重试。'}
+}
 async function showDetail(id){const panel=$('#detail-panel');panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">正在读取关联条款…</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);openDetailSheet();try{const p=new URLSearchParams({id});if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const r=await fetch('/api/graph/entity?'+p);if(!r.ok)throw new Error();const d=await r.json();if(d.error)throw new Error();const e=d.entity,triples=d.triples.slice(0,isMobile()?12:30),articles=d.articles.slice(0,isMobile()?6:12);const focusHint=graphMode==='overview'?`<button class="graph-link" type="button" id="focus-from-detail">${icon('i-graph')}点选连线 · 展开关系</button>`:'';panel.innerHTML=`<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><div class="detail-entity"><h2>${esc(e.name)}</h2><span class="etype" style="background:${TYPE_COLOR[e.type]||'#66717e'}">${esc(e.type)}</span>${e.aliases?.length?`<div class="aliases">常见说法：${e.aliases.map(esc).join('、')}</div>`:''}${focusHint}<h3>关联关系 · ${d.triple_count}</h3>${triples.map(t=>{const other=(t.source===id?t.target:t.source).split(':').slice(1).join(':');return `<div class="trip"><span class="rel rel-${esc(t.relation)}">${esc(t.relation)}</span> ${t.source===id?'→':'←'} ${esc(other)}<br><small>${esc(t.article||'')}</small></div>`}).join('')}${d.triple_count>triples.length?`<div class="source-note">仅展示前 ${triples.length} 条，请使用筛选缩小范围。</div>`:''}<h3>支撑条款 · ${d.article_count}</h3>${articles.map(a=>`<div class="trip"><b>${esc(a.article)} · ${esc(a.title)}</b><div class="source-note">${esc(a.law_name)} · ${esc(a.authority)}${a.effective_date?' · '+esc(a.effective_date)+' 生效':''}</div><br>${esc((a.text||'').slice(0,150))}${(a.text||'').length>150?'…':''}${a.source_url?`<br><a class="source-link" href="${esc(a.source_url)}" target="_blank" rel="noopener">${icon('i-link')}查看官方原文</a>`:''}</div>`).join('')}${d.article_count>articles.length?`<div class="source-note">仅展示前 ${articles.length} 条，请使用筛选缩小范围。</div>`:''}</div>`;panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);$('#focus-from-detail')?.addEventListener('click',()=>{closeDetailSheet();focusEgo(id)})}catch{panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">详情加载失败，请重新选择节点。</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet)}}
 </script></body></html>

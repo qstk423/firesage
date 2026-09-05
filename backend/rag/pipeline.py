@@ -23,6 +23,7 @@ from .llm import LLMClient
 from .scene import clarify_question, decompose_queries, detect_query_mode, structure
 from .risk import assess as assess_risk, notice as risk_notice
 from .verifier import set_article_keys, verify
+from .followups import suggest_followups
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -412,8 +413,23 @@ class Pipeline:
             if hit is not None:
                 cached = dict(hit)
                 cached["cached"] = True
+                if not cached.get("followups"):
+                    cached["followups"] = suggest_followups(
+                        question=question,
+                        intent=cached.get("intent"),
+                        scene=cached.get("scene"),
+                        refused=bool(cached.get("refused")),
+                        references=cached.get("references") or [],
+                    )
                 return cached
         result = self._ask(question, previous_question)
+        result["followups"] = suggest_followups(
+            question=question,
+            intent=result.get("intent"),
+            scene=result.get("scene"),
+            refused=bool(result.get("refused")),
+            references=result.get("references") or [],
+        )
         if len(self._cache) >= self.CACHE_LIMIT:
             self._cache.pop(next(iter(self._cache)))
         self._cache[key] = result

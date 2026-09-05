@@ -460,6 +460,19 @@ def ask(body: AskBody, request: Request):
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
     result = pipe.ask(question, body.previous_question)
+    if not result.get("followups"):
+        try:
+            from rag.followups import suggest_followups
+            result["followups"] = suggest_followups(
+                question=question,
+                intent=result.get("intent"),
+                scene=result.get("scene"),
+                refused=bool(result.get("refused")),
+                references=result.get("references") or [],
+            )
+        except Exception as exc:
+            print(f"[followups] failed: {exc}", flush=True)
+            result["followups"] = []
     try:
         from rag import audit
         audit.from_response(question, body.previous_question, result, client=_client_ip(request))
