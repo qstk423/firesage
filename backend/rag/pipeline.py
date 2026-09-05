@@ -21,6 +21,7 @@ from .intent import route
 from .retriever import HybridRetriever
 from .llm import LLMClient
 from .scene import clarify_question, decompose_queries, detect_query_mode, structure
+from .risk import assess as assess_risk, notice as risk_notice
 from .verifier import set_article_keys, verify
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -220,6 +221,12 @@ class Pipeline:
         lines.append("你补一句具体场景后，我会按条款给出可核对的依据。")
         return "\n".join(lines)
 
+    def _guide_with_risk(self, question, fused, crag, risk):
+        """引导话术 + 高风险前置警示（B2：高风险 + 证据不足 → 催整改而非硬给处罚数字）。"""
+        text = self._guide_answer(question, fused, crag)
+        head = risk_notice(risk)
+        return f"{head}\n\n{text}" if head else text
+
     # ---------- 生成 ----------
     def _llm_structured(self, question, fused, feedback=None):
         context = "\n\n".join(
@@ -378,6 +385,12 @@ class Pipeline:
         if intent == "refuse" and (scene.get("behaviors") or scene.get("objects")):
             intent = "law"
 
+        # ---- 风险分级（规则，检索前完成）：风险看场景严重度，与可信度互相独立 ----
+        risk = assess_risk(full_question, scene, intent)
+        # 紧急风险强制走应急分支：修复「着火了…违反什么规定」被 law 词表抢先路由的问题
+        if risk["risk_level"] == "emergency" and intent in ("law", "chitchat"):
+            intent = "emergency"
+
         # ---- 应急模式 ----
         if intent == "emergency":
             return self._pack({
@@ -388,7 +401,7 @@ class Pipeline:
                     "title": "国家消防救援局：公共场所火灾应急处理",
                     "url": "https://www.119.gov.cn/kp/hzyf/2022/622.shtml",
                 }],
-                "strategy": "应急流程引导（内置）",
+                "strategy": "应急流程引导（内置）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "应急引导"])
 
@@ -397,7 +410,7 @@ class Pipeline:
                 "intent": intent,
                 "answer": "抱歉，这是一个消防法规专业问答系统，超出范围的问题我无法回答。",
                 "refused": True, "crag": "Refuse",
-                "strategy": "拒答护栏",
+                "strategy": "拒答护栏", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "拒答"])
 
@@ -406,7 +419,7 @@ class Pipeline:
                 "intent": intent,
                 "answer": "我是消安智答，可回答消防法规与应急处置问题，例如「楼道堆放杂物违反什么规定」。",
                 "refused": False, "crag": "Chat",
-                "strategy": "闲聊分流",
+                "strategy": "闲聊分流", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "引导"])
 
@@ -423,7 +436,7 @@ class Pipeline:
                            "另含电动车充电/人员密集场所报批稿与广东高层地方规定），"
                            "无法提供准确内容，为避免误导暂不回答。"),
                 "refused": True, "crag": "OutOfKB",
-                "strategy": "知识库范围拒答（宁可拒答不可答错）",
+                "strategy": "知识库范围拒答（宁可拒答不可答错）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "范围判定", "拒答"])
 
@@ -436,7 +449,7 @@ class Pipeline:
                     "answer": ask_text,
                     "refused": False, "crag": "Clarify",
                     "scene": scene,
-                    "strategy": "要素澄清（先问清再答，避免套错条款）",
+                    "strategy": "要素澄清（先问清再答，避免套错条款）", "risk": risk,
                     "context_used": context_used,
                 }, t0, ["场景解析", "澄清追问"])
 
@@ -472,13 +485,13 @@ class Pipeline:
         if self._needs_guide(full_question, scene) and not (top and top.get("cite_inject")):
             return self._pack({
                 "intent": "guide",
-                "answer": self._guide_answer(full_question, fused, crag),
+                "answer": self._guide_with_risk(full_question, fused, crag, risk),
                 "refused": False, "crag": "Ambiguous",
                 "references": [],
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
                 "vector_trace": {"matched": bool(summary.get("vector_articles")),
                                  "vector_ratio": round(vector_ratio, 2)},
-                "strategy": "引导提问（问法偏宽，先帮你把问题问具体）",
+                "strategy": "引导提问（问法偏宽，先帮你把问题问具体）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "引导"])
 
@@ -486,13 +499,13 @@ class Pipeline:
         if crag == "Ambiguous" or (crag == "Incorrect" and fused and fused[0].get("score", 0) >= 0.35):
             return self._pack({
                 "intent": "guide",
-                "answer": self._guide_answer(full_question, fused, crag),
+                "answer": self._guide_with_risk(full_question, fused, crag, risk),
                 "refused": False, "crag": crag,
                 "references": [],
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
                 "vector_trace": {"matched": bool(summary.get("vector_articles")),
                                  "vector_ratio": round(vector_ratio, 2)},
-                "strategy": "引导提问（证据不足时先帮你把问题问具体）",
+                "strategy": "引导提问（证据不足时先帮你把问题问具体）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "引导"])
         if crag == "Incorrect":
@@ -508,7 +521,7 @@ class Pipeline:
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
                 "vector_trace": {"matched": bool(summary.get("vector_articles")),
                                  "vector_ratio": round(vector_ratio, 2)},
-                "strategy": f"CRAG自纠错·{crag}（库外/无关主题）",
+                "strategy": f"CRAG自纠错·{crag}（库外/无关主题）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "拒答"])
 
@@ -552,7 +565,7 @@ class Pipeline:
             "answer": answer_text,
             "structured": structured,
             "refused": False, "crag": crag,
-            "strategy": strategy,
+            "strategy": strategy, "risk": risk,
             "references": refs,
             "verification": verification,
             "graph_trace": {
@@ -618,6 +631,7 @@ class Pipeline:
         payload.setdefault("verification", None)
         payload.setdefault("structured", None)
         payload.setdefault("scene", None)
+        payload.setdefault("risk", None)
         payload["stages"] = stages
         payload["latency_ms"] = int((time.time() - t0) * 1000)
         return payload
