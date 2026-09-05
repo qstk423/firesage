@@ -40,6 +40,14 @@ GUIDE_EXAMPLES = (
     "消防设施坏了不修违法吗？",
 )
 
+# 常见非消防法规短名：无书名号时也要拦，避免被「规定」带进法规检索
+NON_FIRE_LAW_NAMES = (
+    "网络安全法", "数据安全法", "个人信息保护法", "密码法",
+    "民法典", "刑法", "劳动法", "劳动合同法", "公司法",
+    "道路交通安全法", "食品安全法", "环境保护法", "广告法",
+    "消费者权益保护法", "电子商务法", "证券法", "著作权法",
+)
+
 # 库外主题护栏：知识库为建筑消防管理类法规，以下行政/产品/其他领域主题明确不在范围内
 OUT_OF_KB_TOPICS = (
     "报考", "技能鉴定", "考试科目", "职业资格", "CCC", "认证目录", "森林火灾",
@@ -167,7 +175,7 @@ class Pipeline:
         q = question or ""
         return any(k in q for k in (
             "了解", "是什么", "什么意思", "相关知识", "讲讲", "介绍",
-            "有哪些", "怎么回事", "能不能问",
+            "有哪些", "怎么回事", "能不能问", "消防知识", "防火知识", "科普",
         ))
 
     def _needs_guide(self, question: str, scene: dict) -> bool:
@@ -182,8 +190,11 @@ class Pipeline:
         )
         subjects = [s for s in (scene.get("subjects") or []) if s not in ("个人", "我")]
         has_scene = has_scene or bool(subjects)
-        # 无指代追问
-        if q in ("这个怎么规定的", "怎么规定的", "有什么规定", "我想了解一下", "了解一下"):
+        # 无指代追问 / 过宽咨询
+        if q in (
+            "这个怎么规定的", "怎么规定的", "有什么规定", "我想了解一下", "了解一下",
+            "我想了解消防知识", "了解消防知识", "消防知识", "防火知识",
+        ):
             return True
         if len(q) <= 6 and not has_scene:
             return True
@@ -198,12 +209,25 @@ class Pipeline:
                 return True
         return False
 
+    @staticmethod
+    def _is_gibberish(question: str) -> bool:
+        """无有效中文/字母数字：乱码、纯符号 → 拒答（与「问法偏宽引导」区分）。"""
+        q = (question or "").strip()
+        if not q:
+            return True
+        meaningful = re.findall(r"[\u4e00-\u9fffA-Za-z0-9]", q)
+        if not meaningful:
+            return True
+        if len(q) >= 4 and len(meaningful) / len(q) < 0.35:
+            return True
+        return False
+
     def _guide_answer(self, question, fused, crag):
-        """证据不够硬答时：引导用户把问题说具体，而不是冷冰冰拒答。"""
+        """证据不够硬答时：引导用户把问题说具体（不是拒答）。"""
         lines = [
             "我理解你想了解这方面内容，但当前问法偏宽，直接下结论容易答偏。",
             "",
-            "可以这样问得更具体一些（任选）：",
+            "可以问得更具体一些。例如，你可以带上「谁 + 在哪 + 想问什么」；比如：",
         ]
         tips = list(GUIDE_EXAMPLES)
         if fused:
@@ -214,7 +238,6 @@ class Pipeline:
                     f"「{title}」适用于什么情形？",
                     f"「{fused[0].get('article')}」主要规定了什么？",
                 ] + tips[:3]
-        lines.append("· 尽量带上：谁（单位/个人）+ 在哪（楼道/场所）+ 想问什么（能不能做 / 怎么罚 / 谁负责）")
         for t in tips[:5]:
             lines.append(f"· {t}")
         lines.append("")
@@ -226,6 +249,27 @@ class Pipeline:
         text = self._guide_answer(question, fused, crag)
         head = risk_notice(risk)
         return f"{head}\n\n{text}" if head else text
+
+    def _refuse_out_of_kb(self, out_kb_law=None, out_kb_topic=None):
+        """库外拒答：不复述非消防法规全名，避免像在「解答」该法。"""
+        if out_kb_law:
+            body = (
+                "您点名的法规不在本系统知识库收录范围内。"
+                "本系统仅覆盖消防相关法规（如消防法、61号令、高层规定、责任制办法、39号令等），"
+                "为避免误导，我无法就此作答。"
+            )
+        else:
+            body = (
+                f"「{out_kb_topic}」属于本知识库范围外的主题，"
+                "本系统仅回答已收录的消防法规问题，为避免误导暂不回答。"
+            )
+        return body
+
+    def _refuse_invalid_input(self):
+        return "无法理解您的输入，请重新输入具体的消防场景问题（例如：楼道堆放杂物违反什么规定）。"
+
+    def _refuse_off_domain(self):
+        return "抱歉，这是消防法规专业问答系统，该问题超出范围，我无法回答。"
 
     # ---------- 生成 ----------
     def _llm_structured(self, question, fused, feedback=None):
@@ -331,17 +375,30 @@ class Pipeline:
         }
 
     def _mentioned_law_not_in_kb(self, question):
-        """问题中以书名号点名的法规若不在知识库，返回其名称；否则 None。
-        例：《消防设施通用规范》→ 不在库 → 拒答；《消防法》→ 在库 → None。"""
-        for title in re.findall(r"《([^《》]{4,30})》", question):
-            for info in self.article_text.values():
-                kb_names = {info.get("law_name", ""), info.get("law", "")}
-                if any(title in name or name in title for name in kb_names if name):
-                    break
-            else:
+        """点名法规若不在知识库，返回其名称；否则 None。
+
+        支持《书名号》与无书名号短名（如「网络安全法」），避免被「规定」带进消防检索。
+        """
+        kb_names = set()
+        for info in self.article_text.values():
+            for key in ("law_name", "law"):
+                name = (info.get(key) or "").strip()
+                if name:
+                    kb_names.add(name)
+
+        def _in_kb(title: str) -> bool:
+            return any(title in name or name in title for name in kb_names if name)
+
+        for title in re.findall(r"《([^《》]{4,30})》", question or ""):
+            if not _in_kb(title):
                 return title
+        # 显式非消防法规短名（可无书名号）
+        q = question or ""
+        for name in NON_FIRE_LAW_NAMES:
+            if name in q and not _in_kb(name):
+                return name
         # 点名未收录的技术标准号
-        m = re.search(r"(?:GB|GB/T|XF|XF/T)\s*[/．.]?\s*\d{3,5}", question or "", re.I)
+        m = re.search(r"(?:GB|GB/T|XF|XF/T)\s*[/．.]?\s*\d{3,5}", q, re.I)
         if m:
             return m.group(0).replace(" ", "")
         return None
@@ -364,8 +421,20 @@ class Pipeline:
 
     def _ask(self, question, previous_question=None):
         t0 = time.time()
-        question = question.strip()
+        question = (question or "").strip()
         previous_question = (previous_question or "").strip()
+
+        # ---- 无效输入拒答（与宽问「引导」严格区分）----
+        if self._is_gibberish(question):
+            risk = assess_risk(question, {}, "refuse")
+            return self._pack({
+                "intent": "refuse",
+                "answer": self._refuse_invalid_input(),
+                "refused": True, "crag": "Refuse",
+                "strategy": "拒答护栏（无法理解的输入）", "risk": risk,
+                "context_used": False, "scene": None,
+            }, t0, ["分流", "拒答"])
+
         # 短追问合并上一轮：有 previous 且问题很短时一律合并（否则「每班至少几个人」
         # 会被路由成 law、又不含「那/怎么罚」等标记，导致 Hit 丢上下文）
         context_used = bool(
@@ -391,6 +460,18 @@ class Pipeline:
         if risk["risk_level"] == "emergency" and intent in ("law", "chitchat"):
             intent = "emergency"
 
+        # ---- 知识库外法规拒答：优先于检索，避免非消防法被「规定」带进作答 ----
+        out_kb_law = self._mentioned_law_not_in_kb(full_question)
+        out_kb_topic = next((w for w in OUT_OF_KB_TOPICS if w in full_question), None)
+        if out_kb_law or out_kb_topic:
+            return self._pack({
+                "intent": "refuse",
+                "answer": self._refuse_out_of_kb(out_kb_law, out_kb_topic),
+                "refused": True, "crag": "OutOfKB",
+                "strategy": "知识库范围拒答（宁可拒答不可答错）", "risk": risk,
+                "context_used": context_used, "scene": scene,
+            }, t0, ["分流", "范围判定", "拒答"])
+
         # ---- 应急模式 ----
         if intent == "emergency":
             return self._pack({
@@ -408,37 +489,24 @@ class Pipeline:
         if intent == "refuse":
             return self._pack({
                 "intent": intent,
-                "answer": "抱歉，这是一个消防法规专业问答系统，超出范围的问题我无法回答。",
+                "answer": self._refuse_off_domain(),
                 "refused": True, "crag": "Refuse",
-                "strategy": "拒答护栏", "risk": risk,
+                "strategy": "拒答护栏（域外问题）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "拒答"])
 
         if intent == "chitchat":
             return self._pack({
-                "intent": intent,
-                "answer": "我是消安智答，可回答消防法规与应急处置问题，例如「楼道堆放杂物违反什么规定」。",
+                "intent": "guide",
+                "answer": (
+                    "我是消安智答，专门回答消防法规与应急处置问题。"
+                    "可以问具体场景，例如「楼道堆放杂物违反什么规定」；"
+                    "比如「占用消防通道怎么处罚」。"
+                ),
                 "refused": False, "crag": "Chat",
-                "strategy": "闲聊分流", "risk": risk,
+                "strategy": "闲聊分流（引导到可问范围）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["分流", "引导"])
-
-        # ---- 知识库外法规拒答：问题点名了某部法规但不在知识库中 ----
-        out_kb_law = self._mentioned_law_not_in_kb(full_question)
-        out_kb_topic = next((w for w in OUT_OF_KB_TOPICS if w in full_question), None)
-        if out_kb_law or out_kb_topic:
-            reason = (f"《{out_kb_law}》暂未收录在本系统知识库中"
-                      if out_kb_law else f"「{out_kb_topic}」属于本知识库范围外的主题")
-            return self._pack({
-                "intent": intent,
-                "answer": (f"很抱歉，{reason}"
-                           "（当前收录：消防法、61号令、高层规定、责任制办法、39号令；"
-                           "另含电动车充电/人员密集场所报批稿与广东高层地方规定），"
-                           "无法提供准确内容，为避免误导暂不回答。"),
-                "refused": True, "crag": "OutOfKB",
-                "strategy": "知识库范围拒答（宁可拒答不可答错）", "risk": risk,
-                "context_used": context_used, "scene": scene,
-            }, t0, ["分流", "范围判定", "拒答"])
 
         # ---- 澄清追问：关键要素缺失且会影响处罚结论时，先问清再答 ----
         if scene["ambiguity"] and not context_used:
@@ -510,10 +578,10 @@ class Pipeline:
             }, t0, ["检索", "重排", "置信判定", "引导"])
         if crag == "Incorrect":
             return self._pack({
-                "intent": intent,
+                "intent": "refuse",
                 "answer": (
-                    "这个问题和当前知识库主题不太贴，我没法从已收录的消防法规里给出可靠依据。\n\n"
-                    "你可以改成具体消防场景，例如：\n"
+                    "这个问题和当前知识库主题不太贴，我没法从已收录的消防法规里给出可靠依据，因此无法作答。\n\n"
+                    "若你本意是消防场景，可以问得更具体，例如：\n"
                     + "\n".join(f"· {t}" for t in GUIDE_EXAMPLES[:4])
                     + "\n\n紧急情况请直接拨打 119。"
                 ),
@@ -521,7 +589,7 @@ class Pipeline:
                 "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
                 "vector_trace": {"matched": bool(summary.get("vector_articles")),
                                  "vector_ratio": round(vector_ratio, 2)},
-                "strategy": f"CRAG自纠错·{crag}（库外/无关主题）", "risk": risk,
+                "strategy": f"CRAG自纠错·{crag}（库外/无关主题拒答）", "risk": risk,
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "拒答"])
 

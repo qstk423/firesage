@@ -227,14 +227,14 @@ refreshSystemChip();$$('.suggestion').forEach(b=>b.addEventListener('click',()=>
 function append(html,cls='bot'){const el=document.createElement('article');el.className=`msg ${cls}`;el.innerHTML=html;$('#message-list').appendChild(el);$('#messages').scrollTop=$('#messages').scrollHeight;return el}function userMessage(q){return `<div class="bubble">${esc(q)}</div>`}function refHTML(r){const b=r.bm25>0?'<span class="badge">关键词</span>':'',v=r.vector>0?'<span class="badge">向量</span>':'',g=r.graph_hit?'<span class="badge graph">图谱路径</span>':'',ce=r.cross_encoder!=null?'<span class="badge graph">精排 '+(r.cross_encoder*100).toFixed(0)+'</span>':'',path=r.path?`<div class="path">${icon('i-graph')} ${esc(r.path)}</div>`:'',source=r.source_url?`<a class="source-link" href="${esc(r.source_url)}" target="_blank" rel="noopener">${icon('i-link')}官方原文 · ${esc(r.authority)}</a>`:'';return `<div class="ref"><div class="ref-head"><strong>${esc(r.article)} · ${esc(r.title)}</strong>${g}${v}${b}${ce}</div>${path}<div class="ref-text">${esc(r.text)}</div><div class="contribution"><span>关键词 ${Math.round((r.bm25_share||0)*100)}%</span><span>向量 ${Math.round((r.vector_share||0)*100)}%</span><span>图谱 ${Math.round((r.graph_share||0)*100)}%</span></div>${source}</div>`}
 const CONF_LABEL={high:'高 · 依据充分',medium:'中 · 建议补充确认',low:'低 · 谨慎参考'};
 const RISK_META={emergency:['risk-emergency','紧急'],high:['risk-high','高风险隐患'],medium:['risk-medium','中风险'],low:['risk-low','低风险']};function riskChip(risk,withReasons){const info=RISK_META[risk?.risk_level];if(!info)return '';const reasons=(risk.risk_reasons||[]).join('；');return `<span class="tag ${info[0]}"${reasons&&!withReasons?` title="${esc(reasons)}"`:''}>风险：${info[1]}${withReasons&&reasons?` · ${esc(reasons)}`:''}</span>`}function structuredHTML(s,risk){if(!s)return '';const basis=(s.basis||[]).map(b=>`<div class="b">${esc(b)}</div>`).join('')||'<div class="b">见下方支撑条款</div>';const conf=CONF_LABEL[s.confidence]||CONF_LABEL.medium;return `<div class="sec"><h4>${icon('i-shield')}结论</h4><div class="body">${esc(s.conclusion)}</div></div><div class="sec cond"><h4>${icon('i-book')}适用条件</h4><div class="body">${esc(s.conditions||'无特殊限制')}</div></div><details class="sec basis"><summary>${icon('i-link')}法规依据</summary><div class="body">${basis}</div></details><div class="sec"><h4>${icon('i-chat')}补充说明</h4><div class="body">${esc(s.supplement||'无')}</div></div><div class="sec"><h4>风险 / 可信度</h4>${riskChip(risk)}<span class="conf ${esc(s.confidence||'medium')}">${esc(conf)}</span></div>`}
-function responseHTML(r){const isGuide=r.intent==='guide';const cragClass=r.refused?'warn':(isGuide?'warn':'safe'),cragLabel=r.refused?'证据不足，已安全拒答':(isGuide?'问题偏宽，已引导提问':'证据校验通过'),graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'',context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const riskTag=riskChip(r.risk,true);const riskRow=riskTag?`<div class="risk-row">${riskTag}</div>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const guide=isGuide?`<div class="clarify-card">${esc(r.answer).replace(/\n/g,'<br>')}<br><small>按示例再问一句，一般就能落到具体条款。</small></div>`:'';const body=clarify||guide||(r.structured?structuredHTML(r.structured,r.risk):`<div class="answer">${esc(r.answer)}</div>`);const refCards=r.references?.length?`<div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.length?`<div class="cite-links">${r.citations.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')}</div>`:'';const refs=(refCards||links)?`<details class="refs-box"><summary><span>支撑条款与引用依据${r.references?.length?` · ${r.references.length} 条`:''}${r.citations?.length?` · ${r.citations.length} 个官方链接`:''}</span></summary>${refCards}${links}</details>`:'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${riskRow}<div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
+function responseHTML(r){const isGuide=r.intent==='guide';const cragClass=r.refused?'warn':(isGuide?'warn':'safe');const cragLabel=r.refused?(r.crag==='OutOfKB'?'超出知识库，已拒答':(r.crag==='Refuse'?'超出范围 / 无法理解，已拒答':'证据不足，已安全拒答')):(isGuide?'问题偏宽，已引导提问':'证据校验通过');const graph=r.graph_trace?.matched?`<span class="tag graph">${icon('i-graph')}知识图谱命中</span>`:'';const context=r.context_used?'<div class="context-note">已结合上一轮问题理解本次追问。</div>':'';const verify=r.verification?r.verification.passed?`<span class="tag verify-ok">${icon('i-shield')}引用核验通过</span>`:`<span class="tag verify-bad">核验未过 · 已降级原文摘录</span>`:'';const riskTag=riskChip(r.risk,true);const riskRow=riskTag?`<div class="risk-row">${riskTag}</div>`:'';const stageTrail=r.stages?.length?`<div class="stages">${r.stages.map(s=>`<span class="stage done">${esc(s)}</span>`).join('')}<span class="stage-note">耗时 ${r.latency_ms}ms</span></div>`:'';const clarify=r.intent==='clarify'?`<div class="clarify-card">${esc(r.answer)}<br><small>补充信息后我会给出准确条款，避免把不同情形的处罚套错。</small></div>`:'';const guide=isGuide?`<div class="clarify-card">${esc(r.answer).replace(/\n/g,'<br>')}<br><small>按示例再问一句，一般就能落到具体条款。</small></div>`:'';const body=clarify||guide||(r.structured?structuredHTML(r.structured,r.risk):`<div class="answer">${esc(r.answer)}</div>`);const refCards=r.references?.length?`<div class="refs">${r.references.map(refHTML).join('')}</div>`:'';const links=r.citations?.length?`<div class="cite-links">${r.citations.map(c=>`<a class="official-link" href="${esc(c.url)}" target="_blank" rel="noopener">${icon('i-link')}${esc(c.title)}</a>`).join('')}</div>`:'';const refs=(refCards||links)?`<details class="refs-box"><summary><span>支撑条款与引用依据${r.references?.length?` · ${r.references.length} 条`:''}${r.citations?.length?` · ${r.citations.length} 个官方链接`:''}</span></summary>${refCards}${links}</details>`:'';const graphLink=(r.references?.length&&!r.refused)?`<button class="graph-link" type="button">${icon('i-graph')}在知识图谱中查看本次回答的证据链</button>`:'';return `<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${riskRow}<div class="answer-topline"><span class="tag ${cragClass}">${icon('i-shield')}${cragLabel}</span>${graph}${verify}<span class="tag">${esc(r.strategy||'')}</span></div>${stageTrail}${body}${context}${refs}${graphLink}</div>`}function setBusy(v){busy=v;sendBtn.disabled=v;input.disabled=v}
 const LOAD_STAGES=['正在检索','正在重排','正在生成','正在核验'];function loadingHTML(){return `<div class="stages" id="load-stages">${LOAD_STAGES.map((s,i)=>`<span class="stage${i===0?' active':''}">${esc(s)}</span>`).join('')}<span class="stage-note" id="load-note"></span></div>`}function runStageAnimation(root){const stages=[...root.querySelectorAll('.stage')];let i=0;const t0=Date.now();const timer=setInterval(()=>{if(i<stages.length-1){stages[i].classList.replace('active','done');stages[i+1].classList.add('active');i++}const note=root.querySelector('#load-note');if(note)note.textContent=`${stages[i].textContent}… 已用时 ${((Date.now()-t0)/1000).toFixed(1)}s`},900);return()=>clearInterval(timer)}
 async function ask(raw){const q=String(raw||'').trim();if(!q||busy)return;$('#welcome')?.remove();append(userMessage(q),'user');input.value='';input.style.height='auto';$('#counter').textContent='0/500';setBusy(true);lastFailed=q;const loading=append(`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel">${loadingHTML()}</div>`);const stopAnim=runStageAnimation(loading);try{const resp=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,previous_question:lastQuestion||null})});if(!resp.ok){let detail='';try{detail=(await resp.json()).detail||''}catch{}throw new Error(detail||`服务返回 ${resp.status}`)}const data=await resp.json();stopAnim();loading.innerHTML=responseHTML(data);lastQuestion=q;lastFailed='';loading.querySelector('.graph-link')?.addEventListener('click',()=>openSubgraph(data))}catch(err){stopAnim();loading.innerHTML=`<div class="avatar">${icon('i-flame')}</div><div class="bubble answer-panel"><div class="answer-topline"><span class="tag warn">连接失败</span></div><div class="answer">${esc(err.message||'暂时无法连接知识服务')}。请检查服务后重试，你的问题已经保留。</div><button class="retry" type="button">重新发送</button></div>`;loading.querySelector('.retry').addEventListener('click',()=>ask(lastFailed))}finally{setBusy(false);input.focus()}}
-async function openSubgraph(data){const articles=(data.references||[]).map(r=>r.article);if(!articles.length)return;const sceneEntities=Object.values(data.scene||{}).flat().filter(v=>typeof v==='string');switchPage('graph');await loadGraph();const state=$('#graph-state');state.hidden=false;state.textContent='正在提取本次回答相关的局部子图…';const p=new URLSearchParams({articles:articles.join(',')});try{const r=await fetch('/api/graph/subgraph?'+p);if(!r.ok)throw new Error();const d=await r.json();graphMode='answer';focusCenterId=null;showBanner(`正在展示回答相关的局部证据链：${articles.map(esc).join('、')}`);if(!d.nodes.length){state.textContent='本次回答的条款在图谱中没有实体关系记录。';return}state.hidden=true;paintGraph(d,{mode:'answer',highlightNames:sceneEntities,articles})}catch{state.textContent='局部子图加载失败，请稍后重试。'}}
+async function openSubgraph(data){const articles=(data.references||[]).map(r=>r.article);if(!articles.length)return;const sceneEntities=Object.values(data.scene||{}).flat().filter(v=>typeof v==='string');switchPage('graph');graphMode='answer';await loadGraph({skipData:true});const state=$('#graph-state');state.hidden=false;state.textContent='正在提取本次回答相关的局部子图…';const p=new URLSearchParams({articles:articles.join(',')});try{const r=await fetch('/api/graph/subgraph?'+p);if(!r.ok)throw new Error();const d=await r.json();focusCenterId=null;showBanner(`正在展示回答相关的局部证据链：${articles.map(esc).join('、')}`);if(!d.nodes.length){state.textContent='本次回答的条款在图谱中没有实体关系记录。';return}state.hidden=true;paintGraph(d,{mode:'answer',highlightNames:sceneEntities,articles})}catch{state.textContent='局部子图加载失败，请稍后重试。'}}
 function showBanner(text){const banner=$('#subgraph-banner');$('#subgraph-banner-text').innerHTML=text;banner.classList.add('show')}
 function hideBanner(){$('#subgraph-banner').classList.remove('show');graphMode='overview';focusCenterId=null}
 $('#subgraph-exit').addEventListener('click',()=>{hideBanner();if(lastGraphData)paintGraph(lastGraphData,{mode:'overview'});else fetchGraph()});
-async function loadGraph(){if(chart&&lastGraphData&&graphMode==='overview'){setTimeout(()=>chart.resize(),30);return}try{await ensureEcharts();const resp=await fetch('/api/graph/stats');if(!resp.ok)throw new Error();const st=await resp.json();$('#stats').innerHTML=stat('来源',st.sources.length)+stat('语义句',st.semantic_sents)+stat('实体',st.entities)+stat('关系',st.edges)+stat('条款',st.articles.length);$('#filters').innerHTML=Object.keys(st.type_dist).map(t=>`<button class="filter" data-type="${esc(t)}">${esc(t)} ${st.type_dist[t]}</button>`).join('');$('#law-filters').innerHTML=st.sources.map(s=>`<button class="filter" data-law="${esc(s.law)}" title="${esc(s.name)}">${esc(s.law)} ${st.law_dist[s.law]||0}</button>`).join('');$('#relation-filter').innerHTML='<option value="">全部关系</option>'+Object.entries(st.relation_dist).map(([rel,count])=>`<option value="${esc(rel)}">${esc(rel)} · ${count}</option>`).join('');$$('#filters .filter').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('active');const t=b.dataset.type;currentTypes.includes(t)?currentTypes=currentTypes.filter(x=>x!==t):currentTypes.push(t);hideBanner();fetchGraph()}));$$('#law-filters .filter').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('active');const law=b.dataset.law;currentLaws.includes(law)?currentLaws=currentLaws.filter(x=>x!==law):currentLaws.push(law);hideBanner();fetchGraph()}));$('#relation-filter').addEventListener('change',()=>{hideBanner();fetchGraph()});await fetchGraph()}catch(err){$('#graph-state').hidden=false;$('#graph-state').textContent=err?.message||'知识图谱暂时无法加载，请确认后端服务已经启动。'}}function stat(l,v){return `<div><strong>${esc(v)}</strong><span>${l}</span></div>`}let graphTimer;$('#graph-search').addEventListener('input',()=>{clearTimeout(graphTimer);graphTimer=setTimeout(()=>{hideBanner();fetchGraph()},180)});
+async function loadGraph(opts={}){if(chart&&lastGraphData&&graphMode==='overview'&&!opts.skipData){setTimeout(()=>chart.resize(),30);return}try{await ensureEcharts();const resp=await fetch('/api/graph/stats');if(!resp.ok)throw new Error();const st=await resp.json();$('#stats').innerHTML=stat('来源',st.sources.length)+stat('语义句',st.semantic_sents)+stat('实体',st.entities)+stat('关系',st.edges)+stat('条款',st.articles.length);$('#filters').innerHTML=Object.keys(st.type_dist).map(t=>`<button class="filter" data-type="${esc(t)}">${esc(t)} ${st.type_dist[t]}</button>`).join('');$('#law-filters').innerHTML=st.sources.map(s=>`<button class="filter" data-law="${esc(s.law)}" title="${esc(s.name)}">${esc(s.law)} ${st.law_dist[s.law]||0}</button>`).join('');$('#relation-filter').innerHTML='<option value="">全部关系</option>'+Object.entries(st.relation_dist).map(([rel,count])=>`<option value="${esc(rel)}">${esc(rel)} · ${count}</option>`).join('');$$('#filters .filter').forEach(b=>{b.onclick=()=>{b.classList.toggle('active');const t=b.dataset.type;currentTypes.includes(t)?currentTypes=currentTypes.filter(x=>x!==t):currentTypes.push(t);hideBanner();fetchGraph()}});$$('#law-filters .filter').forEach(b=>{b.onclick=()=>{b.classList.toggle('active');const law=b.dataset.law;currentLaws.includes(law)?currentLaws=currentLaws.filter(x=>x!==law):currentLaws.push(law);hideBanner();fetchGraph()}});$('#relation-filter').onchange=()=>{hideBanner();fetchGraph()};if(!opts.skipData)await fetchGraph()}catch(err){$('#graph-state').hidden=false;$('#graph-state').textContent=err?.message||'知识图谱暂时无法加载，请确认后端服务已经启动。'}}function stat(l,v){return `<div><strong>${esc(v)}</strong><span>${l}</span></div>`}let graphTimer;$('#graph-search').addEventListener('input',()=>{clearTimeout(graphTimer);graphTimer=setTimeout(()=>{hideBanner();fetchGraph()},180)});
 async function fetchGraph(){const state=$('#graph-state');state.hidden=false;state.textContent='正在整理知识关系…';const p=new URLSearchParams();if(currentTypes.length)p.set('types',currentTypes.join(','));if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const q=$('#graph-search').value.trim();if(q)p.set('query',q);try{const r=await fetch('/api/graph/data?'+p);if(!r.ok)throw new Error();const d=await r.json();lastGraphData=d;if(!d.nodes.length){state.textContent='没有找到匹配实体，换个筛选条件试试。';if(chart)chart.clear();return}state.hidden=true;graphMode='overview';paintGraph(d,{mode:'overview'})}catch{state.textContent='图谱加载失败，请稍后重试。'}}
 function degreeMap(data){const deg={};(data.nodes||[]).forEach(n=>deg[n.id]=0);(data.edges||[]).forEach(e=>{deg[e.source]=(deg[e.source]||0)+1;deg[e.target]=(deg[e.target]||0)+1});return deg}
 function mobileOverviewNodes(nodes,deg){
@@ -259,7 +259,7 @@ function mobileFocusNodes(nodes,deg,centerId){
   return selected;
 }
 function layoutStable(nodesMeta,mode,centerId){
-  // 分簇初值：六类实体各占一个扇区，区内微散布，力导向只做轻推
+  // 分簇初值：六类实体各占一个扇区，区内微散布；焦点/证据链用固定坐标，避免 force 炸开
   const sorted=[...nodesMeta].sort((a,b)=>String(a.id).localeCompare(String(b.id)));
   const pos={};
   if(isMobile()&&mode==='overview'){
@@ -292,6 +292,56 @@ function layoutStable(nodesMeta,mode,centerId){
     place(hop2, Math.max(520,320+hop2.length*26));
     return pos;
   }
+  if(mode==='answer'){
+    // 证据链：高亮节点居中环，其余按类型外环分簇，全部固定
+    const hotIds=new Set(sorted.filter(n=>n.highlight).map(n=>n.id));
+    const primary=sorted.filter(n=>hotIds.has(n.id));
+    const rest=sorted.filter(n=>!hotIds.has(n.id));
+    const placeRing=(arr,R,startAngle=-Math.PI/2)=>{
+      arr.forEach((n,i)=>{
+        const a=startAngle+2*Math.PI*(i+0.5)/Math.max(arr.length,1);
+        pos[n.id]={x:Math.cos(a)*R,y:Math.sin(a)*R};
+      });
+    };
+    if(primary.length){
+      if(primary.length===1) pos[primary[0].id]={x:0,y:0};
+      else placeRing(primary, Math.max(160,90+primary.length*28));
+      const order=['违规行为','管理义务','政府职责','主体','消防对象','处罚'];
+      const buckets={};
+      rest.forEach(n=>(buckets[n.type||'违规行为']||=[]).push(n));
+      const types=order.filter(t=>buckets[t]?.length).concat(Object.keys(buckets).filter(t=>!order.includes(t)));
+      let offset=0;
+      types.forEach(type=>{
+        const arr=buckets[type]||[];
+        const R=Math.max(380,260+arr.length*18);
+        arr.forEach((n,i)=>{
+          const a=-Math.PI/2+2*Math.PI*(offset+i+0.5)/Math.max(rest.length,1);
+          pos[n.id]={x:Math.cos(a)*R,y:Math.sin(a)*R};
+        });
+        offset+=arr.length;
+      });
+    }else{
+      // 无高亮时退回类型扇区固定布局
+      const order=['违规行为','管理义务','政府职责','主体','消防对象','处罚'];
+      const present=[...new Set(sorted.map(n=>n.type||'违规行为'))];
+      const types=order.filter(t=>present.includes(t)).concat(present.filter(t=>!order.includes(t)));
+      const buckets={};
+      sorted.forEach(n=>{(buckets[n.type||'违规行为']||=[]).push(n)});
+      const nType=Math.max(types.length,1);
+      types.forEach((type,ti)=>{
+        const arr=buckets[type]||[];
+        const sector=-Math.PI/2+2*Math.PI*ti/nType;
+        const CX=Math.cos(sector)*320;
+        const CY=Math.sin(sector)*320;
+        const localR=Math.max(60,24+arr.length*12);
+        arr.forEach((n,i)=>{
+          const a=sector+(-0.5+1*(i+0.5)/Math.max(arr.length,1));
+          pos[n.id]={x:CX+Math.cos(a)*localR,y:CY+Math.sin(a)*localR};
+        });
+      });
+    }
+    return pos;
+  }
   const order=['违规行为','管理义务','政府职责','主体','消防对象','处罚'];
   const present=[...new Set(sorted.map(n=>n.type||'违规行为'))];
   const types=order.filter(t=>present.includes(t)).concat(present.filter(t=>!order.includes(t)));
@@ -320,46 +370,84 @@ function paintGraph(data,opts={}){
   const el=$('#graph-canvas');
   if(!chart){chart=echarts.init(el);window.addEventListener('resize',()=>chart?.resize())}
   const deg=degreeMap(data);
-  // 全览隐藏度=0 孤点（词典预置未连边）；焦点/回答子图保留原样
-  const nodeSrc=(mode==='overview')
+  // 全览隐藏度=0 孤点；焦点裁剪；证据链再控规模（疏朗可读，参考 ECharts force + 局部子图思路）
+  let nodeSrc=(mode==='overview')
     ?mobileOverviewNodes((data.nodes||[]).filter(n=>(deg[n.id]||0)>0),deg)
     :(mode==='focus'?mobileFocusNodes(data.nodes||[],deg,centerId):(data.nodes||[]));
+  const answerCap=isMobile()?12:18;
+  if(mode==='answer'){
+    if(highlightNames.size){
+      nodeSrc=nodeSrc.map(n=>({
+        ...n,
+        highlight:!!(n.highlight||highlightNames.has(n.name)||(n.aliases||[]).some(a=>highlightNames.has(a)))
+      }));
+    }
+    if(nodeSrc.length>answerCap){
+      nodeSrc=[...nodeSrc].sort((a,b)=>{
+        const ha=a.highlight?2:0, hb=b.highlight?2:0;
+        if(hb!==ha)return hb-ha;
+        return (deg[b.id]||0)-(deg[a.id]||0);
+      }).slice(0,answerCap);
+    }
+  }
   const allowedNodeIds=new Set(nodeSrc.map(n=>n.id));
-  const edgeSrc=(data.edges||[]).filter(e=>allowedNodeIds.has(e.source)&&allowedNodeIds.has(e.target));
-  const nameOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.name])); // id -> 展示名
+  let edgeSrc=(data.edges||[]).filter(e=>allowedNodeIds.has(e.source)&&allowedNodeIds.has(e.target));
+  if(mode==='answer'&&edgeSrc.length>24){
+    const hotIds=new Set(nodeSrc.filter(n=>n.highlight).map(n=>n.id));
+    const prefer=edgeSrc.filter(e=>hotIds.has(e.source)||hotIds.has(e.target));
+    edgeSrc=(prefer.length>=Math.min(8,edgeSrc.length)?prefer:edgeSrc)
+      .sort((a,b)=>String(a.article||'').localeCompare(String(b.article||'')))
+      .slice(0,24);
+    const keep=new Set();
+    edgeSrc.forEach(e=>{keep.add(e.source);keep.add(e.target)});
+    nodeSrc=nodeSrc.filter(n=>keep.has(n.id)||n.highlight);
+  }
+  const nameOf=Object.fromEntries((data.nodes||[]).map(n=>[n.id,n.name]));
   const coords=layoutStable(nodeSrc,mode,centerId);
   const isBeh=t=>['违规行为','管理义务','政府职责'].includes(t);
   const nodes=nodeSrc.map(n=>{
-    const isCenter=centerId?n.id===centerId:!!n.highlight;
-    const hop=n.hop==null?(isCenter?0:1):n.hop;
     const matched=highlightNames.has(n.name)||(n.aliases||[]).some(a=>highlightNames.has(a));
+    const isCenter=centerId?n.id===centerId:!!(n.highlight||matched);
+    const hop=n.hop==null?(isCenter?0:1):n.hop;
     const hot=isCenter||matched||!!n.highlight||hop===1;
     const d=deg[n.id]||0;
-    const showLabel=isMobile()
-      ?(mode==='overview'?(d>=20||n.name.length<=4):(isCenter||hop===1))
-      :(mode!=='overview'||hot||n.name.length<=8||d>=3);
-    const size=isMobile()
-      ?(isCenter?46:(hop===1?28:(hop===2?17:(isBeh(n.type)?25:21))))
-      :(isCenter?54:(hop===1?34:(hop===2?22:(isBeh(n.type)?30:24))));
+    let showLabel,size;
+    if(mode==='answer'){
+      // 证据链：少标、节点偏小，留白给动态力导向
+      showLabel=isCenter||matched||!!n.highlight||n.name.length<=4||d>=6;
+      size=isMobile()
+        ?(isCenter||matched?32:(hot?20:14))
+        :(isCenter||matched?38:(hot?24:16));
+    }else{
+      showLabel=isMobile()
+        ?(mode==='overview'?(d>=20||n.name.length<=4):(isCenter||hop===1||matched))
+        :(mode!=='overview'||hot||n.name.length<=8||d>=3);
+      size=isMobile()
+        ?(isCenter?46:(hop===1||matched?28:(hop===2?17:(isBeh(n.type)?25:21))))
+        :(isCenter?54:(hop===1||matched?34:(hop===2?22:(isBeh(n.type)?30:24))));
+    }
     const xy=coords[n.id]||{x:0,y:0};
     return{
-      // echarts 用 name 匹配 links.source/target，必须用唯一 id，展示名放 displayName
       id:n.id,name:n.id,displayName:n.name,category:n.type,hop,symbolSize:size,
-      x:xy.x,y:xy.y,fixed:mode==='focus'?true:(mode==='overview'?false:!!isCenter),
+      x:xy.x,y:xy.y,
+      // 焦点钉死；证据链交给 force（circular 初值 + 疏朗斥力），保留动态又不至于炸
+      fixed:mode==='focus',
       itemStyle:{
         color:TYPE_COLOR[n.type]||'#71808c',
-        opacity:n.contextual?0.45:(hop===2?0.55:1),
-        borderColor:isCenter?'#1f3b57':(hop===1?'#f5a623':(hop===2?'#c5ced6':null)),
-        borderWidth:isCenter?3:(hop===1?2:(hop===2?1:0)),
-        shadowBlur:isCenter?18:(hop===1?8:0),
+        opacity:mode==='answer'?(isCenter||matched?1:(hot?0.85:0.55)):(n.contextual?0.45:(hop===2&&!matched?0.55:1)),
+        borderColor:isCenter?'#1f3b57':(matched||hop===1?'#f5a623':(hop===2?'#c5ced6':null)),
+        borderWidth:isCenter?3:(matched||hop===1?2:(hop===2?1:0)),
+        shadowBlur:isCenter?18:(matched||hop===1?8:0),
         shadowColor:isCenter?'rgba(47,111,159,.35)':'rgba(245,166,35,.25)'
       },
       label:{
-        show:mode==='focus'?true:showLabel,position:'bottom',distance:6,
+        show:mode==='focus'?true:showLabel,position:'bottom',distance:mode==='answer'?10:6,
         formatter:p=>p.data.displayName||p.name,
-        fontSize:isMobile()?(isCenter?12:(hop===1?10:9)):(isCenter?13:(hop===1?11:(hop===2?9:10))),
-        fontWeight:isCenter||hop===1?'bold':'normal',
-        color:hop===2?'#6a7682':'#2f3a44',
+        fontSize:mode==='answer'
+          ?(isMobile()?(isCenter||matched?12:10):(isCenter||matched?13:11))
+          :(isMobile()?(isCenter?12:(hop===1||matched?10:9)):(isCenter?13:(hop===1||matched?11:(hop===2?9:10)))),
+        fontWeight:isCenter||hop===1||matched?'bold':'normal',
+        color:hop===2&&!matched?'#6a7682':'#2f3a44',
         textBorderColor:'rgba(248,246,241,.92)',textBorderWidth:2
       },
       emphasis:{label:{show:true,fontSize:12,fontWeight:'bold',formatter:p=>p.data.displayName||p.name},itemStyle:{opacity:1}}
@@ -367,7 +455,6 @@ function paintGraph(data,opts={}){
   });
   const hopOf=Object.fromEntries(nodeSrc.map(n=>[n.id,n.hop==null?1:n.hop]));
   if(centerId) hopOf[centerId]=0;
-  // 旧交互：全览不画边（分簇漂浮）；点选 focus / 回答子图才连线
   const showLinks=mode!=='overview';
   const edgesFinal=showLinks?edgeSrc.map(e=>{
     const touchCenter=centerId&&(e.source===centerId||e.target===centerId);
@@ -378,10 +465,10 @@ function paintGraph(data,opts={}){
       article:e.article||(e.articles||[])[0]||'',articles:e.articles||[],
       lineStyle:{
         color:touchCenter?(REL_COLOR[e.relation]||'#2f6f9f'):(toSecond?'#9aa3ab':(REL_COLOR[e.relation]||'#4d5964')),
-        width:touchCenter?3.8:(toSecond?1.8:2.8),
-        opacity:touchCenter?1:(toSecond?0.75:0.95),
+        width:mode==='answer'?(touchCenter?2.6:(toSecond?1.2:1.8)):(touchCenter?3.8:(toSecond?1.8:2.8)),
+        opacity:mode==='answer'?(touchCenter?0.95:0.55):(touchCenter?1:(toSecond?0.75:0.95)),
         type:toSecond?'dashed':'solid',
-        curveness:mode==='focus'?(toSecond?0.22:0.12):0.04
+        curveness:mode==='answer'?0.18:(mode==='focus'?(toSecond?0.22:0.12):0.04)
       }
     };
   }):[];
@@ -392,16 +479,29 @@ function paintGraph(data,opts={}){
       return !(hs===2||ht===2);
     });
   }
-  const force=showLinks
-    ?{repulsion:720,edgeLength:[140,240],gravity:.05,friction:.9,layoutAnimation:true}
-    :{repulsion:520,edgeLength:40,gravity:.035,friction:.88,layoutAnimation:true};
-  // 焦点模式用固定双环布局，保证中心→一级→二级的连线稳定可见
+  // 参照 apache/echarts graph force：circular 初值 + 平衡 repulsion/gravity/friction，疏朗且可动
+  const forceAnswer={
+    initLayout:'circular',
+    repulsion:isMobile()?1100:1700,
+    gravity:0.07,
+    edgeLength:isMobile()?[150,240]:[220,360],
+    friction:0.62,
+    layoutAnimation:true
+  };
+  const forceOverview={
+    repulsion:520,edgeLength:40,gravity:.035,friction:.88,layoutAnimation:true
+  };
+  const forceFocus={
+    repulsion:720,edgeLength:[140,240],gravity:.05,friction:.9,layoutAnimation:false
+  };
   const useFixed=mode==='focus'||(isMobile()&&mode==='overview');
-  if(useFixed){
-    nodes.forEach(n=>{n.fixed=true;});
-  }
+  if(useFixed) nodes.forEach(n=>{n.fixed=true});
+  const forceCfg=mode==='answer'?forceAnswer:(mode==='overview'?forceOverview:forceFocus);
   chart.setOption({
-    animation:true,animationDuration:560,animationDurationUpdate:480,animationEasingUpdate:'cubicOut',
+    animation:true,
+    animationDuration:mode==='answer'?800:560,
+    animationDurationUpdate:mode==='answer'?700:480,
+    animationEasingUpdate:'cubicOut',
     tooltip:{confine:true,formatter:p=>{
       if(p.dataType==='node')return`<b>${esc(p.data.displayName||p.data.name)}</b><br>类型：${esc(p.data.category)}<br>潜在连接：${deg[p.data.id]||0}${mode==='overview'?'<br><span style="color:#7a8792">点击后展开关联并连线</span>':''}`;
       const arts=(p.data.articles&&p.data.articles.length)?p.data.articles.slice(0,3).map(esc).join('、'):esc(p.data.article||'');
@@ -413,11 +513,11 @@ function paintGraph(data,opts={}){
       roam:true,draggable:true,
       data:nodes,
       links:edges,
-      force:useFixed?undefined:force,
+      force:useFixed?undefined:forceCfg,
       lineStyle:{color:'#6b7782',width:2,opacity:0.85,curveness:0.08},
       label:{show:true,position:'bottom',distance:6,color:'#2f3a44',fontSize:10,formatter:p=>p.data.displayName||p.name},
       edgeSymbol:showLinks?['none','arrow']:['none','none'],
-      edgeSymbolSize:8,
+      edgeSymbolSize:mode==='answer'?6:8,
       scaleLimit:{min:isMobile()?.35:.15,max:3},
       emphasis:{focus:showLinks?'adjacency':'none',scale:true,lineStyle:{width:4,opacity:1},label:{show:true}},
       blur:{itemStyle:{opacity:.18},lineStyle:{opacity:.08}}
@@ -438,6 +538,9 @@ function paintGraph(data,opts={}){
       else showDetail(p.data.id);
     }
   });
+  if(mode==='answer'||mode==='focus'){
+    requestAnimationFrame(()=>{chart?.resize();setTimeout(()=>chart?.resize(),120)});
+  }
 }
 async function focusEgo(id){const state=$('#graph-state');state.hidden=false;state.textContent='正在展开一级 / 二级关联实体…';try{const r=await fetch('/api/graph/ego?'+new URLSearchParams({id,hops:'2',max_nodes:isMobile()?'14':'42'}));if(!r.ok)throw new Error();const d=await r.json();if(d.error||!d.nodes?.length){state.textContent='该节点暂无关联关系（可能是词典预置实体，语料中尚未连边）。';return}if((d.neighbor_count||0)===0&&(d.edge_count||0)===0){state.hidden=true;showBanner(`已选中：<b>${esc(d.center_name)}</b> · 暂无一级关联`);paintGraph(d,{mode:'focus',centerId:id});showDetail(id);return}graphMode='focus';focusCenterId=id;state.hidden=true;const n1=d.neighbor_count||0,n2=d.second_count||0;showBanner(isMobile()?`已展开：<b>${esc(d.center_name)}</b> · 展示 ${Math.min(13,Math.max(0,d.nodes.length-1))} 个关联 · 再点中心看详情`:`已展开：<b>${esc(d.center_name)}</b> · 一级 ${n1} · 二级 ${n2} · 关系 ${d.edge_count}（实线=一级，虚线=二级 · 点邻居可切换中心）`);paintGraph(d,{mode:'focus',centerId:id,growEdges:false});if(!isMobile())showDetail(id)}catch{state.textContent='关系网加载失败，请稍后重试。'}}
 async function showDetail(id){const panel=$('#detail-panel');panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">正在读取关联条款…</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);openDetailSheet();try{const p=new URLSearchParams({id});if(currentLaws.length)p.set('laws',currentLaws.join(','));if($('#relation-filter').value)p.set('relations',$('#relation-filter').value);const r=await fetch('/api/graph/entity?'+p);if(!r.ok)throw new Error();const d=await r.json();if(d.error)throw new Error();const e=d.entity,triples=d.triples.slice(0,isMobile()?12:30),articles=d.articles.slice(0,isMobile()?6:12);const focusHint=graphMode==='overview'?`<button class="graph-link" type="button" id="focus-from-detail">${icon('i-graph')}点选连线 · 展开关系</button>`:'';panel.innerHTML=`<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><div class="detail-entity"><h2>${esc(e.name)}</h2><span class="etype" style="background:${TYPE_COLOR[e.type]||'#66717e'}">${esc(e.type)}</span>${e.aliases?.length?`<div class="aliases">常见说法：${e.aliases.map(esc).join('、')}</div>`:''}${focusHint}<h3>关联关系 · ${d.triple_count}</h3>${triples.map(t=>{const other=(t.source===id?t.target:t.source).split(':').slice(1).join(':');return `<div class="trip"><span class="rel rel-${esc(t.relation)}">${esc(t.relation)}</span> ${t.source===id?'→':'←'} ${esc(other)}<br><small>${esc(t.article||'')}</small></div>`}).join('')}${d.triple_count>triples.length?`<div class="source-note">仅展示前 ${triples.length} 条，请使用筛选缩小范围。</div>`:''}<h3>支撑条款 · ${d.article_count}</h3>${articles.map(a=>`<div class="trip"><b>${esc(a.article)} · ${esc(a.title)}</b><div class="source-note">${esc(a.law_name)} · ${esc(a.authority)}${a.effective_date?' · '+esc(a.effective_date)+' 生效':''}</div><br>${esc((a.text||'').slice(0,150))}${(a.text||'').length>150?'…':''}${a.source_url?`<br><a class="source-link" href="${esc(a.source_url)}" target="_blank" rel="noopener">${icon('i-link')}查看官方原文</a>`:''}</div>`).join('')}${d.article_count>articles.length?`<div class="source-note">仅展示前 ${articles.length} 条，请使用筛选缩小范围。</div>`:''}</div>`;panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet);$('#focus-from-detail')?.addEventListener('click',()=>{closeDetailSheet();focusEgo(id)})}catch{panel.innerHTML='<div class="detail-sheet-handle" aria-hidden="true"></div><button type="button" class="detail-close" aria-label="关闭详情">×</button><p class="detail-empty">详情加载失败，请重新选择节点。</p>';panel.querySelector('.detail-close')?.addEventListener('click',closeDetailSheet)}}
