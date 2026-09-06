@@ -2,11 +2,11 @@
 """轻量级法规向量索引。
 
 使用字符 n-gram TF-IDF 向量，保证离线和无模型环境也能稳定运行。
-它不是语义模型的替代品，而是 FireSage 三路召回中的可复现基线。
+句级建索引，召回后按条款取 max 分（与 bge 句级通道对齐）。
 """
 import math
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 
 
 def _features(text):
@@ -23,30 +23,34 @@ def _features(text):
 
 
 class TfidfVectorIndex:
-    """按条款聚合的 TF-IDF 余弦向量索引。"""
+    """句级 TF-IDF 余弦向量；search 返回条款级 max 分。"""
 
-    name = "TF-IDF 字符向量"
+    name = "TF-IDF 字符向量（句级）"
 
     def __init__(self, chunks):
-        article_parts = defaultdict(list)
-        article_titles = {}
+        self.unit_articles = []
+        self.vectors = []
+        docs_tokens = []
         for chunk in chunks or []:
-            article_parts[chunk["article"]].append(chunk.get("text", ""))
-            article_titles[chunk["article"]] = chunk.get("title", "")
-        self.articles = sorted(article_parts)
-        docs = {
-            article: _features(article_titles.get(article, "") + " " + " ".join(article_parts[article]))
-            for article in self.articles
-        }
+            article = chunk.get("article") or ""
+            if not article:
+                continue
+            title = chunk.get("title", "") or ""
+            text = chunk.get("text", "") or ""
+            tokens = _features(f"{title} {text}")
+            self.unit_articles.append(article)
+            docs_tokens.append(tokens)
+
         document_frequency = Counter()
-        for tokens in docs.values():
+        for tokens in docs_tokens:
             document_frequency.update(set(tokens))
-        total = max(1, len(docs))
+        total = max(1, len(docs_tokens))
         self.idf = {
             token: math.log((total + 1) / (frequency + 1)) + 1
             for token, frequency in document_frequency.items()
         }
-        self.vectors = {article: self._vector(tokens) for article, tokens in docs.items()}
+        self.vectors = [self._vector(tokens) for tokens in docs_tokens]
+        self.articles = sorted(set(self.unit_articles))
 
     def _vector(self, tokens):
         counts = Counter(tokens)
@@ -57,12 +61,12 @@ class TfidfVectorIndex:
 
     def search(self, query, top_k=10):
         query_vector = self._vector(_features(query))
-        if not query_vector:
+        if not query_vector or not self.vectors:
             return []
-        scored = []
-        for article, vector in self.vectors.items():
+        best = {}
+        for article, vector in zip(self.unit_articles, self.vectors):
             score = sum(value * vector.get(token, 0.0) for token, value in query_vector.items())
-            if score > 0:
-                scored.append((article, score))
-        scored.sort(key=lambda item: (-item[1], item[0]))
-        return scored[:top_k]
+            if score > best.get(article, 0.0):
+                best[article] = score
+        ranked = sorted(best.items(), key=lambda x: -x[1])[:top_k]
+        return ranked

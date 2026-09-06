@@ -59,3 +59,56 @@ def from_response(question: str, previous: Optional[str], response: dict, client
         "latency_ms": response.get("latency_ms"),
         "cached": bool(response.get("cached")),
     })
+
+
+def list_days(limit: int = 31) -> list[str]:
+    """返回已有审计日期（YYYYMMDD），新→旧。"""
+    path_dir = _dir()
+    if not os.path.isdir(path_dir):
+        return []
+    days = []
+    for name in os.listdir(path_dir):
+        if name.startswith("ask_") and name.endswith(".jsonl"):
+            days.append(name[4:-6])
+    days.sort(reverse=True)
+    return days[: max(1, limit)]
+
+
+def export_day(day: str) -> tuple[str, list[dict]]:
+    """读取某日审计；day 形如 20260905。返回 (path, rows)。"""
+    day = "".join(ch for ch in (day or "") if ch.isdigit())
+    if len(day) != 8:
+        raise ValueError("day 须为 YYYYMMDD")
+    path = os.path.join(_dir(), f"ask_{day}.jsonl")
+    if not os.path.isfile(path):
+        return path, []
+    rows = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return path, rows
+
+
+def write_feedback(event: dict[str, Any]) -> Optional[str]:
+    """用户反馈落盘：backend/data/feedback/fb_YYYYMMDD.jsonl"""
+    if not enabled():
+        return None
+    root = os.path.dirname(_dir())
+    path_dir = os.path.join(root, "feedback")
+    os.makedirs(path_dir, exist_ok=True)
+    day = datetime.now(timezone.utc).astimezone().strftime("%Y%m%d")
+    path = os.path.join(path_dir, f"fb_{day}.jsonl")
+    row = {
+        "ts": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
+        **event,
+    }
+    with _lock:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    return path

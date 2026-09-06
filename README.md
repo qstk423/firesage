@@ -12,11 +12,16 @@
 
 - 项目概述：[`docs/项目概述-消安智答FireSage.md`](docs/项目概述-消安智答FireSage.md)
 - 解决方案文档（企业命题组）：[`docs/解决方案-消安智答FireSage.md`](docs/解决方案-消安智答FireSage.md)
+- **答辩前检查清单（校赛收口）**：[`docs/答辩前检查清单.md`](docs/答辩前检查清单.md)
+- 校赛演示材料包：[`docs/校赛演示材料包.md`](docs/校赛演示材料包.md)
 - 产品级差距评估：[`docs/产品级差距评估.md`](docs/产品级差距评估.md)
+- 完整项目差距清单：[`docs/完整项目差距清单.md`](docs/完整项目差距清单.md)
+- 部署与配置清单：[`docs/部署与配置清单.md`](docs/部署与配置清单.md)
 - RAG 完善任务清单：[`docs/RAG完善任务清单.md`](docs/RAG完善任务清单.md)
 - 图谱健康度：[`docs/图谱健康度.md`](docs/图谱健康度.md)
 - 演示截图清单：[`docs/演示截图清单.md`](docs/演示截图清单.md)
 - 意图微调（可复现）：`python3 backend/scripts/train_intent.py --compare`
+- 答辩日预检：`python3 backend/scripts/demo_check.py --preflight`
 
 ---
 
@@ -48,10 +53,10 @@
   → 引用核验；失败则降级原文摘录或拒答
 ```
 
-- **BM25**：关键词精确命中
-- **语义向量**：BAAI/bge-m3（不可用时自动降级 TF-IDF）
-- **GraphRAG**：主体–行为–对象–处罚关系补充口语召回
-- **RRF**：消除不同检索器分数量纲差异
+- **BM25**：关键词精确命中（句级索引，按条款取 max）
+- **语义向量**：BAAI/bge-m3 **句级**检索后聚到条款（不可用时自动降级 TF-IDF）
+- **GraphRAG**：主体–行为–对象–处罚 + **主题层**宽问下钻
+- **RRF**：消除不同检索器分数量纲差异；报批稿条款检索降权
 
 ### 3. 知识图谱可视化
 - 全图浏览：按法规来源、实体类型、关系筛选与搜索（**分簇漂浮，全览不画边**）
@@ -67,7 +72,7 @@
 - CRAG：低置信时优先引导或拒答，不硬编条款
 
 ### 5. FireEval 评测闭环
-- **200** 道人工核验题，覆盖口语、处罚、跨条款、多轮、应急、拒答等 8 类
+- **229** 道人工核验题，覆盖口语、处罚、跨条款、多轮、应急、拒答及物业高频场景等  
 - 已划分 **train / dev / test**，便于后续微调与回归
 - 指标：Hit@1 / Hit@3 / MRR、路由准确率、拒答准确率、引用准确率、严重错误率
 - CI 含金标漂移检查与检索-only Hit 门禁（见 `.github/workflows/fireeval.yml`）
@@ -89,10 +94,13 @@
 | 《电动自行车充电及停放场所消防安全管理》（报批稿） | 条款级入库 | 标注非正式施行 |
 | 《人员密集场所消防安全管理》（报批稿） | 条款级入库 | 标注非正式施行；与既有库正文去重 |
 | 《广东省高层建筑消防安全管理规定》 | **34 条全文** | 地方规章 |
+| 《社会消防技术服务管理规定》（应急管理部令第 7 号） | **39 条全文** | 维保检测 / 安全评估机构 |
+| 《建设工程消防设计审查验收管理暂行规定》（住建部令第 51 号） | **43 条全文** | 特殊工程审查与验收备案 |
 
-当前索引约 **442** 个条款、**1421** 个语义句、**98** 个实体、**771** 条关系。
-实体类型：**违规行为 / 管理义务 / 政府职责 / 主体 / 消防对象 / 处罚**（行为已三分；已覆盖 39 号令 / 电动车充电 / 密集场所 / 广东高层等扩库来源）。
-可视化展示时会按实体对去重，界面更清晰。图谱页「法规来源」筛选对应上述 8 部法规。
+当前索引约 **524** 个条款、**1675** 个语义句、**118** 个实体、**972** 条关系（含高层「主题」节点）。
+实体类型：**主题 / 违规行为 / 管理义务 / 政府职责 / 主体 / 消防对象 / 处罚**。
+检索侧（**v0.8.4**）：句级向量召回 → 条款级作答（parent–child）、报批稿降权、主题双层图谱、精排候选上限与核验失败默认不二次调 LLM（降低体感时延）。
+可视化展示时会按实体对去重，界面更清晰。图谱页「法规来源」筛选与侧栏规模数字均来自 `/api/graph/stats`、`/api/system`（当前 **10** 部）。
 
 ---
 
@@ -109,6 +117,27 @@ python3 main.py
 ```
 
 浏览器打开：**http://localhost:8319**（手机可用同一地址；窄屏自动切底部导航）。
+
+### Docker 一键启动（试点 / 演示）
+
+默认轻量镜像（`FIRESAGE_LITE=1`）：不下载 bge，BM25 + TF-IDF + GraphRAG，适合现场演示。
+
+```bash
+docker compose up --build -d
+# 浏览器 http://localhost:8319
+curl -s http://localhost:8319/api/system | python3 -c "import sys,json;print(json.load(sys.stdin).get('runtime'))"
+docker compose logs -f firesage
+docker compose down
+```
+
+全量质量档（需 LLM 密钥 + 较大磁盘/时间）：
+
+```bash
+docker compose -f docker-compose.full.yml --env-file backend/.env.local up --build -d
+python3 backend/scripts/check_runtime.py --strict
+```
+
+公网反代示例见 `docs/nginx-firesage.conf.example`。更多变量说明见 [`docs/部署与配置清单.md`](docs/部署与配置清单.md)。
 
 ### 可选：接入大模型
 
@@ -162,9 +191,15 @@ export HF_ENDPOINT=https://hf-mirror.com
 ## 评测
 
 ```bash
+# 项目级评估（推荐入口）：五维打分 + 申报/试点/产品三档
+python3 backend/scripts/evaluate_project.py --mode quick \
+  --report docs/项目评估报告.md
+# full = quick + FireEval dev + 检索门禁（较慢）
+python3 backend/scripts/evaluate_project.py --mode full
+
 cd backend
 
-# 全量 v1（200 题）
+# 全量 v1（229 题）
 python3 scripts/evaluate_fireeval.py
 
 # 按划分评测（推荐日常看 dev）
@@ -205,7 +240,10 @@ CI：推送到 `main` 时自动跑单元测试与 FireEval（见 `.github/workfl
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | `POST` | `/api/ask` | 问答；`question`，可选 `previous_question` |
-| `GET` | `/api/system` | 版本、检索通道、生成模式、知识来源 |
+| `POST` | `/api/feedback` | 用户反馈（答偏/条款不准等） |
+| `GET` | `/api/audit/days` | 审计日期列表 |
+| `GET` | `/api/audit/export` | 按日导出审计（`day=YYYYMMDD`） |
+| `GET` | `/api/system` | 版本、检索通道、生成模式、知识来源与规模 |
 | `POST` | `/api/kb/reload` | 热加载 chunks/graph（改语料后免重启） |
 | `GET` | `/api/graph/stats` | 图谱统计 |
 | `GET` | `/api/graph/data` | 图谱数据（`types` / `laws` / `relations` / `query`） |
@@ -219,11 +257,15 @@ CI：推送到 `main` 时自动跑单元测试与 FireEval（见 `.github/workfl
 
 ```text
 firesage/
+├── Dockerfile              # 演示轻量镜像
+├── docker-compose.yml      # docker compose up --build
+├── requirements.txt
+├── requirements-docker.txt # 无 torch 的轻量依赖
 ├── backend/
 │   ├── main.py                 # FastAPI 入口
 │   ├── data/                   # 法规 JSON、chunks、graph、raw 全文
 │   ├── eval/
-│   │   ├── fireeval_v1.json           # 200 题全集
+│   │   ├── fireeval_v1.json           # 229 题全集
 │   │   ├── fireeval_v1_train.json     # 训练集
 │   │   ├── fireeval_v1_dev.json       # 开发集
 │   │   └── fireeval_v1_test.json      # 测试集
@@ -237,6 +279,7 @@ firesage/
 │   │   ├── verifier.py         # 引用 / 结论核验
 │   │   └── graphrag.py         # 图谱构建与检索
 │   └── scripts/
+│       ├── evaluate_project.py     # 项目级评估（五维 + 三档）
 │       ├── evaluate_fireeval.py
 │       ├── ablation_retrieval.py
 │       ├── gate_retrieval.py       # 检索-only Hit 门禁
@@ -285,6 +328,37 @@ python3 rag/graphrag.py
 # 不重启进程时热加载
 curl -X POST http://localhost:8319/api/kb/reload
 ```
+
+---
+
+## 版本与迭代记录（校赛收口）
+
+| 版本 | 要点 |
+|------|------|
+| **v0.8.4** | 响应加速：CrossEncoder 只精排前 N 条；LLM 上下文限 3 条；默认不二次生成；回答展示检索/生成耗时拆分 |
+| **v0.8.3** | 学成熟 RAG：parent–child 切块、`status` 进索引并降权报批稿、句级向量、图谱「主题」双层召回 |
+| **v0.8.2** | 质量可观测（`/api/system.runtime`）、`check_runtime.py`、全量/轻量 Docker、nginx 示例 |
+| **v0.8.x** | 语料扩至 10 部、FireEval 229 题、反馈/审计导出、隐患≠应急分流加固 |
+
+### 用户问卷反馈 → 产品改动（2026-09）
+
+公网小样本试用（n=4，非目标用户）结论：
+
+1. **出处可信**受认可 → 保留引用；前端改为**结论先行 + 法规依据折叠**（已落地）  
+2. **太专业/不够直接** → 主卡片突出结论，依据默认折叠；生成提示约束大白话短结论  
+3. **反应慢** → v0.8.4 砍精排宽度、限制生成上下文、关掉默认二次 LLM；可用 `CE_CANDIDATES` / `LLM_CONTEXT_ARTICLES` / `VERIFY_REGENERATE` 调参（见 `backend/.env.example`）
+
+### 本版发布前验收（2026-09-06）
+
+```bash
+PYTHONPATH=backend python3 -m unittest tests.test_smoke -q
+# → 19 tests OK
+
+python3 backend/scripts/demo_check.py --preflight
+# → smoke + 演示四问（含隐患≠应急）OK；runtime 可观测
+```
+
+答辩日请再跑：`python3 backend/scripts/demo_check.py --preflight`，清单见 [`docs/答辩前检查清单.md`](docs/答辩前检查清单.md)。
 
 ---
 

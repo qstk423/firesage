@@ -1,0 +1,33 @@
+# 消安智答 · 全量质量档（B5）
+# 含 torch / sentence-transformers；首次构建与拉取 bge 较慢。
+#   docker compose -f docker-compose.full.yml --env-file backend/.env.local up --build -d
+#
+# 需要 backend/.env.local 中已配置 LLM_*（勿提交仓库）。
+
+services:
+  firesage:
+    build:
+      context: .
+      dockerfile: Dockerfile.full
+    image: firesage:full
+    container_name: firesage-full
+    ports:
+      - "8319:8319"
+    environment:
+      FIRESAGE_LITE: "0"
+      USE_HF_MIRROR: "1"
+      RATE_LIMIT_PER_MIN: "60"
+      HF_ENDPOINT: https://hf-mirror.com
+    env_file:
+      - path: backend/.env.local
+        required: false
+    volumes:
+      - firesage_audit:/app/backend/data/audit
+      - firesage_feedback:/app/backend/data/feedback
+      - huggingface_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  firesage_audit:
+  firesage_feedback:
+  huggingface_cache:

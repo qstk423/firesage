@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 """扩展语料：解析 raw markdown → JSON，跨库正文去重，重建 chunks/graph。
 
-新增来源（均带官方/政府镜像 URL，报批稿明确标注）：
+已入库专题来源（EXISTING_FILES 含核心四法 + 既有专题）：
 - 公安部39号令《公共娱乐场所消防安全管理规定》
 - XF/T 报批稿《电动自行车充电及停放场所消防安全管理》
-- 人员密集场所消防安全管理（报批稿，OCR 整理）
+- 人员密集场所消防安全管理（报批稿）
 - 《广东省高层建筑消防安全管理规定》
+
+本轮新增：
+- 应急管理部令第7号《社会消防技术服务管理规定》
+- 住建部令第51号《建设工程消防设计审查验收管理暂行规定》
 """
 from __future__ import annotations
 
@@ -35,65 +39,41 @@ EXISTING_FILES = [
     "regulation61.json",
     "highrise5.json",
     "responsibility87.json",
+    "entertainment39.json",
+    "ebike_charging_draft.json",
+    "assembly_occupancy_draft.json",
+    "gd_highrise.json",
 ]
 
 NEW_SPECS = [
     {
-        "raw": "entertainment39.md",
-        "filename": "entertainment39.json",
-        "law_name": "公共娱乐场所消防安全管理规定",
-        "law_abbr": "39号令",
-        "authority": "中华人民共和国公安部",
-        "document_no": "公安部令第39号",
-        "issued_date": "1999-05-25",
-        "effective_date": "1999-05-25",
+        "raw": "tech_service7.md",
+        "filename": "tech_service7.json",
+        "law_name": "社会消防技术服务管理规定",
+        "law_abbr": "技术服务",
+        "authority": "中华人民共和国应急管理部",
+        "document_no": "应急管理部令第7号",
+        "issued_date": "2021-09-13",
+        "effective_date": "2021-11-09",
         "status": "现行",
-        "source_url": "https://www.mem.gov.cn/gk/zfxxgkpt/fdzdgknr/gz11/199905/t19990525_405691.shtml",
-        "mirror_url": "https://zh.wikisource.org/wiki/公共娱乐场所消防安全管理规定",
-        "notes": "部门规章现行文本；正文据应急管理部公开文本与维基文库公有领域整理稿核对。",
+        "source_url": "https://www.mem.gov.cn/gk/zfxxgkpt/fdzdgknr/202109/t20210923_398961.shtml",
+        "mirror_url": "https://zh.wikisource.org/wiki/社会消防技术服务管理规定",
+        "notes": "部门规章现行文本；规范消防设施维保检测、消防安全评估等技术服务机构与从业人员。",
         "parser": "article",
     },
     {
-        "raw": "ebike_charging_draft.md",
-        "filename": "ebike_charging_draft.json",
-        "law_name": "电动自行车充电及停放场所消防安全管理（报批稿）",
-        "law_abbr": "电动车充电",
-        "authority": "国家消防救援局",
-        "document_no": "XF/T XXXX—XXXX（报批稿）",
-        "issued_date": "2025-01",
-        "effective_date": "",
-        "status": "报批稿",
-        "source_url": "https://www.119.gov.cn/images/zfxxgk/fdzdgknr/zqyj/2025/02/21/1740101557778051251.pdf",
-        "notes": "消防救援行业标准报批稿，非正式施行；问答时须提示非正式效力。",
-        "parser": "section",
-    },
-    {
-        "raw": "assembly_occupancy_draft.md",
-        "filename": "assembly_occupancy_draft.json",
-        "law_name": "人员密集场所消防安全管理（报批稿）",
-        "law_abbr": "密集场所",
-        "authority": "国家消防救援局",
-        "document_no": "拟替代 GB/T 40248—2021（报批稿）",
-        "issued_date": "",
-        "effective_date": "",
-        "status": "报批稿",
-        "source_url": "https://www.119.gov.cn/",
-        "notes": "报批稿 OCR 整理，非正式施行；与 61 号令职责表述重叠处已按正文指纹去重。",
-        "parser": "section",
-        "min_text_len": 40,
-    },
-    {
-        "raw": "gd_highrise.md",
-        "filename": "gd_highrise.json",
-        "law_name": "广东省高层建筑消防安全管理规定",
-        "law_abbr": "广东高层",
-        "authority": "广东省人民政府",
-        "document_no": "广东省人民政府令",
-        "issued_date": "2025",
-        "effective_date": "2026-04-01",
-        "status": "现行（地方）",
-        "source_url": "http://www.gd.gov.cn/zwgk/wjk/qbwj/yfl/content/post_4862264.html",
-        "notes": "省级政府规章；与应急部《高层民用建筑消防安全管理规定》主题相近，正文不同则保留。",
+        "raw": "construction_fire_review.md",
+        "filename": "construction_fire_review.json",
+        "law_name": "建设工程消防设计审查验收管理暂行规定",
+        "law_abbr": "消设审查",
+        "authority": "中华人民共和国住房和城乡建设部",
+        "document_no": "住房和城乡建设部令第51号",
+        "issued_date": "2020-04-01",
+        "effective_date": "2020-06-01",
+        "status": "现行",
+        "source_url": "https://www.mohurd.gov.cn/gongkai/zc/wjk/art/2020/art_17339_244962.html",
+        "mirror_url": "https://zh.wikisource.org/wiki/建设工程消防设计审查验收管理暂行规定",
+        "notes": "住建部门规章；特殊建设工程消防设计审查与消防验收、其他工程备案抽查。后续修正以官方现行文本为准。",
         "parser": "article",
     },
 ]

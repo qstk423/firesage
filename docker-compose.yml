@@ -1,0 +1,33 @@
+# 消安智答 FireSage 一键启动
+#   docker compose up --build -d
+#   浏览器 http://localhost:8319
+#
+# 可选 LLM：复制 backend/.env.example → backend/.env.local 后填写密钥，
+# 或在下方 environment / env_file 注入。
+
+services:
+  firesage:
+    build: .
+    image: firesage:lite
+    container_name: firesage
+    ports:
+      - "8319:8319"
+    environment:
+      FIRESAGE_LITE: "1"
+      USE_HF_MIRROR: "1"
+      RATE_LIMIT_PER_MIN: "60"
+      # LLM_BASE_URL: https://api.deepseek.com
+      # LLM_API_KEY: your-key
+      # LLM_MODEL: deepseek-v4-flash
+      # API_KEY: your-secret
+    # env_file:
+    #   - backend/.env.local
+    volumes:
+      # 审计 / 反馈持久化
+      - firesage_audit:/app/backend/data/audit
+      - firesage_feedback:/app/backend/data/feedback
+    restart: unless-stopped
+
+volumes:
+  firesage_audit:
+  firesage_feedback:

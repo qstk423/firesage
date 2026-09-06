@@ -4,6 +4,7 @@
 三路召回使用 RRF 融合，避免各检索器分数量纲不同导致错误置信度。
 """
 import math
+import os
 import re
 from collections import Counter
 
@@ -25,6 +26,16 @@ CHANNEL_WEIGHTS = {"bm25": 0.42, "vector": 0.33, "graph": 0.25}
 # 向量模型降级为 TF-IDF 时：加大 BM25，降低弱语义/图谱通道噪声
 CHANNEL_WEIGHTS_DEGRADED = {"bm25": 0.72, "vector": 0.10, "graph": 0.18}
 RRF_K = 60
+# 报批稿 / 草案：检索降权（仍可召回，但优先现行）
+DRAFT_STATUS_FACTOR = 0.62
+DRAFT_MARKERS = ("报批", "征求意见", "草案", "送审")
+
+
+def _status_factor(status: str, notes: str = "") -> float:
+    blob = f"{status or ''}{notes or ''}"
+    if any(m in blob for m in DRAFT_MARKERS):
+        return DRAFT_STATUS_FACTOR
+    return 1.0
 
 # 同义词扩展（只留高通用概念词；题面整句特判见 eval/retrieval_boosts.json）
 SYNONYMS = {
@@ -156,6 +167,16 @@ SPECIALTY_GATES = {
     ),
     # 地方规定
     "广东高层": ("广东", "粤", "本省", "超高层用气", "广东高层", "广东省高层"),
+    # 社会消防技术服务
+    "技术服务": (
+        "消防技术服务", "技术服务机构", "维保检测", "维护保养检测",
+        "消防安全评估", "注册消防工程师", "技术服务·", "7号令",
+    ),
+    # 建设工程消防设计审查验收
+    "消设审查": (
+        "消防设计审查", "消防验收", "特殊建设工程", "消防验收备案",
+        "竣工验收消防", "消设审查", "设计审查验收",
+    ),
 }
 
 
@@ -255,6 +276,15 @@ class HybridRetriever:
     def __init__(self, chunks=None):
         graph = load_graph()
         self.chunks = chunks or []
+        # 条款 → 时效元数据（报批稿降权）
+        self.article_meta = {}
+        for c in self.chunks:
+            art = c.get("article")
+            if art and art not in self.article_meta:
+                self.article_meta[art] = {
+                    "status": c.get("status", "") or "",
+                    "notes": c.get("notes", "") or "",
+                }
         # 核心库单独建 BM25/向量，避免扩库后 IDF 稀释 Hit@1
         self.core_chunks = [c for c in self.chunks if _chunk_law(c) in CORE_LAWS]
         self.spec_chunks = [c for c in self.chunks if _chunk_law(c) not in CORE_LAWS]
@@ -403,6 +433,14 @@ class HybridRetriever:
                 "graph_hit": article in raw["graph"],
                 "graph_path": graph_paths.get(article),
             })
+        # 时效感知：报批稿/草案降权（句找条答后的条款级惩罚）
+        for item in candidates:
+            meta = self.article_meta.get(item["article"], {})
+            factor = _status_factor(meta.get("status", ""), meta.get("notes", ""))
+            if factor < 1.0:
+                item["retrieval_score"] = round(item["retrieval_score"] * factor, 4)
+                item["status_demoted"] = True
+                item["status"] = meta.get("status", "")
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
         # 点名条款 / 高区分度口语：强制入池（扩库后 BM25 常挤掉金标）
         known = {c["article"] for c in self.chunks}
@@ -453,15 +491,19 @@ class HybridRetriever:
                     reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
             except Exception:
                 pass
-            # CrossEncoder 语义精排：与法规意图重排线性组合（语义为主、规则为辅）
-            ce_scores = self.cross_encoder.score(primary, reranked)
+            # CrossEncoder 语义精排：只对规则重排后的前 N 条打分（CPU 上全量精排很慢）
+            ce_n = int(os.getenv("CE_CANDIDATES", "6") or "6")
+            ce_n = max(3, min(ce_n, len(reranked)))
+            ce_scores = self.cross_encoder.score(primary, reranked[:ce_n])
             if ce_scores:
                 for item in reranked:
                     ce = ce_scores.get(item["article"], 0.0)
-                    item["cross_encoder"] = round(ce, 4)
-                    base = item["rerank_score"]
-                    item["rerank_score"] = round(0.50 * ce + 0.50 * base, 4)
-                    item["score"] = item["rerank_score"]
+                    item["cross_encoder"] = round(ce, 4) if item["article"] in ce_scores else None
+                    if item["article"] in ce_scores:
+                        base = item["rerank_score"]
+                        item["rerank_score"] = round(0.50 * ce + 0.50 * base, 4)
+                        item["score"] = item["rerank_score"]
+                # 未进 CE 的候选保持规则分，整体重排
                 reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
         else:
             for item in candidates:

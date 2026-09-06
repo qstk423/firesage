@@ -21,7 +21,7 @@
 - [x] BM25 + 向量 + GraphRAG → RRF → 法规意图重排 →（可选 CE）
 - [x] CRAG 低置信拒答 + Out-of-KB + verifier
 - [x] 追问合并上一轮；改写保留 full_question
-- [x] 8 源语料入库；图谱重建（约 98 实体 / 771 边；「单位」枢纽已压缩）
+- [x] 10 源语料入库；图谱重建（约 112 实体 / 952 边；「单位」枢纽已压缩）
 - [x] FireEval Hit@1 / Hit@3 过门槛（降级环境下快照）
 - [x] 图谱页法规来源与 README 规模同步
 
@@ -38,7 +38,7 @@
 
 ### T0.2 进程加载新图谱
 - [x] 改 `graph.json` / `chunks.json` 后：`POST /api/kb/reload` 或 ask 时按 mtime 自动热加载；启动日志打印规模
-- **验收**：`/api/graph/stats` 显示 8 源、实体/边与 README 一致
+- **验收**：`/api/graph/stats` 显示 10 源、实体/边与 README 一致
 
 ### T0.3 消融表可一键复跑
 - [x] 固定脚本输出：`bm25` / `bm25_vector` / `hybrid` / `full` 对照表
@@ -213,7 +213,7 @@
 同时满足：
 
 1. 非降级环境下 test：**Hit@1 ≥ 0.85，Hit@3 ≥ 0.95**，且有消融表  
-2. 图谱 8 源边覆盖可解释；孤儿条款有统计与改进记录  
+2. 图谱 10 源边覆盖可解释；孤儿条款有统计与改进记录  
 3. 报批稿效力在回答中可见；verifier 覆盖全部 law_abbr  
 4. 主路径手调规则已收敛，新增法规主要靠「入库脚本 + 词典增量」而非堆题面 if  
 5. 答辩材料能用 1 页图画清：分库召回 + GraphRAG + CRAG/核验（对照 ChatLaw/LightRAG 话术，但不宣称已达到其规模）

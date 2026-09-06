@@ -3062,5 +3062,406 @@
     "forbidden_conclusions": [],
     "should_refuse": false,
     "review_notes": "广东高层定义"
+  },
+  {
+    "id": "py01",
+    "category": "生活化口语表达",
+    "question": "小区消控室能不能一个人盯着就行？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十六条"
+    ],
+    "must_conclusions": [
+      "24小时值班",
+      "2名值班人员"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：消控室单人值班"
+  },
+  {
+    "id": "py02",
+    "category": "生活化口语表达",
+    "question": "消防控制室可以没人值班吗",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十六条"
+    ],
+    "must_conclusions": [
+      "24小时值班"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：消控室无人"
+  },
+  {
+    "id": "py03",
+    "category": "生活化口语表达",
+    "question": "住户从窗户飞线给电动车充电行不行",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第三十七条"
+    ],
+    "must_conclusions": [
+      "电动自行车",
+      "充电"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：飞线充电口语"
+  },
+  {
+    "id": "py04",
+    "category": "生活化口语表达",
+    "question": "楼道里给电瓶车插着充电，物业该不该管",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第三十七条",
+      "高层规定·第十条"
+    ],
+    "must_conclusions": [
+      "电动自行车"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业职责+电动车充电"
+  },
+  {
+    "id": "py05",
+    "category": "生活化口语表达",
+    "question": "外窗焊了防盗笼，出了事跑不出去怎么办",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十一条",
+      "消防法·第二十八条"
+    ],
+    "must_conclusions": [
+      "障碍"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：防盗笼/外窗障碍"
+  },
+  {
+    "id": "py06",
+    "category": "生活化口语表达",
+    "question": "常闭防火门天天开着算不算违规",
+    "intent": "law",
+    "expected_articles": [
+      "广东高层·第二十条",
+      "高层规定·第二十八条",
+      "61号令·第二十一条"
+    ],
+    "must_conclusions": [
+      "防火门"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：常闭防火门"
+  },
+  {
+    "id": "py07",
+    "category": "生活化口语表达",
+    "question": "电缆井里塞满杂物行不行",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十条"
+    ],
+    "must_conclusions": [
+      "电缆井"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：管井堆物"
+  },
+  {
+    "id": "py08",
+    "category": "生活化口语表达",
+    "question": "楼外挂的大广告牌把逃生窗挡住了违法吗",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十一条",
+      "消防法·第二十八条"
+    ],
+    "must_conclusions": [
+      "广告牌"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：广告牌挡窗"
+  },
+  {
+    "id": "py09",
+    "category": "生活化口语表达",
+    "question": "消火栓前面堆满纸箱被挡住了",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十八条"
+    ],
+    "must_conclusions": [
+      "消火栓"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：遮挡消火栓"
+  },
+  {
+    "id": "py10",
+    "category": "生活化口语表达",
+    "question": "装修要电焊，物业不给开动火证能硬焊吗",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第十五条",
+      "61号令·第二十条"
+    ],
+    "must_conclusions": [
+      "明火"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：无动火审批"
+  },
+  {
+    "id": "py11",
+    "category": "生活化口语表达",
+    "question": "物业从来不组织消防演练，违法吗",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十四条",
+      "高层规定·第十条"
+    ],
+    "must_conclusions": [
+      "演练"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：不演练"
+  },
+  {
+    "id": "py12",
+    "category": "处罚与责任主体",
+    "question": "高层楼道停电动车拒不改正怎么罚",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条",
+      "高层规定·第三十七条"
+    ],
+    "must_conclusions": [
+      "罚款"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：电动车处罚"
+  },
+  {
+    "id": "py13",
+    "category": "处罚与责任主体",
+    "question": "单位把疏散通道堵住了会罚多少钱",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第六十条",
+      "消防法·第二十八条"
+    ],
+    "must_conclusions": [
+      "五千元"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业/单位通道处罚"
+  },
+  {
+    "id": "py14",
+    "category": "生活化口语表达",
+    "question": "避难层被物业拿来当库房堆货了",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十九条"
+    ],
+    "must_conclusions": [
+      "避难层"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "避难层占用口语；若未命中避难专条则高层畅通条款托底"
+  },
+  {
+    "id": "py15",
+    "category": "直接法规查询",
+    "question": "消防技术服务机构从事维保检测要具备哪些条件",
+    "intent": "law",
+    "expected_articles": [
+      "技术服务·第五条",
+      "消防法·第三十四条"
+    ],
+    "must_conclusions": [
+      "下列条件"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "新源：技术服务"
+  },
+  {
+    "id": "py16",
+    "category": "直接法规查询",
+    "question": "哪些工程属于特殊建设工程要做消防设计审查",
+    "intent": "law",
+    "expected_articles": [
+      "消设审查·第十四条",
+      "消设审查·第十五条"
+    ],
+    "must_conclusions": [
+      "特殊建设工程"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "新源：消设审查"
+  },
+  {
+    "id": "py17",
+    "category": "生活化口语表达",
+    "question": "喷淋头坏了物业一直不修算不算违法",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十八条",
+      "消防法·第六十条",
+      "61号令·第二十一条"
+    ],
+    "must_conclusions": [
+      "消防设施"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：设施损坏不修"
+  },
+  {
+    "id": "py18",
+    "category": "生活化口语表达",
+    "question": "楼梯口让纸箱堵得过不去了",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十八条",
+      "61号令·第二十一条",
+      "高层规定·第二十八条"
+    ],
+    "must_conclusions": [
+      "疏散"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "演示口语：楼梯口纸箱"
+  },
+  {
+    "id": "py19",
+    "category": "多轮追问",
+    "question": "那物业被罚了居民还要承担责任吗",
+    "previous_question": "楼道里给电瓶车插着充电，物业该不该管",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条",
+      "高层规定·第三十七条",
+      "高层规定·第四条"
+    ],
+    "must_conclusions": [],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "多轮：电动车责任主体"
+  },
+  {
+    "id": "py20",
+    "category": "多轮追问",
+    "question": "拒不改正具体怎么处罚",
+    "previous_question": "高层楼道停电动车拒不改正怎么罚",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条"
+    ],
+    "must_conclusions": [
+      "2000元"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "多轮：电动车罚则细节"
+  },
+  {
+    "id": "py21",
+    "category": "生活化口语表达",
+    "question": "地下车库里能不能存放几桶汽油",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十三条",
+      "消防法·第二十二条"
+    ],
+    "must_conclusions": [
+      "易燃易爆危险品"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "危险品口语；以禁止/安全管理条款托底"
+  },
+  {
+    "id": "py22",
+    "category": "生活化口语表达",
+    "question": "消防车道上画了车位天天停满私家车",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十二条",
+      "消防法·第二十八条"
+    ],
+    "must_conclusions": [
+      "消防车通道"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：消防车道停车"
+  },
+  {
+    "id": "py23",
+    "category": "跨条款综合问题",
+    "question": "物业在消防上到底管什么，通道、充电、消控室分别有啥要求",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第十条",
+      "61号令·第十条",
+      "高层规定·第二十六条",
+      "高层规定·第三十七条"
+    ],
+    "must_conclusions": [
+      "物业"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业综合职责跨条款"
+  },
+  {
+    "id": "py24",
+    "category": "生活化口语表达",
+    "question": "灭火器压力表掉红区了还不换",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十八条",
+      "消防法·第六十条",
+      "61号令·第二十一条"
+    ],
+    "must_conclusions": [
+      "消防"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：器材失效"
+  },
+  {
+    "id": "py25",
+    "category": "直接法规查询",
+    "question": "特殊建设工程不经消防设计审查能不能开工",
+    "intent": "law",
+    "expected_articles": [
+      "消设审查·第十五条"
+    ],
+    "must_conclusions": [
+      "不得施工"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "新源：消设审查开工限制"
   }
 ]

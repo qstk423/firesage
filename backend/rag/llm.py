@@ -30,7 +30,9 @@ class LLMClient:
         self.api_key = os.getenv("LLM_API_KEY", "")
         self.model = os.getenv("LLM_MODEL", "")
         self.timeout = int(os.getenv("LLM_TIMEOUT", "30"))
-        self.max_retries = int(os.getenv("LLM_MAX_RETRIES", "2"))
+        # 演示默认只重试 1 次，避免超时后再等一轮把体感拖到十几秒
+        self.max_retries = int(os.getenv("LLM_MAX_RETRIES", "1"))
+        self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "700") or "700")
         self.enabled = bool(self.base_url and self.api_key and self.model)
 
     def complete(self, system, user):
@@ -43,10 +45,11 @@ class LLMClient:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "temperature": 0.3,
+            "temperature": 0.2,
+            "max_tokens": self.max_tokens,
         }
         last_error = None
-        for attempt in range(self.max_retries):
+        for attempt in range(max(1, self.max_retries)):
             try:
                 req = urllib.request.Request(url,
                     data=json.dumps(payload).encode("utf-8"),

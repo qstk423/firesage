@@ -19,6 +19,7 @@ FIRE_DOMAIN_WORDS = [
     "违规", "电焊", "气焊", "明火", "装修", "施工",
     "演练", "巡查", "检查记录", "职责", "灭火", "报警",
     "烟感", "探测器", "灭火系统", "喷淋", "验收", "避难层", "防火间距",
+    "消防技术服务", "维保", "消防安全评估", "消防设计审查", "消防验收",
 ]
 
 CHAT_WORDS = ["你好", "您好", "谢谢", "你是谁", "介绍一下", "能做什么", "再见", "hello", "hi ", "在吗", "加油"]
@@ -63,12 +64,23 @@ def _is_law_consultation(q: str) -> bool:
     return False
 
 
-def _has_active_emergency(q: str) -> bool:
+def _has_strong_fire_signal(q: str) -> bool:
+    """着火/冒烟/被困等正在发生的火情信号（不含「火灾隐患」弱搭配）。"""
     q_fire = q.replace("着火点", "【点火位置】")
     if any(w in q_fire for w in ACTIVE_EMERGENCY_SIGNALS):
         return True
     if any(w in q_fire for w in WEAK_EMERGENCY_FIRE):
         return True
+    return False
+
+
+def _has_active_emergency(q: str) -> bool:
+    # 强信号：真火情 → 应急
+    if _has_strong_fire_signal(q):
+        return True
+    # 「火灾/报警 + 怎么办」弱规则：排除隐患整改等法规咨询，避免「发现火灾隐患怎么办」误入应急
+    if _is_law_consultation(q):
+        return False
     if any(w in q for w in ["火灾", "119", "报警"]) and any(w in q for w in EMERGENCY_CONTEXT):
         return True
     return False

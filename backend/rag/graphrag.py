@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 FIRELAW_PATH = os.path.join(DATA_DIR, "firelaw.json")
 # 只加载经过核验的法规文件，避免把缓存与构建产物误当成语料。
-SOURCE_FILES = ["firelaw.json", "regulation61.json", "highrise5.json", "responsibility87.json", "entertainment39.json", "ebike_charging_draft.json", "assembly_occupancy_draft.json", "gd_highrise.json"]
+SOURCE_FILES = ["firelaw.json", "regulation61.json", "highrise5.json", "responsibility87.json", "entertainment39.json", "ebike_charging_draft.json", "assembly_occupancy_draft.json", "gd_highrise.json", "tech_service7.json", "construction_fire_review.json"]
 ARCHIVE_PATHS = []
 for _f in SOURCE_FILES:
     p = os.path.join(DATA_DIR, _f)
@@ -54,7 +54,8 @@ SUBJECTS = [
     "消防救援机构", "人员密集场所", "公共娱乐场所", "公众聚集场所",
     "总承包单位", "建设单位", "施工单位", "产权单位", "产权人",
     "事业单位", "机关", "团体", "企业", "业主", "使用人", "个人", "负责人", "单位",
-    "经营单位", "物业服务人",
+    "经营单位", "物业服务人", "注册消防工程师", "消防设计审查验收主管部门",
+    "住房和城乡建设主管部门",
 ]
 SUBJECT_ALIASES = {
     "物业服务企业": ["物业公司", "物业", "物业管理单位"],
@@ -70,7 +71,10 @@ SUBJECT_ALIASES = {
     "产权人": ["产权人", "所有权人"],
     "使用人": ["住户", "承租人", "租户"],
     "统一管理人": ["统一管理单位"],
-    "消防技术服务机构": ["消防维保公司", "消防检测机构", "维保单位"],
+    "消防技术服务机构": ["消防维保公司", "消防检测机构", "维保单位", "技术服务机构", "评估机构"],
+    "注册消防工程师": ["注册消防工程师", "执证消防工程师"],
+    "消防设计审查验收主管部门": ["消防设计审查验收主管部门", "审查验收主管部门"],
+    "住房和城乡建设主管部门": ["住建部门", "住建主管部门", "住房和城乡建设主管部门"],
     "居民委员会": ["居委会", "社区居委会"],
     "村民委员会": ["村委会"],
     "人员密集场所": ["人员密集场所"],
@@ -386,6 +390,49 @@ BEHAVIORS = {
         "objects": ["火灾隐患", "重大火灾隐患", "消防安全"],
         "aliases": ["隐患排查", "消防整治", "火灾隐患整治"],
     },
+    # ---- 技术服务 / 消设审查 ----
+    "符合技术服务从业条件": {
+        "kind": TYPE_DUTY,
+        "verbs": ["具备", "符合", "取得"],
+        "objects": ["从业条件", "企业法人资格", "注册消防工程师"],
+        "aliases": ["从业条件", "维保检测条件", "评估机构条件", "技术服务机构条件"],
+    },
+    "开展消防安全评估": {
+        "kind": TYPE_DUTY,
+        "verbs": ["评估", "开展评估"],
+        "objects": ["消防安全评估"],
+        "aliases": ["消防安全评估", "做消防评估"],
+    },
+    "申请消防设计审查": {
+        "kind": TYPE_DUTY,
+        "verbs": ["申请", "报送", "依法申请"],
+        "objects": ["消防设计审查", "特殊建设工程"],
+        "aliases": ["消防设计审查", "申请设计审查", "特殊工程审查"],
+    },
+    "办理消防验收备案": {
+        "kind": TYPE_DUTY,
+        "verbs": ["备案", "申请验收", "验收"],
+        "objects": ["消防验收", "消防验收备案", "备案抽查"],
+        "aliases": ["消防验收", "验收备案", "消防备案"],
+    },
+    "未经审查不得施工": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["不得施工", "擅自施工", "未审查"],
+        "objects": ["特殊建设工程", "消防设计审查"],
+        "aliases": ["未审查开工", "不经审查施工", "不得施工"],
+    },
+    "出具虚假技术服务文件": {
+        "kind": TYPE_VIOLATION,
+        "verbs": ["出具", "虚假", "伪造"],
+        "objects": ["虚假文件", "书面结论", "技术服务"],
+        "aliases": ["出具虚假文件", "虚假维保报告", "虚假评估报告"],
+    },
+    "实施消防设计审查验收监管": {
+        "kind": TYPE_GOV,
+        "verbs": ["审查", "验收", "抽查", "指导监督"],
+        "objects": ["消防设计审查", "消防验收", "备案抽查"],
+        "aliases": ["设计审查验收", "住建消防审查", "验收抽查"],
+    },
 }
 
 OBJECTS = {
@@ -417,6 +464,12 @@ OBJECTS = {
     "微型消防站": ["微型消防站"],
     "志愿消防队": ["志愿消防队", "志愿消防队员"],
     "高层建筑": ["高层建筑", "高层民用建筑", "高层住宅", "超高层"],
+    "特殊建设工程": ["特殊建设工程"],
+    "消防设计审查": ["消防设计审查", "设计审查"],
+    "消防验收": ["消防验收", "竣工验收消防"],
+    "消防验收备案": ["消防验收备案", "备案抽查", "验收备案"],
+    "从业条件": ["从业条件", "企业法人资格"],
+    "注册消防工程师": ["注册消防工程师"],
 }
 
 PENALTIES = {
@@ -436,6 +489,43 @@ PENALTY_CLAUSE_WORDS = ["处罚", "罚款", "拘留", "责令改正", "责令停
 REL_PROHIBIT, REL_DUTY, REL_RESP = "禁止", "义务", "责任"
 REL_PUNISH, REL_INVOLVE = "处罚", "涉及"
 RELATIONS = [REL_PROHIBIT, REL_DUTY, REL_RESP, REL_PUNISH, REL_INVOLVE]
+
+TYPE_THEME = "主题"
+
+# LightRAG 风格高层主题：宽问先命中主题，再下钻到行为/条款
+THEMES = {
+    "疏散与通道安全": {
+        "aliases": ["楼道", "走廊", "堆物", "堆放杂物", "占通道", "疏散通道", "安全出口",
+                    "消防通道", "消防车通道", "堵住通道", "纸箱"],
+        "behaviors": ["占用疏散通道", "堵塞安全出口", "封闭消防车通道", "设置影响逃生障碍物",
+                      "占用防火间距", "保障通道出口畅通"],
+    },
+    "消防设施完好": {
+        "aliases": ["消防设施", "灭火器", "消火栓", "喷淋", "报警", "损坏消防", "挪用",
+                    "擅自停用", "停用消防"],
+        "behaviors": ["损坏消防设施", "挪用消防设施", "擅自拆除停用消防设施",
+                      "埋压圈占遮挡消火栓", "停用建筑消防设施", "维护保养消防设施"],
+    },
+    "电动车停放充电": {
+        "aliases": ["电动车", "电瓶车", "电动自行车", "楼道充电", "飞线充电", "充电"],
+        "behaviors": ["违规停放充电电动自行车", "飞线充电", "电动车进入电梯楼道",
+                      "充电场所消防管理"],
+    },
+    "值班与控制室": {
+        "aliases": ["消控室", "消防控制室", "值班", "无人值班", "持证上岗"],
+        "behaviors": ["消防控制室值班"],
+    },
+    "处罚与强制措施": {
+        "aliases": ["怎么处罚", "怎么罚", "罚款", "强制拆除", "强制执行", "拘留", "后果"],
+        "behaviors": [],
+    },
+    "责任主体与职责": {
+        "aliases": ["谁负责", "责任人", "管理人", "物业职责", "单位职责", "第一责任人",
+                    "应当履行"],
+        "behaviors": ["落实消防安全责任", "开展防火检查", "组织防火巡查",
+                      "及时消除火灾隐患", "公示消防安全信息"],
+    },
+}
 
 _STOP = set("的了在是我也你他它一个就都得吗呢吧啊呀")
 
@@ -567,17 +657,36 @@ class GraphBuilder:
             source_url = law.get("source_url", "")
             authority = law.get("authority", "")
             effective_date = law.get("effective_date", "")
+            status = (law.get("status") or "").strip() or "现行"
+            notes = law.get("notes", "") or ""
+            issued_date = law.get("issued_date", "") or ""
+            document_no = law.get("document_no", "") or ""
             for ch in law["chapters"]:
                 for art in ch["articles"]:
                     orig_num, txt = art["num"], art["text"]
                     num = f"{law_abbr}·{orig_num}"
                     sents = split_sentences(txt)
                     for si, st in enumerate(sents):
-                        self.chunks.append({"id": f"{num}#{si}", "article": num,
-                                            "title": art["title"], "text": st,
-                                            "chapter": ch["chapter_title"], "law": law_abbr,
-                                            "law_name": law_name, "source_url": source_url,
-                                            "authority": authority, "effective_date": effective_date})
+                        # parent–child：句为检索单元，整条为展示/生成父节点
+                        self.chunks.append({
+                            "id": f"{num}#{si}",
+                            "article": num,
+                            "parent_id": num,
+                            "parent_text": txt,
+                            "title": art["title"],
+                            "text": st,
+                            "chapter": ch["chapter_title"],
+                            "law": law_abbr,
+                            "law_name": law_name,
+                            "source_url": source_url,
+                            "authority": authority,
+                            "effective_date": effective_date,
+                            "status": status,
+                            "notes": notes,
+                            "issued_date": issued_date,
+                            "document_no": document_no,
+                            "chunk_level": "sentence",
+                        })
                         subject = self._find_subject(st)
                         behavior, aliases, kind = self._find_behavior(st)
                         if not behavior:
@@ -627,6 +736,7 @@ class GraphBuilder:
                             pn = self._add_node(p, "处罚", [])
                             self._add_edge(beh_n, pn, REL_PUNISH, num, f"罚则条款传播: {txt[:26]}")
 
+        self._link_themes()
         self._dedupe_edges()
         self._prune_isolated_nodes()
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -635,6 +745,40 @@ class GraphBuilder:
         with open(GRAPH_PATH, "w", encoding="utf-8") as f:
             json.dump({"nodes": list(self.nodes.values()), "edges": self.edges},
                       f, ensure_ascii=False, indent=2)
+
+    def _link_themes(self):
+        """高层主题节点：别名可链宽问；边挂到已有行为，便于下钻条款。"""
+        name_to_nid = {n["name"]: nid for nid, n in self.nodes.items()
+                       if _is_behavior_type(n.get("type", ""))}
+        for theme, spec in THEMES.items():
+            tid = self._add_node(theme, TYPE_THEME, spec.get("aliases") or [])
+            self.nodes[tid]["behaviors"] = list(spec.get("behaviors") or [])
+            linked = False
+            for beh_name in spec.get("behaviors") or []:
+                beh_nid = name_to_nid.get(beh_name)
+                if not beh_nid or beh_nid not in self.nodes:
+                    continue
+                # 取该行为已有条款，为主题挂一条涉及边（避免 prune 掉主题）
+                arts = [e["article"] for e in self.edges
+                        if e["source"] == beh_nid or e["target"] == beh_nid]
+                art = arts[0] if arts else ""
+                if not art:
+                    continue
+                self._add_edge(tid, beh_nid, REL_INVOLVE, art, f"主题涵盖: {beh_name}")
+                linked = True
+            # 纯意图主题（如处罚）：用别名挂到任一处罚节点
+            if not linked and theme == "处罚与强制措施":
+                for nid, n in self.nodes.items():
+                    if n.get("type") == "处罚":
+                        arts = [e["article"] for e in self.edges
+                                if e["source"] == nid or e["target"] == nid]
+                        if arts:
+                            self._add_edge(tid, nid, REL_INVOLVE, arts[0], "主题涵盖: 处罚")
+                            linked = True
+                            break
+            if not linked:
+                # 无边则删除，避免孤点
+                self.nodes.pop(tid, None)
 
     def _dedupe_edges(self):
         seen, out = set(), []
@@ -681,13 +825,20 @@ class GraphRetriever:
             self.adj.setdefault(e["target"], []).append(e)
         self.node_articles = {}
         for e in self.edges:
+            art = e.get("article") or ""
+            if not art:
+                continue
             for nid in (e["source"], e["target"]):
-                self.node_articles.setdefault(nid, set()).add(e["article"])
+                self.node_articles.setdefault(nid, set()).add(art)
+        # 行为名 → 节点 id（主题下钻）
+        self.behavior_ids = {
+            n["name"]: nid for nid, n in self.nodes.items()
+            if _is_behavior_type(n.get("type", ""))
+        }
 
     # ---- 实体链接：返回 [(nid, strength, ntype)] ----
     def link(self, q):
         hits = []
-        aliases_by_id = {nid: self.nodes[nid]["aliases"] for nid in self.nodes}
         for nid, n in self.nodes.items():
             name, ntype = n["name"], n["type"]
             aliases = n.get("aliases", [])
@@ -702,6 +853,11 @@ class GraphRetriever:
             if strength is None and _is_behavior_type(ntype):
                 if self._fuzzy(q, aliases):
                     strength = 0.7
+            # 主题：至少命中一个别名（宽问）
+            if strength is None and ntype == TYPE_THEME:
+                matched = [a for a in aliases if a and a in q]
+                if len(matched) >= 1:
+                    strength = 0.88 if len(matched) == 1 else 0.95
             if strength:
                 hits.append((nid, strength, ntype))
         return hits
@@ -732,6 +888,22 @@ class GraphRetriever:
                 for atcl in self.node_articles.get(nid, []):
                     art_score[atcl] = art_score.get(atcl, 0) + w
                     art_seed[atcl] = self.nodes[nid]["name"]
+                continue
+            # 主题：直连条款 + 下钻到关联行为条款（双层召回）
+            if ntype == TYPE_THEME:
+                w = strength * 0.9
+                theme_name = self.nodes[nid]["name"]
+                for atcl in self.node_articles.get(nid, []):
+                    art_score[atcl] = art_score.get(atcl, 0) + w
+                    art_seed[atcl] = theme_name
+                for beh_name in self.nodes[nid].get("behaviors") or []:
+                    beh_nid = self.behavior_ids.get(beh_name)
+                    if not beh_nid:
+                        continue
+                    for atcl in self.node_articles.get(beh_nid, []):
+                        art_score[atcl] = art_score.get(atcl, 0) + strength * 0.85
+                        art_seed.setdefault(atcl, theme_name)
+                        extra_path.setdefault(atcl, (theme_name, beh_name))
                 continue
             w = strength * (iw if (_is_behavior_type(ntype) and pun) else 1.0)
             for atcl in self.node_articles.get(nid, []):

@@ -11,13 +11,14 @@
   → 可信回答 / 澄清追问 / 安全拒答
 
 对外仅暴露 stages（正在检索/重排/生成/核验）过程状态，不暴露模型内部思维链。
+核验失败默认直接降级抽取式（VERIFY_REGENERATE=1 才二次生成），以控制时延。
 """
 import json
 import os
 import re
 import time
 
-from .intent import route
+from .intent import _has_strong_fire_signal, _is_law_consultation, route
 from .retriever import HybridRetriever
 from .llm import LLMClient
 from .scene import clarify_question, decompose_queries, detect_query_mode, structure
@@ -62,16 +63,22 @@ FOLLOW_UP_MARKERS = [
 
 SYSTEM_TMPL = (
     "你是消防法规领域的专业助手「消安智答」。请严格依据提供的法规条款回答问题，不得编造。"
+    "面向物业/网格员等非法律专业读者：结论用大白话，少用生僻术语；能短则短。"
     "若依据中含「报批稿」或非正式施行文本，必须在 supplement 中明确提示其非正式效力，"
     "并优先采信现行有效法规；不得把报批稿写成已生效规章。"
     "回答必须使用以下 JSON 结构（不要输出 JSON 以外的内容）：\n"
-    '{"conclusion": "直接回答问题的结论（1-2句）", '
+    '{"conclusion": "直接回答问题的结论（1句，尽量不超过40字）", '
     '"conditions": "该结论适用的条件（主体/场所/建筑类型，如不适用写 无特殊限制）", '
     '"basis": ["《法规名》第X条：支撑该结论的关键原文片段", ...], '
-    '"supplement": "补充说明或注意事项（无则写 无）", '
+    '"supplement": "补充说明或注意事项（无则写 无；控制在2句内）", '
     '"confidence": "high|medium|low，依据条款数量与一致性判断"}\n'
     "所有结论必须能在提供的条款原文中找到依据，引用条款编号必须来自提供的条款。"
 )
+
+# 核验失败默认直接降级抽取式，避免再打一轮 LLM（体感常从 6s 拖到 12s+）
+VERIFY_REGENERATE = os.getenv("VERIFY_REGENERATE", "").strip() in ("1", "true", "True", "yes")
+# 送给 LLM 的条款条数（展示仍用 top_k 引用）
+LLM_CONTEXT_ARTICLES = int(os.getenv("LLM_CONTEXT_ARTICLES", "3") or "3")
 
 DRAFT_STATUS_MARKERS = ("报批稿", "征求意见稿", "草案")
 DRAFT_NOTICE = "所引文本含报批稿/非正式施行材料，仅供参考，不作为已生效执法依据；请以现行有效法规为准。"
@@ -111,7 +118,7 @@ class Pipeline:
                 law = json.load(f)
             if "law_abbr" in law:
                 law_abbr = law["law_abbr"]
-            status = law.get("status", "")
+            status = (law.get("status") or "").strip() or "现行"
             notes = law.get("notes", "")
             for ch in law["chapters"]:
                 for art in ch["articles"]:
@@ -242,7 +249,7 @@ class Pipeline:
         for t in tips[:5]:
             lines.append(f"· {t}")
         lines.append("")
-        lines.append("你补一句具体场景后，我会按条款给出可核对的依据。")
+        lines.append("你补一句具体场景后，我会按条款给出可核对的回答。")
         return "\n".join(lines)
 
     def _guide_with_risk(self, question, fused, crag, risk):
@@ -274,9 +281,11 @@ class Pipeline:
 
     # ---------- 生成 ----------
     def _llm_structured(self, question, fused, feedback=None):
+        # 只送前 N 条给模型，缩短生成时延；前端引用仍用完整 fused
+        use = (fused or [])[:max(1, LLM_CONTEXT_ARTICLES)]
         context = "\n\n".join(
             f"【{c['num']} {c['title']}】{c['text']}"
-            for c in (self.article_text.get(f["article"], {}) for f in fused)
+            for c in (self.article_text.get(f["article"], {}) for f in use)
             if c
         )
         user = f"用户问题：{question}\n\n以下为检索到的法规条款：\n{context}\n\n请基于上述条款作答。"
@@ -472,9 +481,11 @@ class Pipeline:
 
         # ---- 风险分级（规则，检索前完成）：风险看场景严重度，与可信度互相独立 ----
         risk = assess_risk(full_question, scene, intent)
-        # 紧急风险强制走应急分支：修复「着火了…违反什么规定」被 law 词表抢先路由的问题
+        # 紧急风险强制走应急：仅当真火情强信号，或非「隐患整改」类法规咨询
+        # （避免「发现火灾隐患怎么办」被 law→emergency 抬升）
         if risk["risk_level"] == "emergency" and intent in ("law", "chitchat"):
-            intent = "emergency"
+            if _has_strong_fire_signal(full_question) or not _is_law_consultation(full_question):
+                intent = "emergency"
 
         # ---- 知识库外法规拒答：优先于检索，避免非消防法被「规定」带进作答 ----
         out_kb_law = self._mentioned_law_not_in_kb(full_question)
@@ -612,6 +623,8 @@ class Pipeline:
         # ---- 第 5 层：生成 ----
         refs = self._build_refs(fused)
         stages = ["检索", "重排", "生成", "核验"]
+        timing = {"retrieve_ms": int((time.time() - t0) * 1000)}
+        t_gen = time.time()
         verification = None
         if self.llm.enabled:
             structured = self._llm_structured(retrieval_question, fused)
@@ -619,13 +632,14 @@ class Pipeline:
             if structured:
                 verification = verify(answer_text, refs, question, scene)
                 if not verification["passed"]:
-                    # 核验失败 → 带反馈重生成一次
-                    structured = self._llm_structured(
-                        retrieval_question, fused, feedback="；".join(verification["issues"]))
-                    answer_text = self._render(structured)
-                    verification = verify(answer_text, refs, question, scene)
+                    if VERIFY_REGENERATE:
+                        # 可选：带反馈再生成一次（更准但更慢）
+                        structured = self._llm_structured(
+                            retrieval_question, fused, feedback="；".join(verification["issues"]))
+                        answer_text = self._render(structured)
+                        verification = verify(answer_text, refs, question, scene)
                     if not verification["passed"]:
-                        # 仍失败 → 弃用 LLM 回答，降级为抽取式（原文摘录天然可信）
+                        # 默认：核验不过直接抽取式降级，避免第二轮 LLM
                         structured = self._extractive_structured(retrieval_question, fused, scene)
                         answer_text = self._render(structured)
                         verification["degraded"] = True
@@ -643,6 +657,7 @@ class Pipeline:
 
         structured = self._with_draft_notice(structured, fused)
         answer_text = self._render(structured) if structured else answer_text
+        timing["generate_ms"] = int((time.time() - t_gen) * 1000)
 
         return self._pack({
             "intent": intent,
@@ -652,6 +667,7 @@ class Pipeline:
             "strategy": strategy, "risk": risk,
             "references": refs,
             "verification": verification,
+            "timing": timing,
             "graph_trace": {
                 "matched": graph_matched,
                 "related_articles": sorted(summary["graph_articles"]),

@@ -1,44 +1,97 @@
 [
   {
-    "id": "p18",
-    "category": "处罚与责任主体",
-    "question": "高层住宅建筑消防设施的维修更新改造费用由谁承担？",
+    "id": "c28",
+    "category": "生活化口语表达",
+    "question": "经常听人说微型消防站，这到底是个什么东西？",
     "intent": "law",
     "expected_articles": [
-      "高层规定·第三十三条"
+      "责任制办法·第三十条",
+      "高层规定·第二十七条"
     ],
     "must_conclusions": [
-      "业主"
+      "微型消防站"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "费用承担"
+    "review_notes": "微型消防站定义"
   },
   {
-    "id": "e02",
-    "category": "应急问题",
-    "question": "楼道里冒烟很大，我现在该怎么逃生？",
-    "intent": "emergency",
-    "expected_articles": [],
+    "id": "p13",
+    "category": "处罚与责任主体",
+    "question": "非法携带易燃易爆危险品乘坐公共交通工具怎么处罚？",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第六十二条",
+      "消防法·第二十三条"
+    ],
     "must_conclusions": [
-      "119"
+      "治安管理处罚法"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "楼道冒烟"
+    "review_notes": "非法携带危险品"
   },
   {
-    "id": "e12",
-    "category": "应急问题",
-    "question": "地铁车厢里着火了怎么逃生",
-    "intent": "emergency",
-    "expected_articles": [],
+    "id": "p35",
+    "category": "处罚与责任主体",
+    "question": "未按照规定建立专职消防队志愿消防队的高层建筑单位怎么处罚？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条",
+      "61号令·第二十三条"
+    ],
     "must_conclusions": [
-      "119"
+      "2000元以上10000元以下"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "地铁起火"
+    "review_notes": "47条5项未建队"
+  },
+  {
+    "id": "f02",
+    "category": "多轮追问",
+    "previous_question": "高层民用建筑的消防控制室必须24小时值班吗？",
+    "question": "每班至少几个人？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十六条"
+    ],
+    "must_conclusions": [
+      "2名"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "追问值班人数"
+  },
+  {
+    "id": "py07",
+    "category": "生活化口语表达",
+    "question": "电缆井里塞满杂物行不行",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十条"
+    ],
+    "must_conclusions": [
+      "电缆井"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "物业高频：管井堆物"
+  },
+  {
+    "id": "x23",
+    "category": "跨条款综合问题",
+    "question": "高层民用建筑多久开展一次消防安全评估？评估报告包括什么？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第三十九条"
+    ],
+    "must_conclusions": [
+      "每年至少"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "评估要求"
   },
   {
     "id": "p09",
@@ -56,156 +109,19 @@
     "review_notes": "61条混设处罚｜金标已按条文修正为五千元以上五万元以下"
   },
   {
-    "id": "p17",
+    "id": "p18",
     "category": "处罚与责任主体",
-    "question": "地方各级人民政府主要负责人对消防工作承担什么责任？",
+    "question": "高层住宅建筑消防设施的维修更新改造费用由谁承担？",
     "intent": "law",
     "expected_articles": [
-      "责任制办法·第二条"
+      "高层规定·第三十三条"
     ],
     "must_conclusions": [
-      "第一责任人"
+      "业主"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "政府第一责任人"
-  },
-  {
-    "id": "d02",
-    "category": "直接法规查询",
-    "question": "住宅区的物业服务企业有什么消防安全职责？",
-    "intent": "law",
-    "expected_articles": [
-      "消防法·第十八条",
-      "61号令·第十条"
-    ],
-    "must_conclusions": [
-      "共用消防设施"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "消防法18条物业对共用消防设施进行维护管理"
-  },
-  {
-    "id": "o15",
-    "category": "知识库外消防问题",
-    "question": "《北京市消防条例》对小型经营场所有什么特别规定？",
-    "intent": "law",
-    "expected_articles": [],
-    "must_conclusions": [],
-    "forbidden_conclusions": [],
-    "should_refuse": true,
-    "review_notes": "地方条例不在语料"
-  },
-  {
-    "id": "p12",
-    "category": "处罚与责任主体",
-    "question": "指使或者强令他人违反消防安全规定冒险作业怎么处罚？",
-    "intent": "law",
-    "expected_articles": [
-      "消防法·第六十四条"
-    ],
-    "must_conclusions": [
-      "警告或者五百元以下罚款"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "强令冒险作业"
-  },
-  {
-    "id": "c28",
-    "category": "生活化口语表达",
-    "question": "经常听人说微型消防站，这到底是个什么东西？",
-    "intent": "law",
-    "expected_articles": [
-      "责任制办法·第三十条",
-      "高层规定·第二十七条"
-    ],
-    "must_conclusions": [
-      "微型消防站"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "微型消防站定义"
-  },
-  {
-    "id": "o08",
-    "category": "知识库外消防问题",
-    "question": "《社会消防技术服务管理规定》把资质分为几级？",
-    "intent": "law",
-    "expected_articles": [],
-    "must_conclusions": [],
-    "forbidden_conclusions": [],
-    "should_refuse": true,
-    "review_notes": "技术服务规定不在语料"
-  },
-  {
-    "id": "p34",
-    "category": "处罚与责任主体",
-    "question": "高层民用建筑因维修停用消防设施未公告未落实防范措施怎么处罚？",
-    "intent": "law",
-    "expected_articles": [
-      "高层规定·第四十七条"
-    ],
-    "must_conclusions": [
-      "2000元以上10000元以下"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "47条6项停用设施"
-  },
-  {
-    "id": "c36",
-    "category": "生活化口语表达",
-    "question": "小区旁边工地上施工，消防这块归谁管？",
-    "intent": "law",
-    "expected_articles": [
-      "高层规定·第十四条",
-      "61号令·第十二条"
-    ],
-    "must_conclusions": [
-      "施工现场"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "施工责任口语"
-  },
-  {
-    "id": "o01",
-    "category": "知识库外消防问题",
-    "question": "《消防设施通用规范》对火灾自动报警系统有什么具体要求？",
-    "intent": "law",
-    "expected_articles": [],
-    "must_conclusions": [],
-    "forbidden_conclusions": [],
-    "should_refuse": true,
-    "review_notes": "GB规范不在语料"
-  },
-  {
-    "id": "n05",
-    "category": "非消防问题",
-    "question": "推荐几部好看的电影",
-    "intent": "refuse",
-    "expected_articles": [],
-    "must_conclusions": [],
-    "forbidden_conclusions": [],
-    "should_refuse": true,
-    "review_notes": "电影"
-  },
-  {
-    "id": "d32",
-    "category": "直接法规查询",
-    "question": "高层民用建筑的电缆井管道井有什么消防安全要求？",
-    "intent": "law",
-    "expected_articles": [
-      "高层规定·第二十条"
-    ],
-    "must_conclusions": [
-      "防火封堵"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "20条管井"
+    "review_notes": "费用承担"
   },
   {
     "id": "d21",
@@ -223,70 +139,84 @@
     "review_notes": "61号令32条：不能确保消防安全时停产停业整改（原误标33条）"
   },
   {
-    "id": "p08",
-    "category": "处罚与责任主体",
-    "question": "在高层民用建筑内未办动火审批手续进行电焊作业怎么处罚？",
+    "id": "py16",
+    "category": "直接法规查询",
+    "question": "哪些工程属于特殊建设工程要做消防设计审查",
     "intent": "law",
     "expected_articles": [
-      "高层规定·第四十七条"
+      "消设审查·第十四条",
+      "消设审查·第十五条"
     ],
     "must_conclusions": [
-      "2000元以上10000元以下"
+      "特殊建设工程"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "违规动火处罚"
+    "review_notes": "新源：消设审查"
   },
   {
-    "id": "p01",
+    "id": "p17",
     "category": "处罚与责任主体",
-    "question": "个人占用、堵塞疏散通道会被怎么处罚？",
+    "question": "地方各级人民政府主要负责人对消防工作承担什么责任？",
     "intent": "law",
     "expected_articles": [
+      "责任制办法·第二条"
+    ],
+    "must_conclusions": [
+      "第一责任人"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "政府第一责任人"
+  },
+  {
+    "id": "d12",
+    "category": "直接法规查询",
+    "question": "谁是单位的消防安全责任人？",
+    "intent": "law",
+    "expected_articles": [
+      "61号令·第四条",
+      "责任制办法·第四条"
+    ],
+    "must_conclusions": [
+      "消防安全责任人"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "61号令4条法定代表人"
+  },
+  {
+    "id": "d40",
+    "category": "直接法规查询",
+    "question": "高层住宅建筑和高层公共建筑分别是多少米？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第五十条"
+    ],
+    "must_conclusions": [
+      "27米",
+      "24米"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "50条定义"
+  },
+  {
+    "id": "py17",
+    "category": "生活化口语表达",
+    "question": "喷淋头坏了物业一直不修算不算违法",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第二十八条",
       "消防法·第六十条",
-      "消防法·第六十四条"
+      "61号令·第二十一条"
     ],
     "must_conclusions": [
-      "五百元以下罚款"
-    ],
-    "forbidden_conclusions": [
-      "五千元以上五万元以下罚款"
-    ],
-    "should_refuse": false,
-    "review_notes": "个人通道处罚60/64条均有"
-  },
-  {
-    "id": "p07",
-    "category": "处罚与责任主体",
-    "question": "在高层民用建筑楼道违规停放电动自行车拒不改正的怎么处罚？",
-    "intent": "law",
-    "expected_articles": [
-      "高层规定·第四十七条"
-    ],
-    "must_conclusions": [
-      "2000元以上10000元以下"
-    ],
-    "forbidden_conclusions": [
-      "五千元以上五万元以下"
-    ],
-    "should_refuse": false,
-    "review_notes": "高层电动车处罚47条7项"
-  },
-  {
-    "id": "f20",
-    "category": "多轮追问",
-    "previous_question": "单位防火检查多久进行一次？",
-    "question": "检查记录需要谁签字？",
-    "intent": "law",
-    "expected_articles": [
-      "61号令·第二十六条"
-    ],
-    "must_conclusions": [
-      "签名"
+      "消防设施"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "追问记录签名"
+    "review_notes": "物业高频：设施损坏不修"
   },
   {
     "id": "c01",
@@ -306,52 +236,171 @@
     "review_notes": "杀手锏案例：口语化堆物"
   },
   {
-    "id": "p31",
-    "category": "处罚与责任主体",
-    "question": "人员密集场所指使他人冒险作业发生事故单位负责人有责任吗？",
-    "intent": "law",
-    "expected_articles": [
-      "消防法·第六十四条",
-      "责任制办法·第二十八条"
-    ],
-    "must_conclusions": [
-      "冒险作业"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "冒险作业责任"
-  },
-  {
-    "id": "c40",
+    "id": "c36",
     "category": "生活化口语表达",
-    "question": "我们小区居委会在消防方面能起什么作用？",
+    "question": "小区旁边工地上施工，消防这块归谁管？",
     "intent": "law",
     "expected_articles": [
-      "高层规定·第十二条",
-      "消防法·第三十二条"
+      "高层规定·第十四条",
+      "61号令·第十二条"
     ],
     "must_conclusions": [
-      "防火安全公约"
+      "施工现场"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "居委会作用"
+    "review_notes": "施工责任口语"
   },
   {
-    "id": "d12",
-    "category": "直接法规查询",
-    "question": "谁是单位的消防安全责任人？",
+    "id": "x03",
+    "category": "跨条款综合问题",
+    "question": "同一栋写字楼里有多家公司，共用的疏散通道消防责任怎么划分？",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第十八条",
+      "责任制办法·第十八条"
+    ],
+    "must_conclusions": [
+      "统一管理"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "共用通道责任"
+  },
+  {
+    "id": "f17",
+    "category": "多轮追问",
+    "previous_question": "单位发生火灾时应当怎么做？",
+    "question": "可以先自己灭火不报警吗？",
+    "intent": "law",
+    "expected_articles": [
+      "61号令·第二十四条"
+    ],
+    "must_conclusions": [
+      "及时报警"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "追问报警义务"
+  },
+  {
+    "id": "o12",
+    "category": "知识库外消防问题",
+    "question": "消防员职业技能鉴定都考哪些科目？",
+    "intent": "law",
+    "expected_articles": [],
+    "must_conclusions": [],
+    "forbidden_conclusions": [],
+    "should_refuse": true,
+    "review_notes": "职业技能不在语料"
+  },
+  {
+    "id": "p08",
+    "category": "处罚与责任主体",
+    "question": "在高层民用建筑内未办动火审批手续进行电焊作业怎么处罚？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条"
+    ],
+    "must_conclusions": [
+      "2000元以上10000元以下"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "违规动火处罚"
+  },
+  {
+    "id": "e04",
+    "category": "应急问题",
+    "question": "楼下电动车充电着火了，火很大",
+    "intent": "emergency",
+    "expected_articles": [],
+    "must_conclusions": [
+      "119"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "电动车起火"
+  },
+  {
+    "id": "f11",
+    "category": "多轮追问",
+    "previous_question": "高层建筑内装修电焊需要办什么手续？",
+    "question": "不办手续会被罚吗？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第四十七条",
+      "高层规定·第十五条"
+    ],
+    "must_conclusions": [
+      "2000元"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "追问动火处罚"
+  },
+  {
+    "id": "c10",
+    "category": "生活化口语表达",
+    "question": "我们老板说消防是保安的事跟他没关系，到底单位里谁负责？",
     "intent": "law",
     "expected_articles": [
       "61号令·第四条",
-      "责任制办法·第四条"
+      "责任制办法·第四条",
+      "消防法·第十六条"
     ],
     "must_conclusions": [
       "消防安全责任人"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "61号令4条法定代表人"
+    "review_notes": "责任人推诿"
+  },
+  {
+    "id": "d18",
+    "category": "直接法规查询",
+    "question": "消防安全重点单位的防火巡查有什么要求？",
+    "intent": "law",
+    "expected_articles": [
+      "61号令·第二十五条",
+      "高层规定·第三十四条"
+    ],
+    "must_conclusions": [
+      "每日防火巡查"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "61号令25条每日巡查"
+  },
+  {
+    "id": "c32",
+    "category": "生活化口语表达",
+    "question": "我自己开个小店做个体户，也要管消防吗？",
+    "intent": "law",
+    "expected_articles": [
+      "责任制办法·第二十九条"
+    ],
+    "must_conclusions": [
+      "个体工商户"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "个体户职责"
+  },
+  {
+    "id": "p12",
+    "category": "处罚与责任主体",
+    "question": "指使或者强令他人违反消防安全规定冒险作业怎么处罚？",
+    "intent": "law",
+    "expected_articles": [
+      "消防法·第六十四条"
+    ],
+    "must_conclusions": [
+      "警告或者五百元以下罚款"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "强令冒险作业"
   },
   {
     "id": "d25",
@@ -369,158 +418,108 @@
     "review_notes": "5条专有共有"
   },
   {
-    "id": "x03",
-    "category": "跨条款综合问题",
-    "question": "同一栋写字楼里有多家公司，共用的疏散通道消防责任怎么划分？",
+    "id": "d32",
+    "category": "直接法规查询",
+    "question": "高层民用建筑的电缆井管道井有什么消防安全要求？",
+    "intent": "law",
+    "expected_articles": [
+      "高层规定·第二十条"
+    ],
+    "must_conclusions": [
+      "防火封堵"
+    ],
+    "forbidden_conclusions": [],
+    "should_refuse": false,
+    "review_notes": "20条管井"
+  },
+  {
+    "id": "d02",
+    "category": "直接法规查询",
+    "question": "住宅区的物业服务企业有什么消防安全职责？",
     "intent": "law",
     "expected_articles": [
       "消防法·第十八条",
-      "责任制办法·第十八条"
+      "61号令·第十条"
     ],
     "must_conclusions": [
-      "统一管理"
+      "共用消防设施"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "共用疏散通道统一管理"
+    "review_notes": "消防法18条物业对共用消防设施进行维护管理"
   },
   {
-    "id": "d40",
-    "category": "直接法规查询",
-    "question": "高层住宅建筑和高层公共建筑分别是多少米？",
-    "intent": "law",
-    "expected_articles": [
-      "高层规定·第五十条"
-    ],
-    "must_conclusions": [
-      "27米",
-      "24米"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "50条定义"
-  },
-  {
-    "id": "f09",
-    "category": "多轮追问",
-    "previous_question": "消防安全重点单位需要每日防火巡查吗？",
-    "question": "巡查都查什么内容？",
-    "intent": "law",
-    "expected_articles": [
-      "61号令·第二十五条",
-      "高层规定·第三十四条"
-    ],
-    "must_conclusions": [
-      "用火、用电"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "追问巡查内容"
-  },
-  {
-    "id": "p27",
+    "id": "p07",
     "category": "处罚与责任主体",
-    "question": "乡镇人民政府在消防工作方面有哪些职责？",
+    "question": "在高层民用建筑楼道违规停放电动自行车拒不改正的怎么处罚？",
     "intent": "law",
     "expected_articles": [
-      "责任制办法·第九条"
+      "高层规定·第四十七条"
     ],
     "must_conclusions": [
-      "乡镇人民政府"
+      "2000元以上10000元以下"
+    ],
+    "forbidden_conclusions": [
+      "五千元以上五万元以下"
+    ],
+    "should_refuse": false,
+    "review_notes": "高层电动车处罚47条7项"
+  },
+  {
+    "id": "e02",
+    "category": "应急问题",
+    "question": "楼道里冒烟很大，我现在该怎么逃生？",
+    "intent": "emergency",
+    "expected_articles": [],
+    "must_conclusions": [
+      "119"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "乡镇职责"
+    "review_notes": "楼道冒烟"
   },
   {
-    "id": "nx01",
-    "category": "直接法规查询",
-    "question": "公共娱乐场所能不能设在居民住宅楼里？",
+    "id": "n07",
+    "category": "非消防问题",
+    "question": "明天适合穿什么衣服",
+    "intent": "refuse",
+    "expected_articles": [],
+    "must_conclusions": [],
+    "forbidden_conclusions": [],
+    "should_refuse": true,
+    "review_notes": "穿搭"
+  },
+  {
+    "id": "py06",
+    "category": "生活化口语表达",
+    "question": "常闭防火门天天开着算不算违规",
     "intent": "law",
     "expected_articles": [
-      "39号令·第七条"
+      "广东高层·第二十条",
+      "高层规定·第二十八条",
+      "61号令·第二十一条"
     ],
     "must_conclusions": [
-      "居民住宅楼"
+      "防火门"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "39号令禁止居民楼改建娱乐场所"
+    "review_notes": "物业高频：常闭防火门"
   },
   {
-    "id": "nx02",
-    "category": "直接法规查询",
-    "question": "地下建筑里开公共娱乐场所有什么额外要求？",
+    "id": "py03",
+    "category": "生活化口语表达",
+    "question": "住户从窗户飞线给电动车充电行不行",
     "intent": "law",
     "expected_articles": [
-      "39号令·第十三条"
-    ],
-    "must_conclusions": [
-      "地下一层"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "地下仅一层等"
-  },
-  {
-    "id": "nx03",
-    "category": "直接法规查询",
-    "question": "楼道里能不能给电动自行车充电？",
-    "intent": "law",
-    "expected_articles": [
-      "电动车充电·7.10",
       "高层规定·第三十七条"
     ],
     "must_conclusions": [
+      "电动自行车",
       "充电"
     ],
     "forbidden_conclusions": [],
     "should_refuse": false,
-    "review_notes": "楼道充电禁止"
-  },
-  {
-    "id": "nx04",
-    "category": "直接法规查询",
-    "question": "电动自行车充电场所要不要装24小时视频监控？",
-    "intent": "law",
-    "expected_articles": [
-      "电动车充电·7.7"
-    ],
-    "must_conclusions": [
-      "30天"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "监控存储不少于30天"
-  },
-  {
-    "id": "nx05",
-    "category": "直接法规查询",
-    "question": "人员密集场所志愿消防队员数量怎么要求？",
-    "intent": "law",
-    "expected_articles": [
-      "密集场所·6.3"
-    ],
-    "must_conclusions": [
-      "30%"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "志愿队不少于从业人员30%"
-  },
-  {
-    "id": "nx06",
-    "category": "直接法规查询",
-    "question": "广东省超高层建筑用气场所应当安装什么装置？",
-    "intent": "law",
-    "expected_articles": [
-      "广东高层·第六条"
-    ],
-    "must_conclusions": [
-      "燃气泄漏"
-    ],
-    "forbidden_conclusions": [],
-    "should_refuse": false,
-    "review_notes": "广东高层第六条"
+    "review_notes": "物业高频：飞线充电口语"
   }
 ]

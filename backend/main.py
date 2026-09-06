@@ -20,7 +20,7 @@ import rag.pipeline as pipeline_mod
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.7.1"
+APP_VERSION = "0.8.4"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
 app.add_middleware(GZipMiddleware, minimum_size=400)
 
@@ -29,7 +29,7 @@ API_KEY = os.getenv("API_KEY", "").strip()
 # 简易限流：每 IP 每分钟最大请求数（0=关闭）
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60") or "60")
 _rate_bucket: dict[str, list[float]] = {}
-PUBLIC_API_PATHS = {"/api/system"}
+PUBLIC_API_PATHS = {"/api/system", "/api/feedback"}
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 # 问答管线（含 embedding）后台加载，避免穿透时首屏一直转圈
 pl = None
@@ -183,6 +183,15 @@ def _reload_knowledge(force: bool = False) -> dict:
 class AskBody(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     previous_question: Optional[str] = Field(default=None, max_length=500)
+
+
+class FeedbackBody(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+    reason: str = Field(..., min_length=1, max_length=40)
+    comment: str = Field(default="", max_length=1000)
+    answer_preview: str = Field(default="", max_length=500)
+    intent: str = Field(default="", max_length=40)
+    articles: list[str] = Field(default_factory=list)
 
 
 def _entity_stats():
@@ -481,6 +490,62 @@ def ask(body: AskBody, request: Request):
     return result
 
 
+@app.post("/api/feedback")
+def submit_feedback(body: FeedbackBody, request: Request):
+    """用户反馈：答偏 / 条款不对 / 其他 → 落盘 jsonl，供试点迭代。"""
+    from rag import audit
+
+    reason = body.reason.strip()
+    allowed = {"wrong_answer", "wrong_article", "unclear", "other"}
+    if reason not in allowed:
+        raise HTTPException(status_code=422, detail=f"reason 须为 {sorted(allowed)}")
+    arts = [a.strip() for a in (body.articles or []) if a and a.strip()][:12]
+    path = audit.write_feedback({
+        "client": _client_ip(request),
+        "question": body.question.strip(),
+        "reason": reason,
+        "comment": (body.comment or "").strip(),
+        "answer_preview": (body.answer_preview or "").strip(),
+        "intent": (body.intent or "").strip(),
+        "articles": arts,
+    })
+    return {"ok": True, "saved": bool(path), "path": os.path.basename(path) if path else None}
+
+
+@app.get("/api/audit/days")
+def audit_days(limit: int = Query(31, ge=1, le=90)):
+    from rag import audit
+    return {"days": audit.list_days(limit=limit)}
+
+
+@app.get("/api/audit/export")
+def audit_export(day: str = Query(..., description="YYYYMMDD"),
+                 format: str = Query("json", pattern="^(json|jsonl)$")):
+    """导出某日问答审计。设置了 API_KEY 时需带 Header。"""
+    from rag import audit
+    from fastapi.responses import PlainTextResponse
+
+    try:
+        path, rows = audit.export_day(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if not rows and not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail=f"无审计文件：ask_{day}.jsonl")
+    if format == "jsonl":
+        text = "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + ("\n" if rows else "")
+        return PlainTextResponse(
+            text,
+            media_type="application/x-ndjson",
+            headers={"Content-Disposition": f'attachment; filename="ask_{day}.jsonl"'},
+        )
+    return {
+        "day": day,
+        "count": len(rows),
+        "file": os.path.basename(path),
+        "rows": rows,
+    }
+
+
 @app.get("/api/system")
 def system_status():
     sources = source_catalog()
@@ -488,9 +553,25 @@ def system_status():
     loading = _pl_loading or (pl is None and not _pl_ready.is_set())
     generation = "加载中…"
     channels = []
+    lite = os.getenv("FIRESAGE_LITE", "").strip() in ("1", "true", "True", "yes")
+    llm_on = False
+    vector_degraded = True
+    cross_encoder_on = False
     if pl is not None:
-        generation = "LLM 生成（结构化+引用核验）" if pl.llm.enabled else "本地抽取式回答"
+        llm_on = bool(getattr(pl.llm, "enabled", False))
+        generation = "LLM 生成（结构化+引用核验）" if llm_on else "本地抽取式回答"
         channels = pl.retriever.channels
+        vector_degraded = bool(getattr(pl.retriever, "degraded_vector", True))
+        ce = getattr(pl.retriever, "cross_encoder", None)
+        cross_encoder_on = bool(getattr(ce, "available", False))
+    # full=向量+精排+LLM；partial=缺一项；lite=显式 LITE 或双降级
+    if lite or (vector_degraded and not llm_on):
+        quality_tier = "lite"
+    elif llm_on and not vector_degraded and cross_encoder_on:
+        quality_tier = "full"
+    else:
+        quality_tier = "partial"
+    arts = {c.get("article") for c in CHUNKS if c.get("article")}
     return {
         "name": "消安智答 FireSage",
         "version": APP_VERSION,
@@ -502,6 +583,20 @@ def system_status():
         "retrieval_channels": channels,
         "knowledge_bases": [source["name"] for source in sources],
         "sources": sources,
+        "corpus": {
+            "sources": len(sources),
+            "articles": len(arts),
+            "semantic_sents": len(CHUNKS),
+            "entities": len(graph["nodes"]),
+            "edges": len(graph["edges"]),
+        },
+        "runtime": {
+            "lite": lite,
+            "llm_enabled": llm_on,
+            "vector_degraded": vector_degraded,
+            "cross_encoder": cross_encoder_on,
+            "quality_tier": quality_tier,
+        },
         "security": {
             "api_key_required": bool(API_KEY),
             "rate_limit_per_min": RATE_LIMIT_PER_MIN,

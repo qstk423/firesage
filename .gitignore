@@ -9,6 +9,9 @@ __pycache__/
 backend/data/.semantic_cache/
 backend/.env.local
 backend/data/audit/
+backend/data/feedback/
 backend/data/survey_responses.jsonl
 server.log
 server.*.log
+test_report.json
+project_eval_report.json
