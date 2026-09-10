@@ -20,6 +20,8 @@ FIRE_DOMAIN_WORDS = [
     "演练", "巡查", "检查记录", "职责", "灭火", "报警",
     "烟感", "探测器", "灭火系统", "喷淋", "验收", "避难层", "防火间距",
     "消防技术服务", "维保", "消防安全评估", "消防设计审查", "消防验收",
+    # 值班/资质类口语（"安排没证的人值班"）：命中走 law，由检索门槛兜底防误入
+    "值班", "持证", "上岗", "无证", "没证",
 ]
 
 CHAT_WORDS = ["你好", "您好", "谢谢", "你是谁", "介绍一下", "能做什么", "再见", "hello", "hi ", "在吗", "加油"]
@@ -39,6 +41,24 @@ ACTIVE_EMERGENCY_SIGNALS = [
 ]
 WEAK_EMERGENCY_FIRE = ["着火", "起火"]
 EMERGENCY_CONTEXT = ["怎么办", "现在", "现场", "家里", "楼里", "发生", "逃生", "救命", "怎么处理"]
+
+# 义务缺位吐槽（法规咨询，非险情）：「公司从来不组织消防演练，着火了都不知道往哪跑」
+# 这类句式中的火情词是假设性后果描述，不应触发应急分流
+_OBLIGATION_TOPICS = ("演练", "培训", "应急预案", "疏散演练", "防火检查", "巡查", "值班")
+_OBLIGATION_LACKS = ("不组织", "从不", "没组织", "未组织", "没有组织", "没搞", "没开展",
+                     "没举行", "没做过", "不搞", "不做", "没有做", "从来没")
+# 正在发生的紧迫信号：与义务吐槽并存时仍应走应急
+_IMMEDIATE_MARKERS = ("现在", "正在", "马上", "已经烧", "已经着", "快烧", "火要")
+
+
+def _is_obligation_complaint(q: str) -> bool:
+    """「单位不组织演练/培训/检查」类义务缺位描述：属法规咨询而非正在发生的险情。"""
+    has_topic = any(w in q for w in _OBLIGATION_TOPICS)
+    has_lack = any(w in q for w in _OBLIGATION_LACKS)
+    if not (has_topic and has_lack):
+        return False
+    # 但若同时含「现在/正在/快烧到」等紧迫信号，仍按险情处理
+    return not any(m in q for m in _IMMEDIATE_MARKERS)
 
 REFUSE_WORDS = ["你多大", "你女朋友", "作弊", "帮我犯罪", "赚钱方法"]
 
@@ -75,6 +95,9 @@ def _has_strong_fire_signal(q: str) -> bool:
 
 
 def _has_active_emergency(q: str) -> bool:
+    # 义务缺位吐槽优先排除：演练/培训类抱怨中的火情词是假设后果，不是正在发生的险情
+    if _is_obligation_complaint(q):
+        return False
     # 强信号：真火情 → 应急
     if _has_strong_fire_signal(q):
         return True

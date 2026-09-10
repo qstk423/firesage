@@ -1,16 +1,16 @@
 {
   "splits": {
     "train": {
-      "n": 139,
-      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_train.jsonl"
+      "n": 160,
+      "path": "c:\\Users\\q's't\\Documents\\trae_projects\\zhengliu\\firesage\\backend\\data\\models\\sft\\gen_sft_train.jsonl"
     },
     "dev": {
-      "n": 29,
-      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_dev.jsonl"
+      "n": 34,
+      "path": "c:\\Users\\q's't\\Documents\\trae_projects\\zhengliu\\firesage\\backend\\data\\models\\sft\\gen_sft_dev.jsonl"
     },
     "test": {
-      "n": 32,
-      "path": "/Users/oblivious/Documents/trae_projects/firesage/backend/data/models/sft/gen_sft_test.jsonl"
+      "n": 35,
+      "path": "c:\\Users\\q's't\\Documents\\trae_projects\\zhengliu\\firesage\\backend\\data\\models\\sft\\gen_sft_test.jsonl"
     }
   },
   "format": "instruction-input-output JSONL for LoRA/QLoRA"

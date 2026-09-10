@@ -1,4 +1,5 @@
 venv/
+venv311/
 .python/
 __pycache__/
 *.pyc
@@ -11,6 +12,13 @@ backend/.env.local
 backend/data/audit/
 backend/data/feedback/
 backend/data/survey_responses.jsonl
+# 真人调研数据（隐私，不入公开库）
+访客问答记录.md
+问卷统计报告.md
+# 本地模型权重与训练产物（体积大，不入库）
+backend/models/
+backend/adapters/
+backend/eval_reports/
 server.log
 server.*.log
 test_report.json

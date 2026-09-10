@@ -4,9 +4,10 @@
 核验规则（任一失败则判定不通过，触发重生成或降级）：
 1. 条款存在性：回答引用的条款必须来自本次检索到的依据，防止编造；
 2. 处罚金额一致：回答中的罚款金额必须能在引用条款原文中找到；
-3. 处罚主体匹配：对单位的处罚不得引用只有个人处罚的条款（反之亦然）；
-4. 建筑适用性：未提及高层的问题不得以高层专项规定作为唯一处罚依据；
-5. 处罚意图覆盖：问处罚时，依据中必须包含真正的处罚条款，而非仅义务条款。
+3. 期限一致：回答中的期限（拘留日数/整改期限等）必须能在条款原文或问题中找到；
+4. 处罚主体匹配：对单位的处罚不得引用只有个人处罚的条款（反之亦然）；
+5. 建筑适用性：未提及高层的问题不得以高层专项规定作为唯一处罚依据；
+6. 处罚意图覆盖：问处罚时，依据中必须包含真正的处罚条款，而非仅义务条款。
 """
 import re
 
@@ -19,6 +20,10 @@ FINE_PATTERN = re.compile(
     r"([零一二两三四五六七八九十百千万\d]+)\s*(?:元|万?元)(?:以上)?(?:至|到|—|~|-)?"
     r"(?:([零一二两三四五六七八九十百千万\d]+)\s*万?元)?(?:以下)?")
 PENALTY_ARTICLE_WORDS = ("罚款", "拘留", "责令改正", "责令停产停业", "处罚", "警告")
+# 期限提取：数值 + 日/天/月/年（支持「X日以上Y日以下」区间写法）
+DURATION_PATTERN = re.compile(
+    r"([零一二两三四五六七八九十百\d]+)\s*(日|天|月|年)(?:以上)?(?:至|到|—|~|-)?"
+    r"(?:([零一二两三四五六七八九十百\d]+)\s*(日|天|月|年))?(?:以下)?")
 
 
 def _cn_to_int(text):
@@ -55,6 +60,37 @@ def _extract_fine_amounts(text):
     return amounts
 
 
+# 期限单位归一：天 → 日
+_DUR_UNIT = {"日": "日", "天": "日", "月": "月", "年": "年"}
+
+
+def _extract_durations(text):
+    """从文本提取期限（拘留日数/整改期限等），返回 [(low, high, unit)]。
+
+    「十五日以上三十日以下」→ [(15, 30, 日)]；「三十日」→ [(30, 30, 日)]。
+    天归一为日；中文/阿拉伯数字均支持。
+    """
+    out = []
+    for m in DURATION_PATTERN.finditer(text or ""):
+        low = _cn_to_int(m.group(1))
+        unit = _DUR_UNIT.get(m.group(2))
+        high = _cn_to_int(m.group(3)) if m.group(3) else low
+        high_unit = _DUR_UNIT.get(m.group(4), unit) if m.group(4) else unit
+        if low is None or high is None or not unit:
+            continue
+        if high < low:
+            low, high = high, low
+        # 区间两端单位不一致（如"3日至1个月"）：按较大单位整体记录
+        u = high_unit if high_unit != unit else unit
+        out.append((low, high, u))
+    return out
+
+
+def _fmt_duration(d):
+    low, high, unit = d
+    return f"{low}~{high}{unit}" if high != low else f"{low}{unit}"
+
+
 # 法规简称 → 回答中可能出现的各种写法
 LAW_ALIASES = {
     "消防法": ["消防法", "中华人民共和国消防法"],
@@ -76,16 +112,23 @@ LAW_ALIASES = {
 
 
 def _extract_cited_articles(answer, known_articles):
-    """从回答中提取引用的条款 key（需在 known_articles 中）。"""
-    text = (answer or "").replace(" ", "")
+    """从回答中提取引用的条款 key（需在 known_articles 中）。
+
+    按行匹配：法规名与条号必须在同一行内同现。全文交叉匹配会把
+    「A法的条号 × B法的名称」组合成不存在的条款，误判为编造。
+    """
     hits = set()
-    for key in known_articles:
-        law, num = key.split("·", 1)
-        aliases = LAW_ALIASES.get(law, [law])
-        # (?![一二三四五六七八九十百]) 防止「第六条」误匹配「第六十条」
-        num_hit = re.search(num + "(?![一二两三四五六七八九十百])", text)
-        if num_hit and any(alias.replace(" ", "") in text for alias in aliases):
-            hits.add(key)
+    for line in (answer or "").splitlines():
+        text = line.replace(" ", "")
+        if "《" not in text and "条" not in text:
+            continue
+        for key in known_articles:
+            law, num = key.split("·", 1)
+            aliases = LAW_ALIASES.get(law, [law])
+            # (?![一二三四五六七八九十百]) 防止「第六条」误匹配「第六十条」
+            num_hit = re.search(num + "(?![一二三四五六七八九十百])", text)
+            if num_hit and any(alias.replace(" ", "") in text for alias in aliases):
+                hits.add(key)
     return hits
 
 
@@ -131,6 +174,17 @@ def verify(answer, references, question, scene=None):
                     amount_ok = False
                     issues.append(f"罚款金额 {low}~{high} 元未在引用条款中找到")
     checks.append({"rule": "处罚金额一致", "passed": amount_ok})
+
+    # 2.5 期限一致：回答中的期限（拘留日数/整改期限）需在条款原文或问题中出现
+    # （问题中出现 = 用户自己给出的期限，复述不算编造）
+    ans_durs = _extract_durations(answer)
+    ref_durs = set(_extract_durations(ref_text)) | set(_extract_durations(question or ""))
+    duration_ok = True
+    for d in ans_durs:
+        if d not in ref_durs:
+            duration_ok = False
+            issues.append(f"期限 {_fmt_duration(d)} 未在引用条款或问题中找到")
+    checks.append({"rule": "期限一致", "passed": duration_ok})
 
     # 3. 处罚主体匹配
     subject_ok = True

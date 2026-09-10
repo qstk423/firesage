@@ -6,12 +6,13 @@
   → 查询改写与同义扩展
   → BM25+语义向量+知识图谱三路召回
   → 法规意图重排 + CrossEncoder 精排
+  → 检索门槛判定（top1 fused+CE 双低 → 直接标准拒答）
   → LLM 依据条款结构化生成（无 LLM 时抽取式降级）
-  → 独立核验器逐结论检查引用一致性（失败重生成一次，再失败降级/拒答）
+  → 独立核验器检查金额/期限/主体/处罚的原文支撑
+    （失败带反馈重试一次，仍失败标准拒答）
   → 可信回答 / 澄清追问 / 安全拒答
 
 对外仅暴露 stages（正在检索/重排/生成/核验）过程状态，不暴露模型内部思维链。
-核验失败默认直接降级抽取式（VERIFY_REGENERATE=1 才二次生成），以控制时延。
 """
 import json
 import os
@@ -33,6 +34,13 @@ CRAG_AMBIGUOUS = 0.22   # 疑似明确但质量低
 CRAG_INCORRECT = 0.12   # 完全未见相关
 CRAG_CE_FLOOR = 0.50    # CrossEncoder 低于此分 → 倾向引导而非硬拒
 CRAG_CE_SOFT = 0.47     # 有图谱命中时的软地板
+
+# 检索拒答门槛（scripts/analyze_threshold.py 对 35 题正误分布回放计算）：
+# top1 fused<0.63 且 top1 CrossEncoder<0.60 → 拦截全部 3 条库外题（o04/o07/o14）。
+# 0.63 而非 0.65：口语化问法（如"安排没证的人值班"）检索命中金标条款但 fused
+# 偏低（0.633），放宽避免误伤；误放行的库外题由引用验证+支撑核验兜底拒答。
+REFUSE_FUSED_TH = 0.63
+REFUSE_CE_TH = 0.60
 
 GUIDE_EXAMPLES = (
     "楼道堆放杂物违反什么规定？",
@@ -69,16 +77,24 @@ SYSTEM_TMPL = (
     "回答必须使用以下 JSON 结构（不要输出 JSON 以外的内容）：\n"
     '{"conclusion": "直接回答问题的结论（1句，尽量不超过40字）", '
     '"conditions": "该结论适用的条件（主体/场所/建筑类型，如不适用写 无特殊限制）", '
-    '"basis": ["《法规名》第X条：支撑该结论的关键原文片段", ...], '
+    '"basis": ["《法规名》第X条：支撑该结论的关键原文短句（60字内，不整段照抄）", ...], '
     '"supplement": "补充说明或注意事项（无则写 无；控制在2句内）", '
     '"confidence": "high|medium|low，依据条款数量与一致性判断"}\n'
     "所有结论必须能在提供的条款原文中找到依据，引用条款编号必须来自提供的条款。"
 )
 
-# 核验失败默认直接降级抽取式，避免再打一轮 LLM（体感常从 6s 拖到 12s+）
-VERIFY_REGENERATE = os.getenv("VERIFY_REGENERATE", "").strip() in ("1", "true", "True", "yes")
+# 核验失败（金额/期限/主体/处罚无原文支撑）→ 带反馈重试一次，仍失败标准拒答
 # 送给 LLM 的条款条数（展示仍用 top_k 引用）
 LLM_CONTEXT_ARTICLES = int(os.getenv("LLM_CONTEXT_ARTICLES", "3") or "3")
+
+# 模型侧规范拒答识别（与 serve_local_qwen 的 REFUSE_MARK 同源）：
+# basis=[] 且结论含拒答话术 → 视为规范拒答直接透传，不进核验重试
+MODEL_REFUSE_PAT = re.compile(
+    r"超出.{0,12}(范围|知识库)|暂不回答|暂无.{0,4}(适用|条款)|无法回答|无法依据|"
+    r"知识库外|非消防主题|无法作答")
+
+# basis 摘录长度上限：保留《法规名》第X条前缀，摘录截断，避免复制整段法条
+BASIS_SNIPPET_LIMIT = 100
 
 DRAFT_STATUS_MARKERS = ("报批稿", "征求意见稿", "草案")
 DRAFT_NOTICE = "所引文本含报批稿/非正式施行材料，仅供参考，不作为已生效执法依据；请以现行有效法规为准。"
@@ -163,6 +179,9 @@ class Pipeline:
         if top.get("cite_inject"):
             return "Correct"
         ce = top.get("cross_encoder")
+        # 检索拒答门槛：top1 双低（fused + CrossEncoder）→ 直接标准拒答
+        if ce is not None and ce < REFUSE_CE_TH and top["score"] < REFUSE_FUSED_TH:
+            return "BelowThreshold"
         if ce is not None:
             # 有图谱路径时略放宽：概念问往往 CE 偏低但仍有真条款
             floor = CRAG_CE_SOFT if top.get("graph_hit") or top.get("direct_match") else CRAG_CE_FLOOR
@@ -279,6 +298,23 @@ class Pipeline:
     def _refuse_off_domain(self):
         return "抱歉，这是消防法规专业问答系统，该问题超出范围，我无法回答。"
 
+    def _refuse_low_confidence(self):
+        return (
+            "当前知识库中没有检索到与该问题足够相关的消防法规条款（检索置信度低于作答门槛），"
+            "为避免误导，我无法作答。\n\n"
+            "可以尝试：把问题换成已收录法规范围内的具体场景"
+            "（如楼道堆放、占用消防通道、电动车充电、消防演练等）；"
+            "或咨询属地消防救援机构。\n紧急情况请直接拨打 119。"
+        )
+
+    def _refuse_unsupported(self):
+        return (
+            "该回答的关键内容（金额/期限/主体/处罚措施）无法在检索到的法规原文中找到支撑，"
+            "重试一次后仍未通过核验。为避免误导，本次不作答。\n\n"
+            "建议核对法规官方原文，或换一个更具体的场景提问；"
+            "紧急情况请直接拨打 119。"
+        )
+
     # ---------- 生成 ----------
     def _llm_structured(self, question, fused, feedback=None):
         # 只送前 N 条给模型，缩短生成时延；前端引用仍用完整 fused
@@ -294,6 +330,7 @@ class Pipeline:
         resp = self.llm.complete(SYSTEM_TMPL, user)
         if not resp:
             return None
+        protections = list(getattr(self.llm, "last_protections", None) or [])
         try:
             start = resp.find("{")
             end = resp.rfind("}")
@@ -301,13 +338,33 @@ class Pipeline:
             return {
                 "conclusion": str(data.get("conclusion", "")).strip(),
                 "conditions": str(data.get("conditions", "无特殊限制")).strip(),
-                "basis": [str(b) for b in data.get("basis", []) if b],
+                "basis": self._condense_basis(data.get("basis", [])),
                 "supplement": str(data.get("supplement", "无")).strip(),
                 "confidence": data.get("confidence", "medium"),
+                # 本地推理服务五层守卫触发记录（云端 LLM 恒为 []）
+                "llm_protections": protections,
             }
         except Exception:
             return {"conclusion": resp.strip(), "conditions": "无特殊限制",
-                    "basis": [], "supplement": "无", "confidence": "low"}
+                    "basis": [], "supplement": "无", "confidence": "low",
+                    "llm_protections": protections}
+
+    @staticmethod
+    def _condense_basis(basis, limit=BASIS_SNIPPET_LIMIT):
+        """精简 basis：保留《法规名》第X条前缀，摘录截断到 limit 字，避免复制整段法条。"""
+        out = []
+        for b in basis or []:
+            b = str(b).strip()
+            if not b:
+                continue
+            m = re.match(r"^(《[^》]+》第[一二三四五六七八九十百零\d]+条(?:之[一二三四五六七八九十])?)[：:](.*)$", b)
+            if m and len(m.group(2)) > limit:
+                snippet = m.group(2)[:limit].rstrip("。；，,、 ") or "…"
+                b = f"{m.group(1)}：{snippet}…"
+            elif not m and len(b) > limit + 20:
+                b = b[:limit + 20] + "…"
+            out.append(b)
+        return out
 
     def _extractive_structured(self, question, fused, scene):
         """无 LLM 降级：从最高置信条款抽取结构化回答（原文直接来自条款，天然可信）。"""
@@ -590,6 +647,24 @@ class Pipeline:
                 "context_used": context_used, "scene": scene,
             }, t0, ["检索", "重排", "置信判定", "引导"])
 
+        # ---- 检索门槛拒答：top1 双低（fused+CE）→ 直接标准拒答，不硬答 ----
+        if crag == "BelowThreshold":
+            return self._pack({
+                "intent": "refuse",
+                "answer": self._refuse_low_confidence(),
+                "refused": True, "crag": crag,
+                "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
+                "vector_trace": {"matched": bool(summary.get("vector_articles")),
+                                 "vector_ratio": round(vector_ratio, 2)},
+                "strategy": (
+                    f"检索门槛拒答（top1 fused={top['score']:.2f}<{REFUSE_FUSED_TH} 且 "
+                    f"CE={top.get('cross_encoder'):.2f}<{REFUSE_CE_TH}，无可靠依据）"
+                    if top else "检索门槛拒答"
+                ),
+                "risk": risk,
+                "context_used": context_used, "scene": scene,
+            }, t0, ["检索", "重排", "置信判定", "拒答"])
+
         # ---- CRAG 低质量 → 引导提问（Ambiguous）/ 仍无证据才拒答（Incorrect）----
         if crag == "Ambiguous" or (crag == "Incorrect" and fused and fused[0].get("score", 0) >= 0.35):
             return self._pack({
@@ -626,24 +701,60 @@ class Pipeline:
         timing = {"retrieve_ms": int((time.time() - t0) * 1000)}
         t_gen = time.time()
         verification = None
+
+        def refuse_after_gen(answer, strategy, verification=None, structured=None, extra_stages=()):
+            """生成阶段的标准拒答打包（支撑核验失败 / 模型侧规范拒答）。"""
+            return self._pack({
+                "intent": "refuse",
+                "answer": answer,
+                "structured": structured,
+                "refused": True, "crag": crag,
+                "strategy": strategy, "risk": risk,
+                "references": refs,
+                "verification": verification,
+                "timing": timing,
+                "graph_trace": {"matched": graph_matched, "graph_ratio": round(graph_ratio, 2)},
+                "vector_trace": {"matched": bool(summary.get("vector_articles")),
+                                 "vector_ratio": round(vector_ratio, 2)},
+                "context_used": context_used, "scene": scene,
+            }, t0, list(stages) + list(extra_stages))
+
         if self.llm.enabled:
             structured = self._llm_structured(retrieval_question, fused)
-            answer_text = self._render(structured)
+            # 首字响应时间以第一次生成为准（重试不覆盖用户体感）
+            timing["ttft_ms"] = getattr(self.llm, "last_ttft_ms", None)
             if structured:
+                # 模型侧已规范拒答（basis=[] + 拒答话术，多为引用守卫/无条款守卫产物）
+                # → 直接透传拒答，不再进核验与重试
+                if (not structured.get("basis")
+                        and MODEL_REFUSE_PAT.search(structured.get("conclusion") or "")):
+                    return refuse_after_gen(
+                        self._refuse_low_confidence(),
+                        "LLM 规范拒答（给定条款不适用，模型拒绝作答）",
+                        structured=structured, extra_stages=["拒答"])
+                answer_text = self._render(structured)
                 verification = verify(answer_text, refs, question, scene)
                 if not verification["passed"]:
-                    if VERIFY_REGENERATE:
-                        # 可选：带反馈再生成一次（更准但更慢）
-                        structured = self._llm_structured(
-                            retrieval_question, fused, feedback="；".join(verification["issues"]))
+                    # 原文支撑检查失败（金额/期限/主体/处罚）→ 带反馈重试一次
+                    stages.append("核验重试")
+                    retry_feedback = (
+                        "；".join(verification["issues"])
+                        + "。请严格依据给定条款重新作答：删除所有在给定条款原文中找不到的"
+                          "金额、期限、主体和处罚表述；只能引用给定条款，不得引用未提供的法规或条款号。"
+                    )
+                    retry = self._llm_structured(
+                        retrieval_question, fused, feedback=retry_feedback)
+                    if retry:
+                        structured = retry
                         answer_text = self._render(structured)
                         verification = verify(answer_text, refs, question, scene)
+                        verification["retried"] = True
                     if not verification["passed"]:
-                        # 默认：核验不过直接抽取式降级，避免第二轮 LLM
-                        structured = self._extractive_structured(retrieval_question, fused, scene)
-                        answer_text = self._render(structured)
-                        verification["degraded"] = True
-                        stages.append("降级")
+                        # 重试仍无原文支撑 → 标准拒答（宁可拒答，不可无依据作答）
+                        return refuse_after_gen(
+                            self._refuse_unsupported(),
+                            "支撑核验拒答（金额/期限/主体/处罚无原文支撑，重试后仍失败）",
+                            verification=verification, extra_stages=["拒答"])
             else:
                 # LLM 未返回结构化 JSON（例如网络/鉴权失败）→ 必须降级，保证 answer/reference 评测可用。
                 structured = self._extractive_structured(retrieval_question, fused, scene)
