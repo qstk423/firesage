@@ -357,11 +357,16 @@ def build_app(model, tok, adapter_dir: str, api_key: str):
     app = FastAPI(title="FireSage Local LLM (OpenAI-compatible)", version="1.0")
     gen_lock = threading.Lock()
     model_name = os.path.basename(adapter_dir.rstrip("\\/"))
+    # 服务端再设一道默认输出上限：即使旧的 .env.local-model 仍写着 700，
+    # 拉取新版代码并重启后也会立即生效。长答案评测可显式设置为 700。
+    server_token_cap = max(
+        64, min(int(os.getenv("LOCAL_LLM_MAX_TOKENS", "480") or "480"), 900))
 
     @app.get("/health")
     def health():
         return {"ok": True, "model": model_name, "adapter": adapter_dir,
-                "backend": "qwen2.5-3b-instruct + lora"}
+                "backend": "qwen2.5-3b-instruct + lora",
+                "max_output_tokens": server_token_cap}
 
     @app.get("/v1/models")
     def models():
@@ -378,8 +383,9 @@ def build_app(model, tok, adapter_dir: str, api_key: str):
             raise HTTPException(status_code=400, detail="messages is empty")
         system = next((m["content"] for m in messages if m.get("role") == "system"), TRAIN_SYSTEM)
         user = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
-        temperature = float(body.get("temperature", 0.2) or 0.2)
-        max_tokens = min(int(body.get("max_tokens", 700) or 700), 900)
+        temperature = float(body.get("temperature", 0) or 0)
+        requested_tokens = int(body.get("max_tokens", 480) or 480)
+        max_tokens = max(64, min(requested_tokens, server_token_cap, 900))
         stream = bool(body.get("stream"))
 
         bridged = bridge_prompt(system, user)
@@ -395,10 +401,13 @@ def build_app(model, tok, adapter_dir: str, api_key: str):
                 **inputs,
                 max_new_tokens=max_tokens,
                 do_sample=temperature > 0.05,
-                temperature=max(temperature, 0.05),
-                top_p=0.8,
                 pad_token_id=tok.eos_token_id,
             )
+            # 贪心解码不传 temperature/top_p，避免 transformers 的无效参数警告；
+            # 显式要求采样时才加入对应参数。
+            if temperature > 0.05:
+                kw["temperature"] = temperature
+                kw["top_p"] = 0.8
             if streamer is not None:
                 kw["streamer"] = streamer
             return kw
@@ -560,6 +569,8 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--api-key", default=os.getenv("LOCAL_LLM_API_KEY", ""),
                         help="为空则不校验（仅本机监听）")
+    parser.add_argument("--skip-warmup", action="store_true",
+                        help="跳过启动时 GPU 热身（默认热身，减少第一次问答等待）")
     args = parser.parse_args()
 
     for label, path in (("基座模型", MODEL_DIR), ("LoRA adapter", args.adapter)):
@@ -583,6 +594,26 @@ def main() -> None:
     )
     print(f"[加载] LoRA adapter {args.adapter}")
     model = PeftModel.from_pretrained(model, args.adapter).eval()
+    if not args.skip_warmup:
+        print("[热身] 正在预热 GPU（只在启动时执行一次）")
+        warm_messages = [
+            {"role": "system", "content": TRAIN_SYSTEM},
+            {"role": "user", "content": "只输出一个左花括号"},
+        ]
+        warm_prompt = tok.apply_chat_template(
+            warm_messages, add_generation_prompt=True, tokenize=False)
+        warm_inputs = tok(
+            warm_prompt, return_tensors="pt", add_special_tokens=False).to(model.device)
+        with torch.no_grad():
+            model.generate(
+                **warm_inputs,
+                max_new_tokens=1,
+                do_sample=False,
+                pad_token_id=tok.eos_token_id,
+            )
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        print("[热身] 完成")
     print(f"[就绪] Qwen2.5-3B + {os.path.basename(args.adapter)} → http://{args.host}:{args.port}")
 
     import uvicorn

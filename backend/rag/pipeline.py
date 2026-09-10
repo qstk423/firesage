@@ -769,6 +769,12 @@ class Pipeline:
         structured = self._with_draft_notice(structured, fused)
         answer_text = self._render(structured) if structured else answer_text
         timing["generate_ms"] = int((time.time() - t_gen) * 1000)
+        # 生成服务返回的纯模型耗时与 token 数，便于在 Windows 上定位慢在
+        # 检索、模型生成还是二次核验；云端接口不返回时保持 None/空字典。
+        timing["model_ms"] = getattr(self.llm, "last_model_latency_ms", None)
+        timing["usage"] = dict(getattr(self.llm, "last_usage", None) or {})
+        timing["guard_retry"] = "citation_retry" in (
+            getattr(self.llm, "last_protections", None) or [])
 
         return self._pack({
             "intent": intent,

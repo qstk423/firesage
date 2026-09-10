@@ -171,6 +171,9 @@ python3 main.py
 - `.env.local-model` 为独立配置文件，**不修改** DeepSeek 生产配置（`.env.local`），停掉本地进程即回退云端
 - 显存不足时 `run_firesage_local.py` 已强制 `CUDA_VISIBLE_DEVICES=""`，检索模型走 CPU，与 8320 推理服务互不抢占
 - 需要 `LLM_STREAM=1`（默认已写入 `.env.local-model`）开启流式生成与 TTFT 记录
+- 演示默认采用确定性生成并把输出限制为 480 tokens；8320 启动时会自动预热 GPU，减少第一次问答额外等待
+- 返回的 `timing` 包含检索、总生成、纯模型生成、TTFT 与 token 用量，可据此区分 CPU 检索和 GPU 生成瓶颈
+- 若要复现 700-token 长答案评测，可在启动 8320 前设置 `LOCAL_LLM_MAX_TOKENS=700`，并同步调整 `LLM_MAX_TOKENS=700`
 
 ### Docker 一键启动（试点 / 演示）
 

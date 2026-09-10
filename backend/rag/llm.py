@@ -33,7 +33,10 @@ class LLMClient:
         self.timeout = int(os.getenv("LLM_TIMEOUT", "30"))
         # 演示默认只重试 1 次，避免超时后再等一轮把体感拖到十几秒
         self.max_retries = int(os.getenv("LLM_MAX_RETRIES", "1"))
-        self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "700") or "700")
+        # 本地 3B 默认控制在 480 token：足够容纳结构化 JSON，同时限制异常啰嗦输出。
+        # 深度评测若确实需要长答案，可在独立 env 中临时调回 700。
+        self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "480") or "480")
+        self.temperature = float(os.getenv("LLM_TEMPERATURE", "0") or "0")
         # 流式输出（默认关闭，保持云端生产行为不变；本地 .env.local-model 置 1 开启）
         self.use_stream = os.getenv("LLM_STREAM", "").strip() in ("1", "true", "True", "yes")
         self.enabled = bool(self.base_url and self.api_key and self.model)
@@ -41,6 +44,8 @@ class LLMClient:
         self.last_protections: list = []
         # 最近一次流式调用的首字响应时间（毫秒；非流式为 None）
         self.last_ttft_ms = None
+        self.last_model_latency_ms = None
+        self.last_usage: dict = {}
 
     def _request(self, payload):
         return urllib.request.Request(
@@ -59,6 +64,7 @@ class LLMClient:
         t0 = time.time()
         self.last_ttft_ms = None
         parts, final_content, protections = [], None, []
+        model_latency_ms, usage = None, {}
         with urllib.request.urlopen(self._request(payload), timeout=self.timeout) as resp:
             for raw in resp:
                 line = raw.decode("utf-8", errors="replace").strip()
@@ -84,19 +90,29 @@ class LLMClient:
                 if chunk.get("ttft_ms") is not None:
                     # 生成侧 TTFT 更准（不含 HTTP 开销），优先采信
                     self.last_ttft_ms = chunk["ttft_ms"]
+                if chunk.get("latency_ms") is not None:
+                    model_latency_ms = chunk["latency_ms"]
+                if chunk.get("usage"):
+                    usage = dict(chunk["usage"])
         self.last_protections = protections
+        self.last_model_latency_ms = model_latency_ms
+        self.last_usage = usage
         return final_content if final_content is not None else "".join(parts)
 
     def complete(self, system, user):
         if not self.enabled:
             return None
+        self.last_protections = []
+        self.last_ttft_ms = None
+        self.last_model_latency_ms = None
+        self.last_usage = {}
         payload = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "temperature": 0.2,
+            "temperature": self.temperature,
             "max_tokens": self.max_tokens,
         }
         if self.use_stream:
@@ -111,6 +127,8 @@ class LLMClient:
                 # 本地 serve_local_qwen 五层守卫触发记录（DeepSeek 等云端无此字段）
                 self.last_protections = list(data.get("firesage_protections") or [])
                 self.last_ttft_ms = data.get("ttft_ms")
+                self.last_model_latency_ms = data.get("latency_ms")
+                self.last_usage = dict(data.get("usage") or {})
                 return data["choices"][0]["message"]["content"]
             except Exception as e:
                 last_error = e
