@@ -119,6 +119,16 @@ def score_row(row: dict, resp: dict) -> tuple[bool, str]:
     structured = resp.get("structured") or {}
     answer = resp.get("answer") or ""
     if intent == "law":
+        # 库外题（expected_articles 为空且金标无条款）：正确拒答为通过，
+        # 硬答反而失败（宁可拒答不可编造）
+        if not row.get("expected_articles"):
+            if resp.get("refused"):
+                return True, "OK（库外题，管线拒答）"
+            basis = structured.get("basis")
+            if basis == [] and REFUSE_PAT.search(answer):
+                return True, "OK（库外题，LLM 规范拒答）"
+            return False, f"库外题未拒答（refused={resp.get('refused')}，" \
+                          f"crag={resp.get('crag')}）"
         basis = structured.get("basis")
         if not isinstance(basis, list) or not basis:
             return False, "basis 为空"
@@ -218,14 +228,20 @@ def main() -> None:
 
     total = round(time.time() - t_all, 1)
     passed = sum(1 for r in results if r.get("passed"))
-    law_rows = [r for r in results if r.get("intent") == "law"]
+    # 金标命中只统计有期望条款的 law 题；库外题（expected 空）单独统计正确拒答数
+    law_rows = [r for r in results
+                if r.get("intent") == "law" and r.get("expected_articles")]
+    oov_rows = [r for r in results
+                if r.get("intent") == "law" and not r.get("expected_articles")]
     gold_hit = sum(1 for r in law_rows if r.get("passed") and any(
         n in " ".join(r.get("basis") or [])
         for n in [(k.split("·")[-1]) for k in (r.get("expected_articles") or [])]))
+    oov_refused = sum(1 for r in oov_rows if r.get("passed"))
     unsupported_rows = [r for r in results if r.get("unsupported_marks")]
 
     print(f"\n[结果] {passed}/{len(results)} 通过，总耗时 {total}s")
-    print(f"[金标命中] law {len(law_rows)} 条中 basis 含期望条号：{gold_hit}")
+    print(f"[金标命中] law（有金标）{len(law_rows)} 条中 basis 含期望条号：{gold_hit}")
+    print(f"[库外拒答] law（无金标）{len(oov_rows)} 条中正确拒答：{oov_refused}")
     ttfts = sorted(r["ttft_ms"] for r in results if r.get("ttft_ms"))
     ttft_p50 = ttfts[len(ttfts) // 2] if ttfts else None
     if ttfts:
@@ -245,6 +261,7 @@ def main() -> None:
         json.dump({"summary": {"total": len(results), "passed": passed,
                                "seconds_total": total,
                                "gold_hit_law": f"{gold_hit}/{len(law_rows)}",
+                               "oov_refused": f"{oov_refused}/{len(oov_rows)}",
                                "ttft_p50_ms": ttft_p50,
                                "unsupported_marked": len(unsupported_rows)},
                    "rows": results}, f, ensure_ascii=False, indent=2)

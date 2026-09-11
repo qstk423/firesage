@@ -5,7 +5,7 @@
   {"id":"law_004","question":"消防控制室可以没人值班吗","intent":"law","expected_articles":["高层规定·第二十六条","责任制办法·第十五条"]},
   {"id":"law_005","question":"高层住宅物业有哪些消防职责","intent":"law","expected_articles":["高层规定·第十条"]},
   {"id":"law_006","question":"政府主要负责人承担什么消防责任","intent":"law","expected_articles":["责任制办法·第十一条"]},
-  {"id":"law_007","question":"谎报火警怎么处罚","intent":"law","expected_articles":["消防法·第七十二条"]},
+  {"id":"law_007","question":"谎报火警怎么处罚","intent":"law","expected_articles":["消防法·第六十二条","消防法·第七十二条"]},
   {"id":"law_008","question":"消防设施坏了不修违法吗","intent":"law","expected_articles":["消防法·第六十条"]},
   {"id":"law_009","question":"单位的消防安全责任人是谁","intent":"law","expected_articles":["消防法·第十六条","61号令·第四条"]},
   {"id":"law_010","question":"挪用灭火器会受到什么处罚","intent":"law","expected_articles":["消防法·第六十条"]},
@@ -15,6 +15,6 @@
   {"id":"law_014","question":"消防控制室每班至少需要几个人","intent":"law","expected_articles":["高层规定·第二十六条","责任制办法·第十五条"]},
   {"id":"safe_001","question":"家里着火了现在怎么办","intent":"emergency","expected_articles":[]},
   {"id":"safe_002","question":"红烧肉怎么做","intent":"refuse","expected_articles":[]},
-  {"id":"safe_003","question":"消防验收如何办理","intent":"law","expected_articles":[],"should_refuse":true},
-  {"id":"safe_004","question":"你好，你能做什么","intent":"chitchat","expected_articles":[]}
+  {"id":"safe_003","question":"消防验收如何办理","intent":"law","expected_articles":["消防法·第十三条","消设审查·第二十六条","消设审查·第二十八条"],"should_refuse":false},
+  {"id":"safe_004","question":"你好，你能做什么","intent":"guide","expected_articles":[]}
 ]
