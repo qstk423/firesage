@@ -1,4 +1,4 @@
-﻿# 消安智答 FireSage
+﻿﻿# 消安智答 FireSage
 
 **面向消防法规咨询与火灾应急提示的可信知识问答原型。**
 
@@ -173,7 +173,9 @@ powershell -ExecutionPolicy Bypass -File backend\scripts\stop_local_stack.ps1
 
 ```bash
 # 1. 本地推理服务：Qwen2.5-3B + LoRA v2，OpenAI 兼容，监听 8320
-..\venv311\Scripts\python.exe scripts\serve_local_qwen.py --api-key local-firesage
+#    8GB 显存机器建议加 --precision 4bit（一键脚本已默认）：权重 6.2GB→2GB，
+#    避免与 Windows 桌面争显存触发 WDDM 换页（吞吐会从 ~26 跌到 ~6 tok/s）
+..\venv311\Scripts\python.exe scripts\serve_local_qwen.py --api-key local-firesage --precision 4bit
 
 # 2. 独立 FireSage 后端：读 .env.local-model，BGE 走 CPU 避让显存，监听 8321
 ..\venv311\Scripts\python.exe scripts\run_firesage_local.py

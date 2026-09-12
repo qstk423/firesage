@@ -23,6 +23,13 @@ Bearer 鉴权，读取 choices[0].message.content），切换只需改配置指�
 启动（backend 目录）：
     ..\\venv311\\Scripts\\python.exe scripts\\serve_local_qwen.py
 默认监听 http://127.0.0.1:8320，不占用 FireSage 的 8319。
+
+模型加载（--adapter 参数）：
+    auto（默认）：优先加载合并模型 models/Qwen2.5-3B-Instruct-firesage-v2-merged
+                  （由 scripts/merge_lora.py 生成，免 PEFT 逐 token 开销，吞吐更高）；
+                  目录不存在时回退基座+LoRA adapter 原路径。
+    none：仅基座（调试对比用）。
+    <路径>：基座 + 指定 adapter（PEFT 慢速回退）。
 """
 from __future__ import annotations
 
@@ -38,6 +45,7 @@ from fastapi import FastAPI, HTTPException, Request
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BACKEND_DIR, "models", "Qwen2.5-3B-Instruct")
+MERGED_DIR = os.path.join(BACKEND_DIR, "models", "Qwen2.5-3B-Instruct-firesage-v2-merged")
 DEFAULT_ADAPTER = os.path.join(BACKEND_DIR, "adapters", "firesage-qwen25-3b-lora-v2")
 DATA_DIR = os.path.join(BACKEND_DIR, "data")
 
@@ -351,12 +359,11 @@ def apply_protections(question: str, data: dict | None, raw: str,
 
 
 # ---------------- FastAPI 服务 ----------------
-def build_app(model, tok, adapter_dir: str, api_key: str):
+def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
     # 注意：Request 必须在模块顶层导入——本文件启用了 from __future__ import annotations，
     # 闭包内局部导入的注解无法被 FastAPI 解析，会被误判为 query 参数。
     app = FastAPI(title="FireSage Local LLM (OpenAI-compatible)", version="1.0")
     gen_lock = threading.Lock()
-    model_name = os.path.basename(adapter_dir.rstrip("\\/"))
     # 服务端再设一道默认输出上限：即使旧的 .env.local-model 仍写着 700，
     # 拉取新版代码并重启后也会立即生效。长答案评测可显式设置为 700。
     server_token_cap = max(
@@ -364,8 +371,7 @@ def build_app(model, tok, adapter_dir: str, api_key: str):
 
     @app.get("/health")
     def health():
-        return {"ok": True, "model": model_name, "adapter": adapter_dir,
-                "backend": "qwen2.5-3b-instruct + lora",
+        return {"ok": True, "model": model_name, "backend": backend_label,
                 "max_output_tokens": server_token_cap}
 
     @app.get("/v1/models")
@@ -564,36 +570,88 @@ def build_app(model, tok, adapter_dir: str, api_key: str):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="本地 OpenAI 兼容 Qwen+LoRA 服务")
-    parser.add_argument("--adapter", default=DEFAULT_ADAPTER)
+    parser.add_argument("--adapter", default="auto",
+                        help="auto=优先加载合并模型（快，推荐）；none=仅基座；"
+                             "或显式 adapter 路径（基座+PEFT，慢速回退）")
     parser.add_argument("--port", type=int, default=8320)
-    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--api-key", default=os.getenv("LOCAL_LLM_API_KEY", ""),
                         help="为空则不校验（仅本机监听）")
     parser.add_argument("--skip-warmup", action="store_true",
                         help="跳过启动时 GPU 热身（默认热身，减少第一次问答等待）")
+    parser.add_argument("--precision", choices=["bf16", "4bit"], default="bf16",
+                        help="bf16=原始精度（权重约6.2GB）；4bit=NF4量化（约2GB，"
+                             "8GB显卡与Windows桌面共用显存时避免挤爆触发WDDM换页降速）")
     args = parser.parse_args()
 
-    for label, path in (("基座模型", MODEL_DIR), ("LoRA adapter", args.adapter)):
-        if not os.path.exists(path):
+    # 加载模式判定：合并模型（吞吐优先）> 基座+PEFT（原路径）
+    use_merged = args.adapter == "auto" and os.path.isdir(MERGED_DIR)
+    if use_merged:
+        load_dir, adapter_dir = MERGED_DIR, None
+        model_name, backend_label = "firesage-qwen25-3b-lora-v2", "qwen2.5-3b-instruct + lora (merged)"
+    elif args.adapter == "none":
+        load_dir, adapter_dir = MODEL_DIR, None
+        model_name, backend_label = "qwen2.5-3b-instruct", "qwen2.5-3b-instruct"
+    else:
+        adapter_dir = DEFAULT_ADAPTER if args.adapter == "auto" else args.adapter
+        load_dir = MODEL_DIR
+        model_name = os.path.basename(adapter_dir.rstrip("\\/"))
+        backend_label = "qwen2.5-3b-instruct + lora"
+
+    for label, path in (("模型目录", load_dir), ("LoRA adapter", adapter_dir)):
+        if label and path and not os.path.exists(path):
             print(f"[错误] {label}不存在：{path}")
             raise SystemExit(1)
+    if use_merged:
+        print(f"[模式] 检测到合并模型，直接加载（免去 PEFT 逐 token 开销）")
+    elif adapter_dir is None:
+        print("[模式] 仅加载基座（无 LoRA，仅供调试对比）")
 
     global LAW_INDEX
     LAW_INDEX = load_law_index()
     print(f"[法规索引] 加载 {len(LAW_INDEX)} 条条款（引用守卫用）")
 
     os.environ["HF_HUB_OFFLINE"] = "1"
+    # 抗显存碎片：长时间多长度提示词运行后，缓存分配器碎片会持续膨胀显存占用，
+    # 逼近 8GB 上限触发 WDDM 换页，生成吞吐从 ~26 tok/s 跌至 ~7 tok/s。
+    # expandable_segments 让分配器复用可扩展段，实测保持紧凑占用。
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
     import torch
-    from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    print(f"[加载] 基座 {MODEL_DIR}")
-    tok = AutoTokenizer.from_pretrained(MODEL_DIR, local_files_only=True)
+    # 4bit NF4 量化：8GB 桌面显卡与 Windows 共享显存，bf16 权重（~6.2GB）加上
+    # 桌面应用（~1.5GB）会逼近上限，生成时的激活分配触发 WDDM 换页，
+    # 吞吐从 ~26 tok/s 跌至 ~6 tok/s；量化后权重 ~2GB，留足余量不再换页。
+    use_4bit = args.precision == "4bit"
+    quant_cfg = None
+    if use_4bit:
+        try:
+            import bitsandbytes  # noqa: F401
+            from transformers import BitsAndBytesConfig
+            quant_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_compute_dtype=torch.bfloat16,
+            )
+            print("[模式] 4bit NF4 量化加载（权重约2GB，防 WDDM 换页降速）")
+        except Exception as exc:
+            use_4bit, quant_cfg = False, None
+            print(f"[警告] bitsandbytes 不可用（{exc}），回退 bf16 加载")
+
+    print(f"[加载] 模型 {load_dir}")
+    tok = AutoTokenizer.from_pretrained(load_dir, local_files_only=True)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_DIR, local_files_only=True, dtype=torch.bfloat16, device_map="cuda"
+        load_dir, local_files_only=True,
+        dtype=None if use_4bit else torch.bfloat16,
+        quantization_config=quant_cfg,
+        device_map="cuda",
     )
-    print(f"[加载] LoRA adapter {args.adapter}")
-    model = PeftModel.from_pretrained(model, args.adapter).eval()
+    if adapter_dir:
+        from peft import PeftModel
+        print(f"[加载] LoRA adapter {adapter_dir}")
+        model = PeftModel.from_pretrained(model, adapter_dir)
+    model = model.eval()
     if not args.skip_warmup:
         print("[热身] 正在预热 GPU（只在启动时执行一次）")
         warm_messages = [
@@ -614,10 +672,12 @@ def main() -> None:
         if torch.cuda.is_available():
             torch.cuda.synchronize()
         print("[热身] 完成")
-    print(f"[就绪] Qwen2.5-3B + {os.path.basename(args.adapter)} → http://{args.host}:{args.port}")
+    if use_4bit:
+        backend_label += " [4bit-nf4]"
+    print(f"[就绪] {backend_label} → http://{args.host}:{args.port}")
 
     import uvicorn
-    uvicorn.run(build_app(model, tok, args.adapter, args.api_key),
+    uvicorn.run(build_app(model, tok, model_name, args.api_key, backend_label),
                 host=args.host, port=args.port, log_level="warning")
 
 

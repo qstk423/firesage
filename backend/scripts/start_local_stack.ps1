@@ -1,6 +1,6 @@
-﻿﻿# ============================================================
+﻿﻿﻿# ============================================================
 # 一键启动本地演示栈（桌面端）
-#   8320  Qwen2.5-3B + LoRA v2 推理服务（OpenAI 兼容，五层守卫 + 流式）
+#   8320  Qwen2.5-3B + LoRA v2 推理服务（OpenAI 兼容，五层守卫 + 流式，4bit 量化防显存挤爆）
 #   8321  FireSage 独立后端（读 .env.local-model，BGE 走 CPU）
 #
 # 用法（任意目录均可）：
@@ -61,7 +61,7 @@ if (Test-Port 8320) {
 } else {
     Write-Host "[启动] 8320 Qwen+LoRA 推理服务（模型加载约 1-2 分钟）..."
     Start-Process -FilePath $Python `
-        -ArgumentList "-u", "scripts\serve_local_qwen.py", "--api-key", "local-firesage" `
+        -ArgumentList "-u", "scripts\serve_local_qwen.py", "--api-key", "local-firesage", "--precision", "4bit" `
         -WorkingDirectory $BackendDir -WindowStyle Hidden `
         -RedirectStandardOutput (Join-Path $BackendDir "server.local-8320.log") `
         -RedirectStandardError  (Join-Path $BackendDir "server.local-8320.err.log")
