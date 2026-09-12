@@ -235,6 +235,16 @@ export HF_ENDPOINT=https://hf-mirror.com
 生成 SFT 数据：`backend/data/gen_sft_train_v2.jsonl`（v2 分布；v1/v3 保留用于消融对比）。
 **评测纪律**：`gen_sft_test.jsonl`（35 题）为独立测试集，**严禁加入任何版本训练集**。
 
+复现 LoRA v2（Windows，`backend` 目录）：
+
+```powershell
+..\venv311\Scripts\python.exe scripts\train_lora_qwen3b.py `
+  --train data\gen_sft_train_v2.jsonl `
+  --dev data\gen_sft_dev.jsonl `
+  --max-length 512 --epochs 2 `
+  --out adapters\firesage-qwen25-3b-lora-v2
+```
+
 ### LoRA 版本对比结论
 
 | 版本 | 训练要点 | 表现 | 结论 |
@@ -266,6 +276,23 @@ v4 方向（**不实施**，版本已冻结）：拒答模板多样化、epochs 
 cd backend
 ..\venv311\Scripts\python.exe scripts\e2e_local_test.py
 ```
+
+从 `v1.0-dev` 起，报告同时输出两套口径：
+
+- `contract_passed`：格式、引用来源、拒答与安全规则通过；
+- `strict_passed`：在契约通过基础上，有金标法规题还必须命中“法规名 + 条号”。
+
+检索专项性能与消融评测（不调用生成模型）：
+
+```powershell
+cd backend
+..\venv311\Scripts\python.exe scripts\ablation_retrieval.py --split test `
+  --markdown docs\retrieval-benchmark-windows.md
+```
+
+报告包含 Hit@1/3/5、MRR、检索 P50/P95，以及 BM25、BGE、GraphRAG、
+规则重排和 CrossEncoder 的分段耗时。工程化迭代路线见
+[`docs/v1.0-engineering-roadmap.md`](docs/v1.0-engineering-roadmap.md)。
 
 最终结果（v0.9.0 冻结版，报告：`backend/eval_reports/e2e_local_test.json`）：
 

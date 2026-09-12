@@ -115,6 +115,7 @@ def detect_unsupported(question: str, conclusion: str, basis: list[str],
 
 
 def score_row(row: dict, resp: dict) -> tuple[bool, str]:
+    """检查结构、引用来源和拒答/应急规则，不把金标命中混入契约检查。"""
     intent = row.get("intent")
     structured = resp.get("structured") or {}
     answer = resp.get("answer") or ""
@@ -160,6 +161,66 @@ def score_row(row: dict, resp: dict) -> tuple[bool, str]:
     return False, "未知 intent"
 
 
+def hits_expected_article(row: dict, resp: dict) -> bool | None:
+    """是否至少命中一条期望法规（法规名+条号）；无金标返回 None。
+
+    不能只比“第七条”这类条号，否则《消防法》第七条会被误算成
+    《高层民用建筑消防安全管理规定》第七条。
+    """
+    expected = row.get("expected_articles") or []
+    if not expected:
+        return None
+    basis_items = [str(item) for item in (
+        (resp.get("structured") or {}).get("basis") or [])]
+    references = resp.get("references") or []
+
+    def compact(text: str) -> str:
+        return re.sub(r"[\s《》（）()·]", "", text or "")
+
+    for key in expected:
+        article_num = key.split("·")[-1]
+        reference = next(
+            (ref for ref in references if ref.get("article") == key), None)
+        if not reference:
+            continue
+        law_name = reference.get("law_name") or key.split("·")[0]
+        target_law = compact(law_name)
+        if any(article_num in item and target_law in compact(item)
+               for item in basis_items):
+            return True
+    return False
+
+
+def _percentile(values: list[float], ratio: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return round(ordered[round((len(ordered) - 1) * ratio)], 2)
+
+
+def summarize_timings(rows: list[dict]) -> dict:
+    """汇总 API 返回的分段耗时；缺失字段不按 0 计算。"""
+    series: dict[str, list[float]] = {}
+    for row in rows:
+        timing = row.get("timing") or {}
+        for key, value in timing.items():
+            if key == "retrieval" and isinstance(value, dict):
+                for child_key, child_value in value.items():
+                    if isinstance(child_value, (int, float)):
+                        series.setdefault(f"retrieval.{child_key}", []).append(float(child_value))
+            elif isinstance(value, (int, float)) and not isinstance(value, bool):
+                series.setdefault(key, []).append(float(value))
+    return {
+        key: {
+            "n": len(values),
+            "p50": _percentile(values, 0.50),
+            "p95": _percentile(values, 0.95),
+            "max": round(max(values), 2),
+        }
+        for key, values in sorted(series.items())
+    }
+
+
 def main() -> None:
     # ---- 前置检查：服务 + 前端静态资源 ----
     status, system = get("/api/system")
@@ -192,7 +253,13 @@ def main() -> None:
         secs = round(time.time() - t0, 1)
         structured = resp.get("structured") or {}
         guards = structured.get("llm_protections") or []
-        ok, msg = score_row(row, resp)
+        contract_ok, msg = score_row(row, resp)
+        gold_hit = hits_expected_article(row, resp)
+        # 严格通过：先满足格式/守卫契约；有金标的法规题还必须至少命中一条金标。
+        strict_ok = contract_ok and not (
+            row.get("intent") == "law" and gold_hit is False)
+        if contract_ok and not strict_ok:
+            msg = "未命中金标条款"
         unsupported = (detect_unsupported(
             q, structured.get("conclusion") or "", structured.get("basis") or [],
             resp.get("references") or [], guards) if row.get("intent") == "law" else [])
@@ -200,11 +267,15 @@ def main() -> None:
             "id": row.get("id"),
             "intent": row.get("intent"),
             "question": q,
-            "passed": ok,
+            "passed": strict_ok,
+            "contract_passed": contract_ok,
+            "gold_hit": gold_hit,
             "message": msg,
             "seconds": secs,
             "latency_ms": resp.get("latency_ms"),
+            "trace_id": resp.get("trace_id"),
             "ttft_ms": (resp.get("timing") or {}).get("ttft_ms"),
+            "timing": resp.get("timing") or {},
             "api_intent": resp.get("intent"),
             "refused": resp.get("refused"),
             "crag": resp.get("crag"),
@@ -221,31 +292,36 @@ def main() -> None:
             "expected_articles": row.get("expected_articles"),
         }
         results.append(rec)
-        mark = "PASS" if ok else "FAIL"
+        mark = "PASS" if strict_ok else "FAIL"
         extra = f" ⚠{unsupported}" if unsupported else ""
         print(f"  [{i}/{len(rows)}] {mark} {q[:24]} → {msg}（{secs}s，"
               f"守卫：{guards or '无'}）{extra}")
 
     total = round(time.time() - t_all, 1)
     passed = sum(1 for r in results if r.get("passed"))
+    contract_passed = sum(1 for r in results if r.get("contract_passed"))
     # 金标命中只统计有期望条款的 law 题；库外题（expected 空）单独统计正确拒答数
     law_rows = [r for r in results
                 if r.get("intent") == "law" and r.get("expected_articles")]
     oov_rows = [r for r in results
                 if r.get("intent") == "law" and not r.get("expected_articles")]
-    gold_hit = sum(1 for r in law_rows if r.get("passed") and any(
-        n in " ".join(r.get("basis") or [])
-        for n in [(k.split("·")[-1]) for k in (r.get("expected_articles") or [])]))
+    gold_hit = sum(1 for r in law_rows if r.get("gold_hit") is True)
     oov_refused = sum(1 for r in oov_rows if r.get("passed"))
     unsupported_rows = [r for r in results if r.get("unsupported_marks")]
 
-    print(f"\n[结果] {passed}/{len(results)} 通过，总耗时 {total}s")
+    print(f"\n[严格结果] {passed}/{len(results)} 通过，总耗时 {total}s")
+    print(f"[契约通过] {contract_passed}/{len(results)}（格式、引用来源与安全规则）")
     print(f"[金标命中] law（有金标）{len(law_rows)} 条中 basis 含期望条号：{gold_hit}")
     print(f"[库外拒答] law（无金标）{len(oov_rows)} 条中正确拒答：{oov_refused}")
     ttfts = sorted(r["ttft_ms"] for r in results if r.get("ttft_ms"))
     ttft_p50 = ttfts[len(ttfts) // 2] if ttfts else None
     if ttfts:
         print(f"[首字响应] n={len(ttfts)} p50={ttft_p50}ms max={ttfts[-1]}ms")
+    timing_summary = summarize_timings(results)
+    if timing_summary:
+        print("[分段耗时 P50/P95]")
+        for key, stats in timing_summary.items():
+            print(f"  - {key}: {stats['p50']}/{stats['p95']} ms（n={stats['n']}）")
     print(f"[内容不支撑标注] {len(unsupported_rows)} 条")
     for r in unsupported_rows:
         print(f"  - {r['id']} {r['question'][:30]}：{r['unsupported_marks']}")
@@ -258,11 +334,16 @@ def main() -> None:
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump({"summary": {"total": len(results), "passed": passed,
+        json.dump({"summary": {"total": len(results),
+                               "strict_passed": passed,
+                               "contract_passed": contract_passed,
+                               # 向后兼容；passed 从 v1.0-dev 起代表严格通过数
+                               "passed": passed,
                                "seconds_total": total,
                                "gold_hit_law": f"{gold_hit}/{len(law_rows)}",
                                "oov_refused": f"{oov_refused}/{len(oov_rows)}",
                                "ttft_p50_ms": ttft_p50,
+                               "timing_ms": timing_summary,
                                "unsupported_marked": len(unsupported_rows)},
                    "rows": results}, f, ensure_ascii=False, indent=2)
     print(f"[保存] {OUT_PATH}")

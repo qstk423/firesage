@@ -6,6 +6,7 @@
 import math
 import os
 import re
+import time
 from collections import Counter
 
 try:
@@ -319,6 +320,16 @@ class HybridRetriever:
         sub_queries: 复合问拆出的多路查询；对各查询通道做 RRF 再平均。
         query_mode: local=场景条款；global=职责总述（压专题、抬核心库）。
         """
+        total_started = time.perf_counter()
+        timing = {
+            "bm25_ms": 0.0,
+            "vector_ms": 0.0,
+            "graph_ms": 0.0,
+            "fusion_ms": 0.0,
+            "rule_rerank_ms": 0.0,
+            "ml_rerank_ms": 0.0,
+            "cross_encoder_ms": 0.0,
+        }
         pool_size = max(12, top_k * 4)
         use_vector = mode in ("bm25_vector", "hybrid", "full")
         use_graph = mode in ("hybrid", "full")
@@ -339,6 +350,7 @@ class HybridRetriever:
         for q in queries:
             q_needed = set() if global_mode else _specialty_needed(q)
             needed |= q_needed
+            channel_started = time.perf_counter()
             bm25_q = self.bm25.search(q, pool_size)
             if self.bm25_specialty and q_needed:
                 # 专题库召回分打折，避免与核心库同主题时抢占 Hit@1
@@ -347,12 +359,16 @@ class HybridRetriever:
                     if a.split("·", 1)[0] in q_needed
                 ]
                 bm25_q = _merge_ranked(bm25_q, spec_hits, pool_size)
+            timing["bm25_ms"] += (time.perf_counter() - channel_started) * 1000
             for a, s in bm25_q:
                 bm25_best[a] = max(bm25_best.get(a, 0.0), s)
             if use_vector:
+                channel_started = time.perf_counter()
                 for a, s in self.vector.search(" ".join(_expand(q)), pool_size):
                     vector_best[a] = max(vector_best.get(a, 0.0), s)
+                timing["vector_ms"] += (time.perf_counter() - channel_started) * 1000
             if use_graph:
+                channel_started = time.perf_counter()
                 allow = CORE_LAWS if global_mode else (CORE_LAWS | q_needed)
                 for a, s, p in self.graph.search(q, pool_size):
                     if a.split("·", 1)[0] not in allow:
@@ -360,7 +376,9 @@ class HybridRetriever:
                     if s >= graph_best.get(a, 0.0):
                         graph_best[a] = s
                         graph_paths[a] = p
+                timing["graph_ms"] += (time.perf_counter() - channel_started) * 1000
 
+        fusion_started = time.perf_counter()
         bm25_list = sorted(bm25_best.items(), key=lambda x: -x[1])[:pool_size]
         vector_list = sorted(vector_best.items(), key=lambda x: -x[1])[:pool_size]
         graph_list = [
@@ -470,12 +488,16 @@ class HybridRetriever:
                 "cite_inject": True,
             })
         candidates.sort(key=lambda item: (-item["retrieval_score"], item["article"]))
+        timing["fusion_ms"] = (time.perf_counter() - fusion_started) * 1000
         if use_rerank:
+            rerank_started = time.perf_counter()
             reranked = self.reranker.rerank(primary, candidates[:pool_size])
+            timing["rule_rerank_ms"] = (time.perf_counter() - rerank_started) * 1000
             # 领域微调重排：对 (问题, 条款) 打分，与规则分融合
             try:
                 from . import rerank_ml
                 if rerank_ml.available():
+                    ml_started = time.perf_counter()
                     pairs = []
                     for item in reranked:
                         art = self.reranker.article_text.get(item["article"], {})
@@ -489,12 +511,15 @@ class HybridRetriever:
                         item["rerank_score"] = round(item["rerank_score"] + 0.10 * ml, 4)
                         item["score"] = item["rerank_score"]
                     reranked.sort(key=lambda item: (-item["rerank_score"], item["article"]))
+                    timing["ml_rerank_ms"] = (time.perf_counter() - ml_started) * 1000
             except Exception:
                 pass
             # CrossEncoder 语义精排：只对规则重排后的前 N 条打分（CPU 上全量精排很慢）
             ce_n = int(os.getenv("CE_CANDIDATES", "6") or "6")
             ce_n = max(3, min(ce_n, len(reranked)))
+            ce_started = time.perf_counter()
             ce_scores = self.cross_encoder.score(primary, reranked[:ce_n])
+            timing["cross_encoder_ms"] = (time.perf_counter() - ce_started) * 1000
             if ce_scores:
                 for item in reranked:
                     ce = ce_scores.get(item["article"], 0.0)
@@ -512,6 +537,8 @@ class HybridRetriever:
             reranked = candidates[:pool_size]
             ce_scores = None
         ranked = reranked[:top_k]
+        timing["total_ms"] = (time.perf_counter() - total_started) * 1000
+        timing = {key: round(value, 2) for key, value in timing.items()}
         summary = {
             "bm25_articles": set(raw["bm25"]),
             "vector_articles": set(raw["vector"]),
@@ -520,5 +547,6 @@ class HybridRetriever:
             "mode": mode,
             "query_mode": query_mode or "local",
             "sub_queries": queries,
+            "timing": timing,
         }
         return ranked, summary

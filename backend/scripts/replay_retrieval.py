@@ -52,11 +52,13 @@ def main():
         if rq not in subs:
             subs = [rq] + [s for s in subs if s != rq]
         mode = detect_query_mode(q, scene)
-        fused, _ = pipe.retriever.retrieve(rq, top_k=5, sub_queries=subs, query_mode=mode)
+        fused, summary = pipe.retriever.retrieve(
+            rq, top_k=5, sub_queries=subs, query_mode=mode)
         rec = {
             "id": row.get("id"),
             "question": q,
             "expected_articles": row.get("expected_articles"),
+            "timing": summary.get("timing") or {},
             "tops": [{"article": f["article"], "score": round(f["score"], 3),
                       "ce": round(f["cross_encoder"], 3) if f.get("cross_encoder") is not None else None}
                      for f in fused[:5]],

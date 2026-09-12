@@ -57,6 +57,10 @@ def from_response(question: str, previous: Optional[str], response: dict, client
         "strategy": response.get("strategy"),
         "articles": [r.get("article") for r in refs if r.get("article")],
         "latency_ms": response.get("latency_ms"),
+        "timing": response.get("timing") or {},
+        "trace_id": response.get("trace_id"),
+        "llm_protections": (
+            (response.get("structured") or {}).get("llm_protections") or []),
         "cached": bool(response.get("cached")),
     })
 

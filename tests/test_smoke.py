@@ -152,6 +152,17 @@ class FireSageSmokeTest(unittest.TestCase):
     def test_out_of_scope_refusal(self):
         self.assertTrue(self.pipeline.ask("红烧肉怎么做")["refused"])
 
+    def test_retrieval_timing_shape(self):
+        _, summary = self.pipeline.retriever.retrieve(
+            "单位占用消防车通道怎么处罚", top_k=5, mode="bm25")
+        timing = summary["timing"]
+        for key in (
+            "bm25_ms", "vector_ms", "graph_ms", "fusion_ms",
+            "rule_rerank_ms", "ml_rerank_ms", "cross_encoder_ms", "total_ms",
+        ):
+            self.assertIn(key, timing)
+            self.assertGreaterEqual(timing[key], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

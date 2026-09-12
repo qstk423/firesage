@@ -6,6 +6,7 @@ import os
 import json
 import time
 import threading
+import uuid
 from typing import Optional
 
 from fastapi import FastAPI, Query, HTTPException, Request
@@ -20,7 +21,7 @@ import rag.pipeline as pipeline_mod
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-APP_VERSION = "0.8.4"
+APP_VERSION = "1.0.0-dev"
 app = FastAPI(title="消安智答 FireSage", version=APP_VERSION)
 app.add_middleware(GZipMiddleware, minimum_size=400)
 
@@ -469,6 +470,9 @@ def ask(body: AskBody, request: Request):
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
     result = pipe.ask(question, body.previous_question)
+    # 每次 HTTP 请求使用独立追踪号；即使命中回答缓存也能区分两次调用。
+    result = dict(result)
+    result["trace_id"] = uuid.uuid4().hex[:16]
     if not result.get("followups"):
         try:
             from rag.followups import suggest_followups

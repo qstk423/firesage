@@ -56,9 +56,19 @@ def _retrieval_question(case: dict) -> str:
     return full
 
 
+def _percentile(values: list[float], ratio: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = round((len(ordered) - 1) * ratio)
+    return round(ordered[index], 2)
+
+
 def _metrics_for_mode(retriever: HybridRetriever, cases: list[dict], mode: str) -> dict:
-    retrieval_cases = hit1 = hit3 = 0
+    retrieval_cases = hit1 = hit3 = hit5 = 0
     reciprocal_rank = 0.0
+    case_latency_ms = []
+    stage_values: dict[str, list[float]] = {}
     t0 = time.time()
     for case in cases:
         expected = set(case.get("expected_articles") or [])
@@ -71,12 +81,18 @@ def _metrics_for_mode(retriever: HybridRetriever, cases: list[dict], mode: str) 
             continue
         retrieval_cases += 1
         rq = _retrieval_question(case)
-        ranked, _ = retriever.retrieve(rq, top_k=5, mode=mode)
+        case_started = time.perf_counter()
+        ranked, summary = retriever.retrieve(rq, top_k=5, mode=mode)
+        case_latency_ms.append((time.perf_counter() - case_started) * 1000)
+        for key, value in (summary.get("timing") or {}).items():
+            stage_values.setdefault(key, []).append(float(value))
         arts = [item["article"] for item in ranked]
         if arts and arts[0] in expected:
             hit1 += 1
         if expected.intersection(arts[:3]):
             hit3 += 1
+        if expected.intersection(arts[:5]):
+            hit5 += 1
         first_rank = next((i for i, a in enumerate(arts, 1) if a in expected), None)
         if first_rank:
             reciprocal_rank += 1 / first_rank
@@ -86,8 +102,17 @@ def _metrics_for_mode(retriever: HybridRetriever, cases: list[dict], mode: str) 
         "retrieval_cases": retrieval_cases,
         "hit_at_1": round(hit1 / n, 4),
         "hit_at_3": round(hit3 / n, 4),
+        "hit_at_5": round(hit5 / n, 4),
         "mrr": round(reciprocal_rank / n, 4),
         "elapsed_s": round(time.time() - t0, 2),
+        "latency_ms": {
+            "p50": _percentile(case_latency_ms, 0.50),
+            "p95": _percentile(case_latency_ms, 0.95),
+            "max": round(max(case_latency_ms), 2) if case_latency_ms else None,
+        },
+        "stage_ms_p50": {
+            key: _percentile(values, 0.50) for key, values in stage_values.items()
+        },
     }
 
 
@@ -102,13 +127,15 @@ def _to_markdown(payload: dict) -> str:
         f"- channels: `{', '.join(payload['channels'])}`",
         f"- generated_at: `{payload['generated_at']}`",
         "",
-        "| 模式 | 说明 | Hit@1 | Hit@3 | MRR | n | 耗时(s) |",
-        "|------|------|------:|------:|----:|--:|--------:|",
+        "| 模式 | 说明 | Hit@1 | Hit@3 | Hit@5 | MRR | n | P50(ms) | P95(ms) |",
+        "|------|------|------:|------:|------:|----:|--:|--------:|--------:|",
     ]
     for row in rows:
         lines.append(
             f"| `{row['mode']}` | {row['label']} | {row['hit_at_1']:.4f} | "
-            f"{row['hit_at_3']:.4f} | {row['mrr']:.4f} | {row['retrieval_cases']} | {row['elapsed_s']} |"
+            f"{row['hit_at_3']:.4f} | {row['hit_at_5']:.4f} | {row['mrr']:.4f} | "
+            f"{row['retrieval_cases']} | {row['latency_ms']['p50']} | "
+            f"{row['latency_ms']['p95']} |"
         )
     lines.extend([
         "",
@@ -146,7 +173,9 @@ def main() -> None:
         rows.append(row)
         print(
             f"[{mode}] Hit@1={row['hit_at_1']:.4f} Hit@3={row['hit_at_3']:.4f} "
-            f"MRR={row['mrr']:.4f} n={row['retrieval_cases']} ({row['elapsed_s']}s) — {label}"
+            f"Hit@5={row['hit_at_5']:.4f} MRR={row['mrr']:.4f} "
+            f"n={row['retrieval_cases']} P50={row['latency_ms']['p50']}ms "
+            f"P95={row['latency_ms']['p95']}ms — {label}"
         )
 
     payload = {

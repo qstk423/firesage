@@ -503,6 +503,7 @@ class Pipeline:
 
     def _ask(self, question, previous_question=None):
         t0 = time.time()
+        timing = {}
         question = (question or "").strip()
         previous_question = (previous_question or "").strip()
 
@@ -529,6 +530,7 @@ class Pipeline:
         full_question = f"{previous_question}；追问：{question}" if context_used else question
 
         # ---- 第 1 层：场景结构化 ----
+        route_started = time.perf_counter()
         scene = structure(full_question)
         intent = route(full_question)
         # 词表未命中但场景结构化识别出消防行为/对象（如"楼梯口让纸箱堵得过不去了"）
@@ -543,6 +545,7 @@ class Pipeline:
         if risk["risk_level"] == "emergency" and intent in ("law", "chitchat"):
             if _has_strong_fire_signal(full_question) or not _is_law_consultation(full_question):
                 intent = "emergency"
+        timing["route_ms"] = round((time.perf_counter() - route_started) * 1000, 2)
 
         # ---- 知识库外法规拒答：优先于检索，避免非消防法被「规定」带进作答 ----
         out_kb_law = self._mentioned_law_not_in_kb(full_question)
@@ -606,6 +609,7 @@ class Pipeline:
                 }, t0, ["场景解析", "澄清追问"])
 
         # ---- 第 2 层：查询改写 + 复合问子查询分解 + 局部/全局模式 ----
+        query_started = time.perf_counter()
         if scene["rewrite"] and scene["rewrite"] != question:
             # 追问场景必须保留上一轮原文，否则「停了会怎么罚」会丢掉电动车/楼道上下文
             retrieval_question = f"{scene['rewrite']} {full_question}"
@@ -618,14 +622,20 @@ class Pipeline:
         query_mode = detect_query_mode(full_question, scene)
         scene["query_mode"] = query_mode
         scene["sub_queries"] = sub_queries
+        timing["query_prepare_ms"] = round(
+            (time.perf_counter() - query_started) * 1000, 2)
 
         # ---- 第 3、4 层：三路召回 + 精排 ----
+        retrieval_started = time.perf_counter()
         fused, summary = self.retriever.retrieve(
             retrieval_question,
             top_k=5,
             sub_queries=sub_queries,
             query_mode=query_mode,
         )
+        timing["retrieve_ms"] = round(
+            (time.perf_counter() - retrieval_started) * 1000, 2)
+        timing["retrieval"] = dict(summary.get("timing") or {})
         crag = self._crag_judge(fused, retrieval_question)
 
         graph_matched = bool(summary["graph_articles"])
@@ -698,12 +708,22 @@ class Pipeline:
         # ---- 第 5 层：生成 ----
         refs = self._build_refs(fused)
         stages = ["检索", "重排", "生成", "核验"]
-        timing = {"retrieve_ms": int((time.time() - t0) * 1000)}
+        timing["pre_generation_ms"] = round((time.time() - t0) * 1000, 2)
         t_gen = time.time()
         verification = None
+        pipeline_retry = False
+
+        def finish_generation_timing():
+            timing["generate_ms"] = int((time.time() - t_gen) * 1000)
+            timing["model_ms"] = getattr(self.llm, "last_model_latency_ms", None)
+            timing["usage"] = dict(getattr(self.llm, "last_usage", None) or {})
+            timing["guard_retry"] = "citation_retry" in (
+                getattr(self.llm, "last_protections", None) or [])
+            timing["pipeline_retry"] = pipeline_retry
 
         def refuse_after_gen(answer, strategy, verification=None, structured=None, extra_stages=()):
             """生成阶段的标准拒答打包（支撑核验失败 / 模型侧规范拒答）。"""
+            finish_generation_timing()
             return self._pack({
                 "intent": "refuse",
                 "answer": answer,
@@ -736,6 +756,7 @@ class Pipeline:
                 verification = verify(answer_text, refs, question, scene)
                 if not verification["passed"]:
                     # 原文支撑检查失败（金额/期限/主体/处罚）→ 带反馈重试一次
+                    pipeline_retry = True
                     stages.append("核验重试")
                     retry_feedback = (
                         "；".join(verification["issues"])
@@ -768,13 +789,7 @@ class Pipeline:
 
         structured = self._with_draft_notice(structured, fused)
         answer_text = self._render(structured) if structured else answer_text
-        timing["generate_ms"] = int((time.time() - t_gen) * 1000)
-        # 生成服务返回的纯模型耗时与 token 数，便于在 Windows 上定位慢在
-        # 检索、模型生成还是二次核验；云端接口不返回时保持 None/空字典。
-        timing["model_ms"] = getattr(self.llm, "last_model_latency_ms", None)
-        timing["usage"] = dict(getattr(self.llm, "last_usage", None) or {})
-        timing["guard_retry"] = "citation_retry" in (
-            getattr(self.llm, "last_protections", None) or [])
+        finish_generation_timing()
 
         return self._pack({
             "intent": intent,
@@ -851,6 +866,8 @@ class Pipeline:
         payload.setdefault("risk", None)
         payload["stages"] = stages
         payload["latency_ms"] = int((time.time() - t0) * 1000)
+        payload.setdefault("timing", {})
+        payload["timing"].setdefault("total_ms", payload["latency_ms"])
         return payload
 
 
