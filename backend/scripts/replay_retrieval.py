@@ -10,7 +10,8 @@ import os
 import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
+# Windows + CUDA 12.x 上空字符串会被忽略（GPU 仍可见），必须 "-1" 才真正隐藏设备
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BACKEND_DIR)

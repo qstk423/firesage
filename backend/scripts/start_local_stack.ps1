@@ -101,6 +101,28 @@ try {
     }
 } catch { }
 
+# ---- GPU 隔离验收：Qwen 进程独占 GPU，RAG（BGE）进程显存必须为 0 ----
+function Get-ProcGpuMiB([int]$ProcId) {
+    try {
+        $s = (Get-Counter -Counter "\GPU Process Memory(*)\Local Usage" -ErrorAction Stop).CounterSamples |
+             Where-Object { $_.InstanceName -match "^pid_$ProcId(_|$)" }
+        $sum = ($s | Measure-Object -Property CookedValue -Sum).Sum
+        if ($null -eq $sum) { return 0 }
+        return [math]::Round($sum / 1MB)
+    } catch { return -1 }   # -1 = 查询失败（非 0 占用）
+}
+
+$qwenPid  = (Get-NetTCPConnection -LocalPort 8320 -State Listen | Select-Object -First 1).OwningProcess
+$ragPid   = (Get-NetTCPConnection -LocalPort 8321 -State Listen | Select-Object -First 1).OwningProcess
+Start-Sleep -Seconds 3   # 等 8321 模型加载完显存计数稳定
+$qwenMiB = Get-ProcGpuMiB $qwenPid
+$ragMiB  = Get-ProcGpuMiB $ragPid
+Write-Host ""
+Write-Host "[GPU 隔离验收] Qwen(8320, PID $qwenPid) 显存 ${qwenMiB} MiB | RAG(8321, PID $ragPid) 显存 ${ragMiB} MiB"
+if ($ragMiB -gt 0) {
+    Write-Warning "RAG 进程占用 ${ragMiB} MiB 显存（应为 0）！BGE 抢占 GPU 会拖慢 Qwen 生成，请检查 run_firesage_local.py 的 CUDA_VISIBLE_DEVICES=-1"
+}
+
 Write-Host ""
 Write-Host "本地演示栈已就绪（桌面端）：" -ForegroundColor Cyan
 Write-Host "  前端 / 后端    http://127.0.0.1:8321"

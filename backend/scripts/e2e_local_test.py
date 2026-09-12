@@ -45,7 +45,7 @@ STOPWORDS = set("什么 怎么 如何 哪些 可以 应该 不是 没有 关于 
 
 
 def post_ask(question: str, timeout: int = 300) -> dict:
-    payload = json.dumps({"question": question}).encode("utf-8")
+    payload = json.dumps({"question": question, "use_cache": False}).encode("utf-8")
     req = urllib.request.Request(
         BASE + "/api/ask", data=payload,
         headers={"Content-Type": "application/json"})
@@ -198,26 +198,53 @@ def _percentile(values: list[float], ratio: float) -> float | None:
     return round(ordered[round((len(ordered) - 1) * ratio)], 2)
 
 
-def summarize_timings(rows: list[dict]) -> dict:
-    """汇总 API 返回的分段耗时；缺失字段不按 0 计算。"""
-    series: dict[str, list[float]] = {}
-    for row in rows:
-        timing = row.get("timing") or {}
-        for key, value in timing.items():
-            if key == "retrieval" and isinstance(value, dict):
-                for child_key, child_value in value.items():
-                    if isinstance(child_value, (int, float)):
-                        series.setdefault(f"retrieval.{child_key}", []).append(float(child_value))
-            elif isinstance(value, (int, float)) and not isinstance(value, bool):
-                series.setdefault(key, []).append(float(value))
+def _stat(values: list[float]) -> dict:
     return {
-        key: {
-            "n": len(values),
-            "p50": _percentile(values, 0.50),
-            "p95": _percentile(values, 0.95),
-            "max": round(max(values), 2),
-        }
-        for key, values in sorted(series.items())
+        "n": len(values),
+        "p50": _percentile(values, 0.50),
+        "p95": _percentile(values, 0.95),
+        "max": round(max(values), 2) if values else None,
+    }
+
+
+def is_generation_row(rec: dict) -> bool:
+    """生成题：响应里带 generate_ms（走了 LLM 生成；模板拒答/引导无此字段）。"""
+    return rec.get("generate_ms") is not None
+
+
+def summarize_timings(rows: list[dict]) -> dict:
+    """分段耗时统计。
+
+    口径（v1.0-dev）：
+    - generation：只在「生成题」批次上计算 P50/P95——同一批样本，字段间可直接比较
+      （total/retrieve/pre_generation/ttft/generate/model/tokens/tok_s）；
+    - all_rows：全部题的 total_ms（客户端墙钟），仅作整体参考；
+    - 每条生成题校验 total_ms >= generate_ms（客户端墙钟必须覆盖服务端生成段）。
+    """
+    gen_rows = [r for r in rows if is_generation_row(r)]
+    gen_series: dict[str, list[float]] = {}
+    for row in gen_rows:
+        for key in ("total_ms", "retrieve_ms", "pre_generation_ms",
+                    "ttft_ms", "generate_ms", "model_ms",
+                    "tokens", "tokens_per_second"):
+            value = row.get(key)
+            if isinstance(value, (int, float)):
+                gen_series.setdefault(key, []).append(float(value))
+        retrieval = (row.get("timing") or {}).get("retrieval") or {}
+        for child_key, child_value in retrieval.items():
+            if isinstance(child_value, (int, float)) and not isinstance(child_value, bool):
+                gen_series.setdefault(f"retrieval.{child_key}", []).append(float(child_value))
+    violations = [
+        {"id": r["id"], "total_ms": r["total_ms"], "generate_ms": r["generate_ms"]}
+        for r in gen_rows
+        if r.get("total_ms") is not None and r["total_ms"] < r["generate_ms"]
+    ]
+    return {
+        "generation_rows": len(gen_rows),
+        "generation": {key: _stat(values) for key, values in sorted(gen_series.items())},
+        "all_rows_total_ms": _stat([r["total_ms"] for r in rows
+                                    if isinstance(r.get("total_ms"), (int, float))]),
+        "total_lt_generate_violations": violations,
     }
 
 
@@ -241,18 +268,25 @@ def main() -> None:
     t_all = time.time()
     for i, row in enumerate(rows, 1):
         q = extract_question(row)
-        t0 = time.time()
+        t0 = time.perf_counter()
         try:
             resp = post_ask(q)
         except Exception as e:
             results.append({"id": row.get("id"), "intent": row.get("intent"),
                             "question": q, "error": str(e),
-                            "seconds": round(time.time() - t0, 1)})
+                            "seconds": round(time.perf_counter() - t0, 1)})
             print(f"  [{i}/{len(rows)}] {q[:24]} → 调用失败：{e}")
             continue
-        secs = round(time.time() - t0, 1)
+        total_ms = round((time.perf_counter() - t0) * 1000, 1)
+        secs = round(total_ms / 1000, 1)
         structured = resp.get("structured") or {}
         guards = structured.get("llm_protections") or []
+        timing = resp.get("timing") or {}
+        usage = timing.get("usage") or {}
+        tokens = usage.get("completion_tokens")
+        model_ms = timing.get("model_ms")
+        tokens_per_second = (round(tokens / (model_ms / 1000), 1)
+                             if isinstance(tokens, (int, float)) and model_ms else None)
         contract_ok, msg = score_row(row, resp)
         gold_hit = hits_expected_article(row, resp)
         # 严格通过：先满足格式/守卫契约；有金标的法规题还必须至少命中一条金标。
@@ -271,11 +305,19 @@ def main() -> None:
             "contract_passed": contract_ok,
             "gold_hit": gold_hit,
             "message": msg,
+            # ---- 同一条请求的完整分段耗时（total 为客户端墙钟：请求进入 → 响应完成） ----
+            "total_ms": total_ms,
+            "retrieve_ms": timing.get("retrieve_ms"),
+            "pre_generation_ms": timing.get("pre_generation_ms"),
+            "ttft_ms": timing.get("ttft_ms"),
+            "generate_ms": timing.get("generate_ms"),
+            "model_ms": model_ms,
+            "tokens": tokens,
+            "tokens_per_second": tokens_per_second,
             "seconds": secs,
             "latency_ms": resp.get("latency_ms"),
             "trace_id": resp.get("trace_id"),
-            "ttft_ms": (resp.get("timing") or {}).get("ttft_ms"),
-            "timing": resp.get("timing") or {},
+            "timing": timing,
             "api_intent": resp.get("intent"),
             "refused": resp.get("refused"),
             "crag": resp.get("crag"),
@@ -313,15 +355,23 @@ def main() -> None:
     print(f"[契约通过] {contract_passed}/{len(results)}（格式、引用来源与安全规则）")
     print(f"[金标命中] law（有金标）{len(law_rows)} 条中 basis 含期望条号：{gold_hit}")
     print(f"[库外拒答] law（无金标）{len(oov_rows)} 条中正确拒答：{oov_refused}")
+    timing_summary = summarize_timings(results)
+    gen_n = timing_summary["generation_rows"]
+    print(f"[分段耗时 P50/P95] 生成题 n={gen_n}（同批样本；total=客户端墙钟）")
+    for key, stats in timing_summary["generation"].items():
+        unit = " tok/s" if key == "tokens_per_second" else (
+            " tok" if key == "tokens" else " ms")
+        print(f"  - {key}: {stats['p50']}/{stats['p95']}{unit}（n={stats['n']}，max={stats['max']}）")
+    all_total = timing_summary["all_rows_total_ms"]
+    print(f"  - total_ms（全部 {len(results)} 题，含非生成）: "
+          f"{all_total['p50']}/{all_total['p95']} ms（n={all_total['n']}）")
+    violations = timing_summary["total_lt_generate_violations"]
+    if violations:
+        print(f"[校验] total_ms >= generate_ms 违例 {len(violations)} 条：{violations}")
+    else:
+        print(f"[校验] total_ms >= generate_ms：{gen_n}/{gen_n} 全部通过")
     ttfts = sorted(r["ttft_ms"] for r in results if r.get("ttft_ms"))
     ttft_p50 = ttfts[len(ttfts) // 2] if ttfts else None
-    if ttfts:
-        print(f"[首字响应] n={len(ttfts)} p50={ttft_p50}ms max={ttfts[-1]}ms")
-    timing_summary = summarize_timings(results)
-    if timing_summary:
-        print("[分段耗时 P50/P95]")
-        for key, stats in timing_summary.items():
-            print(f"  - {key}: {stats['p50']}/{stats['p95']} ms（n={stats['n']}）")
     print(f"[内容不支撑标注] {len(unsupported_rows)} 条")
     for r in unsupported_rows:
         print(f"  - {r['id']} {r['question'][:30]}：{r['unsupported_marks']}")
@@ -333,6 +383,7 @@ def main() -> None:
             print(f"  - {r['id']} [{r['intent']}] {r['question'][:30]}：{r['message']}")
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
+    gen_stats = timing_summary["generation"]
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump({"summary": {"total": len(results),
                                "strict_passed": passed,
@@ -343,6 +394,11 @@ def main() -> None:
                                "gold_hit_law": f"{gold_hit}/{len(law_rows)}",
                                "oov_refused": f"{oov_refused}/{len(oov_rows)}",
                                "ttft_p50_ms": ttft_p50,
+                               # v1.0-dev：生成题同批样本的分段统计（详见 summarize_timings）
+                               "generation_rows": timing_summary["generation_rows"],
+                               "total_ms_p50": gen_stats.get("total_ms", {}).get("p50"),
+                               "tokens_per_second_p50": gen_stats.get(
+                                   "tokens_per_second", {}).get("p50"),
                                "timing_ms": timing_summary,
                                "unsupported_marked": len(unsupported_rows)},
                    "rows": results}, f, ensure_ascii=False, indent=2)

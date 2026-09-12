@@ -4,107 +4,120 @@
     "strict_passed": 28,
     "contract_passed": 34,
     "passed": 28,
-    "seconds_total": 664.2,
+    "seconds_total": 347.6,
     "gold_hit_law": "20/27",
     "oov_refused": "3/3",
-    "ttft_p50_ms": 561,
+    "ttft_p50_ms": 594,
+    "generation_rows": 27,
+    "total_ms_p50": 13083.1,
+    "tokens_per_second_p50": 23.1,
     "timing_ms": {
-      "generate_ms": {
-        "n": 27,
-        "p50": 23877.0,
-        "p95": 43839.0,
-        "max": 44288.0
+      "generation_rows": 27,
+      "generation": {
+        "generate_ms": {
+          "n": 27,
+          "p50": 11413.0,
+          "p95": 20105.0,
+          "max": 20166.0
+        },
+        "model_ms": {
+          "n": 27,
+          "p50": 11052.0,
+          "p95": 20098.0,
+          "max": 20158.0
+        },
+        "pre_generation_ms": {
+          "n": 27,
+          "p50": 1439.36,
+          "p95": 1923.87,
+          "max": 2329.6
+        },
+        "retrieval.bm25_ms": {
+          "n": 27,
+          "p50": 2.12,
+          "p95": 13.68,
+          "max": 19.59
+        },
+        "retrieval.cross_encoder_ms": {
+          "n": 27,
+          "p50": 1343.71,
+          "p95": 1652.29,
+          "max": 1823.35
+        },
+        "retrieval.fusion_ms": {
+          "n": 27,
+          "p50": 0.78,
+          "p95": 1.92,
+          "max": 2.08
+        },
+        "retrieval.graph_ms": {
+          "n": 27,
+          "p50": 0.61,
+          "p95": 1.78,
+          "max": 1.78
+        },
+        "retrieval.ml_rerank_ms": {
+          "n": 27,
+          "p50": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "retrieval.rule_rerank_ms": {
+          "n": 27,
+          "p50": 4.99,
+          "p95": 6.65,
+          "max": 7.37
+        },
+        "retrieval.total_ms": {
+          "n": 27,
+          "p50": 1429.06,
+          "p95": 1923.14,
+          "max": 2327.86
+        },
+        "retrieval.vector_ms": {
+          "n": 27,
+          "p50": 66.93,
+          "p95": 279.33,
+          "max": 689.75
+        },
+        "retrieve_ms": {
+          "n": 27,
+          "p50": 1429.12,
+          "p95": 1923.22,
+          "max": 2327.91
+        },
+        "tokens": {
+          "n": 27,
+          "p50": 250.0,
+          "p95": 480.0,
+          "max": 480.0
+        },
+        "tokens_per_second": {
+          "n": 27,
+          "p50": 23.1,
+          "p95": 24.4,
+          "max": 24.7
+        },
+        "total_ms": {
+          "n": 27,
+          "p50": 13083.1,
+          "p95": 21892.6,
+          "max": 21964.1
+        },
+        "ttft_ms": {
+          "n": 27,
+          "p50": 594.0,
+          "p95": 671.0,
+          "max": 747.0
+        }
       },
-      "model_ms": {
-        "n": 27,
-        "p50": 20757.0,
-        "p95": 43808.0,
-        "max": 44249.0
-      },
-      "pre_generation_ms": {
-        "n": 27,
-        "p50": 296.93,
-        "p95": 396.33,
-        "max": 1220.65
-      },
-      "query_prepare_ms": {
-        "n": 27,
-        "p50": 0.01,
-        "p95": 0.02,
-        "max": 0.02
-      },
-      "retrieval.bm25_ms": {
-        "n": 27,
-        "p50": 5.43,
-        "p95": 15.75,
-        "max": 22.06
-      },
-      "retrieval.cross_encoder_ms": {
-        "n": 27,
-        "p50": 227.82,
-        "p95": 280.8,
-        "max": 294.26
-      },
-      "retrieval.fusion_ms": {
-        "n": 27,
-        "p50": 0.68,
-        "p95": 1.43,
-        "max": 2.0
-      },
-      "retrieval.graph_ms": {
-        "n": 27,
-        "p50": 0.41,
-        "p95": 1.25,
-        "max": 1.33
-      },
-      "retrieval.ml_rerank_ms": {
-        "n": 27,
-        "p50": 0.0,
-        "p95": 0.0,
-        "max": 0.0
-      },
-      "retrieval.rule_rerank_ms": {
-        "n": 27,
-        "p50": 3.4,
-        "p95": 4.53,
-        "max": 4.8
-      },
-      "retrieval.total_ms": {
-        "n": 27,
-        "p50": 295.06,
-        "p95": 396.52,
-        "max": 1051.7
-      },
-      "retrieval.vector_ms": {
-        "n": 27,
-        "p50": 33.13,
-        "p95": 104.92,
-        "max": 865.01
-      },
-      "retrieve_ms": {
-        "n": 27,
-        "p50": 295.19,
-        "p95": 396.58,
-        "max": 1051.75
-      },
-      "route_ms": {
-        "n": 27,
-        "p50": 1.8,
-        "p95": 2.77,
-        "max": 166.47
-      },
-      "total_ms": {
+      "all_rows_total_ms": {
         "n": 35,
-        "p50": 18321.0,
-        "p95": 42397.0,
-        "max": 44630.0
+        "p50": 9593.6,
+        "p95": 21289.3,
+        "max": 21964.1
       },
-      "ttft_ms": {
-        "n": 27,
-        "p50": 561.0,
-        "p95": 673.0,
-        "max": 765.0
-      }
+      "total_lt_generate_violations": []
     },
     "unsupported_marked": 25
   },
@@ -117,28 +130,35 @@
       "contract_passed": true,
       "gold_hit": false,
       "message": "未命中金标条款",
-      "seconds": 18.8,
-      "latency_ms": 18792,
-      "trace_id": "65ee665d0014414b",
-      "ttft_ms": 636,
+      "total_ms": 9593.6,
+      "retrieve_ms": 1228.06,
+      "pre_generation_ms": 1441.84,
+      "ttft_ms": 622,
+      "generate_ms": 8127,
+      "model_ms": 8096,
+      "tokens": 196,
+      "tokens_per_second": 24.2,
+      "seconds": 9.6,
+      "latency_ms": 9569,
+      "trace_id": "da98603e29404244",
       "timing": {
-        "route_ms": 166.47,
+        "route_ms": 212.26,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 1051.75,
+        "retrieve_ms": 1228.06,
         "retrieval": {
-          "bm25_ms": 2.41,
-          "vector_ms": 865.01,
-          "graph_ms": 0.41,
-          "fusion_ms": 0.68,
-          "rule_rerank_ms": 4.46,
+          "bm25_ms": 1.36,
+          "vector_ms": 229.73,
+          "graph_ms": 0.45,
+          "fusion_ms": 0.73,
+          "rule_rerank_ms": 5.24,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 178.62,
-          "total_ms": 1051.7
+          "cross_encoder_ms": 990.42,
+          "total_ms": 1228.01
         },
-        "pre_generation_ms": 1220.65,
-        "ttft_ms": 636,
-        "generate_ms": 17571,
-        "model_ms": 17504,
+        "pre_generation_ms": 1441.84,
+        "ttft_ms": 622,
+        "generate_ms": 8127,
+        "model_ms": 8096,
         "usage": {
           "prompt_tokens": 423,
           "completion_tokens": 196,
@@ -146,7 +166,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 18792
+        "total_ms": 9569
       },
       "api_intent": "law",
       "refused": false,
@@ -170,9 +190,9 @@
       "retrieved_scores": [
         0.68,
         0.667,
-        0.658,
-        0.63,
-        0.609
+        0.656,
+        0.633,
+        0.608
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -189,28 +209,35 @@
       "contract_passed": true,
       "gold_hit": false,
       "message": "未命中金标条款",
-      "seconds": 21.0,
-      "latency_ms": 20976,
-      "trace_id": "325c058f2edc4451",
-      "ttft_ms": 532,
+      "total_ms": 10315.2,
+      "retrieve_ms": 605.0,
+      "pre_generation_ms": 607.04,
+      "ttft_ms": 497,
+      "generate_ms": 9681,
+      "model_ms": 9674,
+      "tokens": 239,
+      "tokens_per_second": 24.7,
+      "seconds": 10.3,
+      "latency_ms": 10288,
+      "trace_id": "5d5e943148414a6d",
       "timing": {
-        "route_ms": 2.58,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 189.18,
+        "route_ms": 0.97,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 605.0,
         "retrieval": {
-          "bm25_ms": 4.99,
-          "vector_ms": 31.22,
-          "graph_ms": 0.29,
-          "fusion_ms": 0.62,
-          "rule_rerank_ms": 3.44,
+          "bm25_ms": 1.52,
+          "vector_ms": 54.67,
+          "graph_ms": 0.47,
+          "fusion_ms": 0.93,
+          "rule_rerank_ms": 5.22,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 148.46,
-          "total_ms": 189.13
+          "cross_encoder_ms": 542.05,
+          "total_ms": 604.94
         },
-        "pre_generation_ms": 192.62,
-        "ttft_ms": 532,
-        "generate_ms": 20784,
-        "model_ms": 20757,
+        "pre_generation_ms": 607.04,
+        "ttft_ms": 497,
+        "generate_ms": 9681,
+        "model_ms": 9674,
         "usage": {
           "prompt_tokens": 430,
           "completion_tokens": 239,
@@ -218,7 +245,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 20976
+        "total_ms": 10288
       },
       "api_intent": "law",
       "refused": false,
@@ -242,7 +269,7 @@
       "retrieved_scores": [
         0.662,
         0.646,
-        0.632,
+        0.631,
         0.63,
         0.618
       ],
@@ -262,28 +289,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 33.9,
-      "latency_ms": 33914,
-      "trace_id": "1de57bc85e384a21",
-      "ttft_ms": 593,
+      "total_ms": 16947.3,
+      "retrieve_ms": 1903.65,
+      "pre_generation_ms": 1903.33,
+      "ttft_ms": 626,
+      "generate_ms": 15014,
+      "model_ms": 15006,
+      "tokens": 361,
+      "tokens_per_second": 24.1,
+      "seconds": 16.9,
+      "latency_ms": 16918,
+      "trace_id": "9d188c5467a640c6",
       "timing": {
-        "route_ms": 0.1,
+        "route_ms": 0.06,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 396.58,
+        "retrieve_ms": 1903.65,
         "retrieval": {
-          "bm25_ms": 15.75,
-          "vector_ms": 100.46,
-          "graph_ms": 1.03,
-          "fusion_ms": 0.76,
-          "rule_rerank_ms": 4.14,
+          "bm25_ms": 13.68,
+          "vector_ms": 243.8,
+          "graph_ms": 1.39,
+          "fusion_ms": 1.06,
+          "rule_rerank_ms": 6.65,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 274.26,
-          "total_ms": 396.52
+          "cross_encoder_ms": 1636.87,
+          "total_ms": 1903.59
         },
-        "pre_generation_ms": 396.33,
-        "ttft_ms": 593,
-        "generate_ms": 33517,
-        "model_ms": 33488,
+        "pre_generation_ms": 1903.33,
+        "ttft_ms": 626,
+        "generate_ms": 15014,
+        "model_ms": 15006,
         "usage": {
           "prompt_tokens": 524,
           "completion_tokens": 361,
@@ -291,7 +325,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 33914
+        "total_ms": 16918
       },
       "api_intent": "law",
       "refused": false,
@@ -315,10 +349,10 @@
       ],
       "retrieved_scores": [
         0.861,
-        0.734,
-        0.602,
-        0.596,
-        0.563
+        0.732,
+        0.595,
+        0.582,
+        0.557
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -336,10 +370,17 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（管线拒答）",
+      "total_ms": 3.4,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
+      "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
       "seconds": 0.0,
       "latency_ms": 0,
-      "trace_id": "4bb06739d3144237",
-      "ttft_ms": null,
+      "trace_id": "b88e4f5094654a06",
       "timing": {
         "total_ms": 0
       },
@@ -366,28 +407,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 42.2,
-      "latency_ms": 42210,
-      "trace_id": "a4964985df964511",
-      "ttft_ms": 579,
+      "total_ms": 21289.3,
+      "retrieve_ms": 1593.32,
+      "pre_generation_ms": 1593.69,
+      "ttft_ms": 594,
+      "generate_ms": 19670,
+      "model_ms": 19661,
+      "tokens": 480,
+      "tokens_per_second": 24.4,
+      "seconds": 21.3,
+      "latency_ms": 21264,
+      "trace_id": "06c8d0c3852142d2",
       "timing": {
-        "route_ms": 0.16,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 361.14,
+        "route_ms": 0.06,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1593.32,
         "retrieval": {
-          "bm25_ms": 22.06,
-          "vector_ms": 87.99,
-          "graph_ms": 0.93,
-          "fusion_ms": 0.64,
-          "rule_rerank_ms": 3.87,
+          "bm25_ms": 19.59,
+          "vector_ms": 279.33,
+          "graph_ms": 1.49,
+          "fusion_ms": 0.92,
+          "rule_rerank_ms": 5.91,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 245.44,
-          "total_ms": 361.08
+          "cross_encoder_ms": 1285.85,
+          "total_ms": 1593.26
         },
-        "pre_generation_ms": 361.75,
-        "ttft_ms": 579,
-        "generate_ms": 41849,
-        "model_ms": 41814,
+        "pre_generation_ms": 1593.69,
+        "ttft_ms": 594,
+        "generate_ms": 19670,
+        "model_ms": 19661,
         "usage": {
           "prompt_tokens": 577,
           "completion_tokens": 480,
@@ -395,7 +443,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 42210
+        "total_ms": 21264
       },
       "api_intent": "law",
       "refused": false,
@@ -421,11 +469,11 @@
         "61号令·第四十条"
       ],
       "retrieved_scores": [
-        0.831,
-        0.626,
-        0.581,
-        0.568,
-        0.544
+        0.832,
+        0.628,
+        0.583,
+        0.564,
+        0.539
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -443,28 +491,35 @@
       "contract_passed": false,
       "gold_hit": false,
       "message": "basis 为空",
-      "seconds": 41.7,
-      "latency_ms": 41706,
-      "trace_id": "99598eee776a4570",
-      "ttft_ms": 576,
+      "total_ms": 21235.8,
+      "retrieve_ms": 1248.54,
+      "pre_generation_ms": 1248.24,
+      "ttft_ms": 519,
+      "generate_ms": 19968,
+      "model_ms": 9175,
+      "tokens": 216,
+      "tokens_per_second": 23.5,
+      "seconds": 21.2,
+      "latency_ms": 21216,
+      "trace_id": "b15f71a364db4d89",
       "timing": {
-        "route_ms": 0.14,
+        "route_ms": 0.07,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 295.87,
+        "retrieve_ms": 1248.54,
         "retrieval": {
-          "bm25_ms": 4.12,
-          "vector_ms": 74.77,
-          "graph_ms": 0.45,
-          "fusion_ms": 2.0,
-          "rule_rerank_ms": 4.53,
+          "bm25_ms": 1.14,
+          "vector_ms": 57.73,
+          "graph_ms": 0.75,
+          "fusion_ms": 2.08,
+          "rule_rerank_ms": 5.63,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 209.79,
-          "total_ms": 295.77
+          "cross_encoder_ms": 1181.03,
+          "total_ms": 1248.45
         },
-        "pre_generation_ms": 296.93,
-        "ttft_ms": 576,
-        "generate_ms": 41409,
-        "model_ms": 19450,
+        "pre_generation_ms": 1248.24,
+        "ttft_ms": 519,
+        "generate_ms": 19968,
+        "model_ms": 9175,
         "usage": {
           "prompt_tokens": 721,
           "completion_tokens": 216,
@@ -472,7 +527,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": true,
-        "total_ms": 41706
+        "total_ms": 21216
       },
       "api_intent": "refuse",
       "refused": true,
@@ -513,28 +568,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 12.7,
-      "latency_ms": 12702,
-      "trace_id": "7a0998368dcb4e12",
-      "ttft_ms": 536,
+      "total_ms": 7761.5,
+      "retrieve_ms": 1672.19,
+      "pre_generation_ms": 1673.1,
+      "ttft_ms": 570,
+      "generate_ms": 6067,
+      "model_ms": 6060,
+      "tokens": 134,
+      "tokens_per_second": 22.1,
+      "seconds": 7.8,
+      "latency_ms": 7740,
+      "trace_id": "3720fe0464af4a02",
       "timing": {
-        "route_ms": 2.77,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 338.55,
+        "route_ms": 0.87,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1672.19,
         "retrieval": {
-          "bm25_ms": 9.24,
-          "vector_ms": 82.85,
-          "graph_ms": 0.82,
-          "fusion_ms": 0.68,
-          "rule_rerank_ms": 2.54,
+          "bm25_ms": 8.61,
+          "vector_ms": 200.72,
+          "graph_ms": 1.35,
+          "fusion_ms": 0.76,
+          "rule_rerank_ms": 4.24,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 242.21,
-          "total_ms": 338.47
+          "cross_encoder_ms": 1456.3,
+          "total_ms": 1672.12
         },
-        "pre_generation_ms": 342.3,
-        "ttft_ms": 536,
-        "generate_ms": 12360,
-        "model_ms": 12328,
+        "pre_generation_ms": 1673.1,
+        "ttft_ms": 570,
+        "generate_ms": 6067,
+        "model_ms": 6060,
         "usage": {
           "prompt_tokens": 423,
           "completion_tokens": 134,
@@ -542,7 +604,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 12702
+        "total_ms": 7740
       },
       "api_intent": "law",
       "refused": false,
@@ -585,28 +647,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 32.2,
-      "latency_ms": 32215,
-      "trace_id": "4e10978369ca4116",
-      "ttft_ms": 610,
+      "total_ms": 17596.0,
+      "retrieve_ms": 1896.3,
+      "pre_generation_ms": 1897.58,
+      "ttft_ms": 671,
+      "generate_ms": 15678,
+      "model_ms": 15669,
+      "tokens": 354,
+      "tokens_per_second": 22.6,
+      "seconds": 17.6,
+      "latency_ms": 17576,
+      "trace_id": "8af4a2ed77ce449a",
       "timing": {
-        "route_ms": 2.51,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 291.35,
+        "route_ms": 0.91,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1896.3,
         "retrieval": {
-          "bm25_ms": 7.24,
-          "vector_ms": 28.86,
-          "graph_ms": 0.27,
-          "fusion_ms": 0.56,
-          "rule_rerank_ms": 3.05,
+          "bm25_ms": 2.09,
+          "vector_ms": 64.64,
+          "graph_ms": 0.47,
+          "fusion_ms": 0.65,
+          "rule_rerank_ms": 4.96,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 251.17,
-          "total_ms": 291.26
+          "cross_encoder_ms": 1823.35,
+          "total_ms": 1896.25
         },
-        "pre_generation_ms": 293.25,
-        "ttft_ms": 610,
-        "generate_ms": 31922,
-        "model_ms": 31889,
+        "pre_generation_ms": 1897.58,
+        "ttft_ms": 671,
+        "generate_ms": 15678,
+        "model_ms": 15669,
         "usage": {
           "prompt_tokens": 652,
           "completion_tokens": 354,
@@ -614,7 +683,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 32215
+        "total_ms": 17576
       },
       "api_intent": "law",
       "refused": false,
@@ -637,11 +706,11 @@
         "责任制办法·第十五条"
       ],
       "retrieved_scores": [
-        0.874,
+        0.873,
         0.843,
-        0.566,
-        0.565,
-        0.552
+        0.563,
+        0.56,
+        0.553
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -659,12 +728,19 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（应急要素齐全）",
-      "seconds": 0.0,
-      "latency_ms": 1,
-      "trace_id": "278d041aa7a04369",
+      "total_ms": 30.1,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 0.0,
+      "latency_ms": 0,
+      "trace_id": "c49f4cd68dfa4dd8",
       "timing": {
-        "total_ms": 1
+        "total_ms": 0
       },
       "api_intent": "emergency",
       "refused": false,
@@ -689,28 +765,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 24.1,
-      "latency_ms": 24105,
-      "trace_id": "055f6a09031f43ac",
-      "ttft_ms": 493,
+      "total_ms": 13083.1,
+      "retrieve_ms": 1098.26,
+      "pre_generation_ms": 1100.27,
+      "ttft_ms": 521,
+      "generate_ms": 11953,
+      "model_ms": 11943,
+      "tokens": 264,
+      "tokens_per_second": 22.1,
+      "seconds": 13.1,
+      "latency_ms": 13053,
+      "trace_id": "7ad5a8d1c8e14be7",
       "timing": {
-        "route_ms": 1.26,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 226.82,
+        "route_ms": 1.74,
+        "query_prepare_ms": 0.02,
+        "retrieve_ms": 1098.26,
         "retrieval": {
-          "bm25_ms": 2.38,
-          "vector_ms": 27.68,
-          "graph_ms": 0.28,
-          "fusion_ms": 0.61,
-          "rule_rerank_ms": 2.27,
+          "bm25_ms": 2.98,
+          "vector_ms": 85.0,
+          "graph_ms": 0.53,
+          "fusion_ms": 1.09,
+          "rule_rerank_ms": 4.69,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 193.48,
-          "total_ms": 226.77
+          "cross_encoder_ms": 1003.76,
+          "total_ms": 1098.18
         },
-        "pre_generation_ms": 227.73,
-        "ttft_ms": 493,
-        "generate_ms": 23877,
-        "model_ms": 23849,
+        "pre_generation_ms": 1100.27,
+        "ttft_ms": 521,
+        "generate_ms": 11953,
+        "model_ms": 11943,
         "usage": {
           "prompt_tokens": 338,
           "completion_tokens": 264,
@@ -718,7 +801,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 24105
+        "total_ms": 13053
       },
       "api_intent": "law",
       "refused": false,
@@ -742,11 +825,11 @@
         "消防法·第十三条"
       ],
       "retrieved_scores": [
-        0.643,
-        0.537,
+        0.644,
+        0.536,
         0.535,
         0.522,
-        0.499
+        0.5
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -763,28 +846,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 8.4,
-      "latency_ms": 8381,
-      "trace_id": "91769e1ce0b64445",
-      "ttft_ms": 528,
+      "total_ms": 5650.4,
+      "retrieve_ms": 1067.96,
+      "pre_generation_ms": 1067.74,
+      "ttft_ms": 527,
+      "generate_ms": 4577,
+      "model_ms": 4567,
+      "tokens": 90,
+      "tokens_per_second": 19.7,
+      "seconds": 5.7,
+      "latency_ms": 5645,
+      "trace_id": "c5d7967db9a34688",
       "timing": {
-        "route_ms": 1.87,
+        "route_ms": 0.76,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 229.91,
+        "retrieve_ms": 1067.96,
         "retrieval": {
-          "bm25_ms": 2.49,
-          "vector_ms": 31.4,
-          "graph_ms": 0.33,
-          "fusion_ms": 0.6,
-          "rule_rerank_ms": 3.31,
+          "bm25_ms": 1.19,
+          "vector_ms": 56.58,
+          "graph_ms": 0.61,
+          "fusion_ms": 1.01,
+          "rule_rerank_ms": 4.27,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 191.64,
-          "total_ms": 229.86
+          "cross_encoder_ms": 1004.11,
+          "total_ms": 1067.87
         },
-        "pre_generation_ms": 232.6,
-        "ttft_ms": 528,
-        "generate_ms": 8148,
-        "model_ms": 8130,
+        "pre_generation_ms": 1067.74,
+        "ttft_ms": 527,
+        "generate_ms": 4577,
+        "model_ms": 4567,
         "usage": {
           "prompt_tokens": 340,
           "completion_tokens": 90,
@@ -792,7 +882,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 8381
+        "total_ms": 5645
       },
       "api_intent": "law",
       "refused": false,
@@ -818,7 +908,7 @@
         0.488,
         0.476,
         0.476,
-        0.472
+        0.471
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -835,28 +925,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 23.3,
-      "latency_ms": 23292,
-      "trace_id": "76d247c8c45e4b70",
-      "ttft_ms": 520,
+      "total_ms": 12352.8,
+      "retrieve_ms": 932.44,
+      "pre_generation_ms": 932.95,
+      "ttft_ms": 572,
+      "generate_ms": 11413,
+      "model_ms": 11405,
+      "tokens": 262,
+      "tokens_per_second": 23.0,
+      "seconds": 12.4,
+      "latency_ms": 12346,
+      "trace_id": "217bc8a7f12843aa",
       "timing": {
-        "route_ms": 0.12,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 213.34,
+        "route_ms": 0.07,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 932.44,
         "retrieval": {
-          "bm25_ms": 3.23,
-          "vector_ms": 37.69,
-          "graph_ms": 0.53,
-          "fusion_ms": 0.95,
-          "rule_rerank_ms": 3.98,
+          "bm25_ms": 1.56,
+          "vector_ms": 64.37,
+          "graph_ms": 0.64,
+          "fusion_ms": 1.14,
+          "rule_rerank_ms": 5.15,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 166.74,
-          "total_ms": 213.23
+          "cross_encoder_ms": 859.36,
+          "total_ms": 932.32
         },
-        "pre_generation_ms": 214.13,
-        "ttft_ms": 520,
-        "generate_ms": 23078,
-        "model_ms": 23045,
+        "pre_generation_ms": 932.95,
+        "ttft_ms": 572,
+        "generate_ms": 11413,
+        "model_ms": 11405,
         "usage": {
           "prompt_tokens": 349,
           "completion_tokens": 262,
@@ -864,7 +961,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 23292
+        "total_ms": 12346
       },
       "api_intent": "law",
       "refused": false,
@@ -884,15 +981,15 @@
         "高层规定·第四十五条",
         "高层规定·第四十六条",
         "消防法·第四十四条",
-        "高层规定·第二十八条",
-        "高层规定·第四十二条"
+        "高层规定·第四十二条",
+        "高层规定·第二十八条"
       ],
       "retrieved_scores": [
         0.678,
-        0.636,
-        0.604,
+        0.635,
+        0.602,
         0.51,
-        0.508
+        0.51
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -909,28 +1006,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 40.4,
-      "latency_ms": 40424,
-      "trace_id": "749adaa80c994f16",
-      "ttft_ms": 560,
+      "total_ms": 20826.2,
+      "retrieve_ms": 1421.62,
+      "pre_generation_ms": 1422.21,
+      "ttft_ms": 540,
+      "generate_ms": 19386,
+      "model_ms": 19379,
+      "tokens": 459,
+      "tokens_per_second": 23.7,
+      "seconds": 20.8,
+      "latency_ms": 20808,
+      "trace_id": "9999340329a7449f",
       "timing": {
-        "route_ms": 0.16,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 296.07,
+        "route_ms": 0.06,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 1421.62,
         "retrieval": {
-          "bm25_ms": 8.42,
-          "vector_ms": 48.32,
-          "graph_ms": 0.29,
-          "fusion_ms": 0.79,
-          "rule_rerank_ms": 3.85,
+          "bm25_ms": 2.96,
+          "vector_ms": 69.3,
+          "graph_ms": 0.43,
+          "fusion_ms": 0.71,
+          "rule_rerank_ms": 3.92,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 234.26,
-          "total_ms": 296.02
+          "cross_encoder_ms": 1344.17,
+          "total_ms": 1421.57
         },
-        "pre_generation_ms": 297.88,
-        "ttft_ms": 560,
-        "generate_ms": 40126,
-        "model_ms": 40106,
+        "pre_generation_ms": 1422.21,
+        "ttft_ms": 540,
+        "generate_ms": 19386,
+        "model_ms": 19379,
         "usage": {
           "prompt_tokens": 603,
           "completion_tokens": 459,
@@ -938,7 +1042,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 40424
+        "total_ms": 20808
       },
       "api_intent": "law",
       "refused": false,
@@ -962,11 +1066,11 @@
         "消防法·第五十九条"
       ],
       "retrieved_scores": [
-        0.735,
+        0.733,
         0.721,
         0.697,
         0.665,
-        0.658
+        0.659
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -983,12 +1087,19 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（应急要素齐全）",
-      "seconds": 0.0,
-      "latency_ms": 1,
-      "trace_id": "e3ac79a9151e46e6",
+      "total_ms": 3.4,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 0.0,
+      "latency_ms": 0,
+      "trace_id": "ffb848f66b1d442d",
       "timing": {
-        "total_ms": 1
+        "total_ms": 0
       },
       "api_intent": "emergency",
       "refused": false,
@@ -1013,28 +1124,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 31.0,
-      "latency_ms": 30982,
-      "trace_id": "ac5d2ddad2ad4a7e",
-      "ttft_ms": 552,
+      "total_ms": 16958.4,
+      "retrieve_ms": 1661.54,
+      "pre_generation_ms": 1661.73,
+      "ttft_ms": 624,
+      "generate_ms": 15290,
+      "model_ms": 15271,
+      "tokens": 359,
+      "tokens_per_second": 23.5,
+      "seconds": 17.0,
+      "latency_ms": 16952,
+      "trace_id": "51e9467c464c4580",
       "timing": {
-        "route_ms": 2.53,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 356.44,
+        "route_ms": 0.96,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1661.54,
         "retrieval": {
-          "bm25_ms": 5.43,
-          "vector_ms": 89.77,
-          "graph_ms": 1.1,
-          "fusion_ms": 0.65,
-          "rule_rerank_ms": 3.37,
+          "bm25_ms": 4.43,
+          "vector_ms": 174.91,
+          "graph_ms": 1.58,
+          "fusion_ms": 0.78,
+          "rule_rerank_ms": 5.11,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 255.92,
-          "total_ms": 356.38
+          "cross_encoder_ms": 1474.56,
+          "total_ms": 1661.49
         },
-        "pre_generation_ms": 358.87,
-        "ttft_ms": 552,
-        "generate_ms": 30624,
-        "model_ms": 30589,
+        "pre_generation_ms": 1661.73,
+        "ttft_ms": 624,
+        "generate_ms": 15290,
+        "model_ms": 15271,
         "usage": {
           "prompt_tokens": 598,
           "completion_tokens": 359,
@@ -1042,7 +1160,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 30982
+        "total_ms": 16952
       },
       "api_intent": "law",
       "refused": false,
@@ -1065,11 +1183,11 @@
         "61号令·第二十一条"
       ],
       "retrieved_scores": [
-        0.848,
-        0.71,
-        0.708,
-        0.699,
-        0.62
+        0.849,
+        0.709,
+        0.703,
+        0.691,
+        0.623
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1087,28 +1205,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 9.8,
-      "latency_ms": 9790,
-      "trace_id": "63205be16295470a",
-      "ttft_ms": 485,
+      "total_ms": 5890.3,
+      "retrieve_ms": 1157.1,
+      "pre_generation_ms": 1159.06,
+      "ttft_ms": 496,
+      "generate_ms": 4724,
+      "model_ms": 4718,
+      "tokens": 107,
+      "tokens_per_second": 22.7,
+      "seconds": 5.9,
+      "latency_ms": 5883,
+      "trace_id": "ed9509bdb85e4bad",
       "timing": {
-        "route_ms": 1.81,
+        "route_ms": 1.04,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 227.04,
+        "retrieve_ms": 1157.1,
         "retrieval": {
-          "bm25_ms": 2.18,
-          "vector_ms": 27.6,
-          "graph_ms": 0.37,
-          "fusion_ms": 1.4,
-          "rule_rerank_ms": 2.41,
+          "bm25_ms": 1.25,
+          "vector_ms": 52.45,
+          "graph_ms": 0.55,
+          "fusion_ms": 1.86,
+          "rule_rerank_ms": 3.91,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 192.98,
-          "total_ms": 227.0
+          "cross_encoder_ms": 1096.94,
+          "total_ms": 1157.04
         },
-        "pre_generation_ms": 229.37,
-        "ttft_ms": 485,
-        "generate_ms": 9561,
-        "model_ms": 9539,
+        "pre_generation_ms": 1159.06,
+        "ttft_ms": 496,
+        "generate_ms": 4724,
+        "model_ms": 4718,
         "usage": {
           "prompt_tokens": 376,
           "completion_tokens": 107,
@@ -1116,7 +1241,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 9790
+        "total_ms": 5883
       },
       "api_intent": "law",
       "refused": false,
@@ -1139,10 +1264,10 @@
       ],
       "retrieved_scores": [
         0.69,
-        0.633,
-        0.608,
-        0.599,
-        0.573
+        0.634,
+        0.609,
+        0.596,
+        0.571
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1159,28 +1284,35 @@
       "contract_passed": true,
       "gold_hit": false,
       "message": "未命中金标条款",
-      "seconds": 8.0,
-      "latency_ms": 7929,
-      "trace_id": "e7597d2d16f543c4",
-      "ttft_ms": 570,
+      "total_ms": 5665.1,
+      "retrieve_ms": 1583.65,
+      "pre_generation_ms": 1584.23,
+      "ttft_ms": 624,
+      "generate_ms": 4058,
+      "model_ms": 4051,
+      "tokens": 87,
+      "tokens_per_second": 21.5,
+      "seconds": 5.7,
+      "latency_ms": 5643,
+      "trace_id": "ec54292952804002",
       "timing": {
-        "route_ms": 2.46,
+        "route_ms": 0.82,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 317.26,
+        "retrieve_ms": 1583.65,
         "retrieval": {
-          "bm25_ms": 3.06,
-          "vector_ms": 29.52,
-          "graph_ms": 0.31,
-          "fusion_ms": 0.62,
-          "rule_rerank_ms": 2.78,
+          "bm25_ms": 0.86,
+          "vector_ms": 54.46,
+          "graph_ms": 0.61,
+          "fusion_ms": 1.02,
+          "rule_rerank_ms": 4.98,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 280.8,
-          "total_ms": 317.19
+          "cross_encoder_ms": 1521.57,
+          "total_ms": 1583.59
         },
-        "pre_generation_ms": 319.71,
-        "ttft_ms": 570,
-        "generate_ms": 7610,
-        "model_ms": 7585,
+        "pre_generation_ms": 1584.23,
+        "ttft_ms": 624,
+        "generate_ms": 4058,
+        "model_ms": 4051,
         "usage": {
           "prompt_tokens": 600,
           "completion_tokens": 87,
@@ -1188,7 +1320,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 7929
+        "total_ms": 5643
       },
       "api_intent": "law",
       "refused": false,
@@ -1210,11 +1342,11 @@
         "高层规定·第三十五条"
       ],
       "retrieved_scores": [
-        0.637,
-        0.615,
+        0.636,
         0.612,
+        0.6,
         0.594,
-        0.567
+        0.564
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1231,28 +1363,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 25.3,
-      "latency_ms": 25310,
-      "trace_id": "6ee699346a2e4f95",
-      "ttft_ms": 577,
+      "total_ms": 13945.6,
+      "retrieve_ms": 1484.89,
+      "pre_generation_ms": 1485.47,
+      "ttft_ms": 569,
+      "generate_ms": 12433,
+      "model_ms": 12423,
+      "tokens": 290,
+      "tokens_per_second": 23.3,
+      "seconds": 13.9,
+      "latency_ms": 13919,
+      "trace_id": "c1b2b4e6da6b4732",
       "timing": {
-        "route_ms": 0.09,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 280.16,
+        "route_ms": 0.06,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 1484.89,
         "retrieval": {
-          "bm25_ms": 12.65,
-          "vector_ms": 30.46,
-          "graph_ms": 0.32,
-          "fusion_ms": 0.75,
-          "rule_rerank_ms": 2.38,
+          "bm25_ms": 3.16,
+          "vector_ms": 87.09,
+          "graph_ms": 0.51,
+          "fusion_ms": 0.64,
+          "rule_rerank_ms": 3.67,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 233.46,
-          "total_ms": 280.1
+          "cross_encoder_ms": 1389.69,
+          "total_ms": 1484.84
         },
-        "pre_generation_ms": 280.71,
-        "ttft_ms": 577,
-        "generate_ms": 25029,
-        "model_ms": 25011,
+        "pre_generation_ms": 1485.47,
+        "ttft_ms": 569,
+        "generate_ms": 12433,
+        "model_ms": 12423,
         "usage": {
           "prompt_tokens": 614,
           "completion_tokens": 290,
@@ -1260,7 +1399,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 25310
+        "total_ms": 13919
       },
       "api_intent": "law",
       "refused": false,
@@ -1284,9 +1423,9 @@
       "retrieved_scores": [
         0.873,
         0.717,
-        0.676,
+        0.677,
         0.675,
-        0.659
+        0.658
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1303,28 +1442,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 12.1,
-      "latency_ms": 12056,
-      "trace_id": "f4d7817f589548f1",
-      "ttft_ms": 545,
+      "total_ms": 7429.6,
+      "retrieve_ms": 1429.12,
+      "pre_generation_ms": 1429.39,
+      "ttft_ms": 602,
+      "generate_ms": 5994,
+      "model_ms": 5987,
+      "tokens": 134,
+      "tokens_per_second": 22.4,
+      "seconds": 7.4,
+      "latency_ms": 7424,
+      "trace_id": "7c19b03f88c5413d",
       "timing": {
-        "route_ms": 0.11,
+        "route_ms": 0.06,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 271.56,
+        "retrieve_ms": 1429.12,
         "retrieval": {
-          "bm25_ms": 6.49,
-          "vector_ms": 31.5,
-          "graph_ms": 0.35,
-          "fusion_ms": 0.6,
-          "rule_rerank_ms": 4.8,
+          "bm25_ms": 3.26,
+          "vector_ms": 76.17,
+          "graph_ms": 0.58,
+          "fusion_ms": 0.89,
+          "rule_rerank_ms": 4.35,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 227.67,
-          "total_ms": 271.5
+          "cross_encoder_ms": 1343.71,
+          "total_ms": 1429.06
         },
-        "pre_generation_ms": 272.36,
-        "ttft_ms": 545,
-        "generate_ms": 11784,
-        "model_ms": 11758,
+        "pre_generation_ms": 1429.39,
+        "ttft_ms": 602,
+        "generate_ms": 5994,
+        "model_ms": 5987,
         "usage": {
           "prompt_tokens": 510,
           "completion_tokens": 134,
@@ -1332,7 +1478,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 12056
+        "total_ms": 7424
       },
       "api_intent": "law",
       "refused": false,
@@ -1355,10 +1501,10 @@
       ],
       "retrieved_scores": [
         0.745,
-        0.639,
-        0.6,
-        0.585,
-        0.514
+        0.635,
+        0.602,
+        0.579,
+        0.521
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1375,10 +1521,17 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（库外题，管线拒答）",
+      "total_ms": 20.9,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
+      "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
       "seconds": 0.0,
       "latency_ms": 1,
-      "trace_id": "1081f8d145e14ae5",
-      "ttft_ms": null,
+      "trace_id": "8b78a28f82764a2b",
       "timing": {
         "total_ms": 1
       },
@@ -1405,12 +1558,19 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（库外题，管线拒答）",
-      "seconds": 0.0,
-      "latency_ms": 1,
-      "trace_id": "6eed06a8467b4c38",
+      "total_ms": 14.8,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 0.0,
+      "latency_ms": 0,
+      "trace_id": "744502991376449d",
       "timing": {
-        "total_ms": 1
+        "total_ms": 0
       },
       "api_intent": "refuse",
       "refused": true,
@@ -1435,28 +1595,35 @@
       "contract_passed": true,
       "gold_hit": false,
       "message": "未命中金标条款",
-      "seconds": 18.4,
-      "latency_ms": 18321,
-      "trace_id": "dea99a3418d8472e",
+      "total_ms": 9949.9,
+      "retrieve_ms": 1019.2,
+      "pre_generation_ms": 1020.34,
       "ttft_ms": 513,
+      "generate_ms": 8923,
+      "model_ms": 8915,
+      "tokens": 210,
+      "tokens_per_second": 23.6,
+      "seconds": 9.9,
+      "latency_ms": 9944,
+      "trace_id": "d003922de1954ca2",
       "timing": {
-        "route_ms": 1.27,
+        "route_ms": 0.94,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 245.24,
+        "retrieve_ms": 1019.2,
         "retrieval": {
-          "bm25_ms": 5.25,
-          "vector_ms": 33.13,
-          "graph_ms": 0.31,
-          "fusion_ms": 0.57,
-          "rule_rerank_ms": 2.3,
+          "bm25_ms": 2.12,
+          "vector_ms": 66.93,
+          "graph_ms": 0.51,
+          "fusion_ms": 0.63,
+          "rule_rerank_ms": 3.88,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 203.5,
-          "total_ms": 245.17
+          "cross_encoder_ms": 944.99,
+          "total_ms": 1019.14
         },
-        "pre_generation_ms": 247.72,
+        "pre_generation_ms": 1020.34,
         "ttft_ms": 513,
-        "generate_ms": 18073,
-        "model_ms": 18063,
+        "generate_ms": 8923,
+        "model_ms": 8915,
         "usage": {
           "prompt_tokens": 488,
           "completion_tokens": 210,
@@ -1464,7 +1631,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 18321
+        "total_ms": 9944
       },
       "api_intent": "law",
       "refused": false,
@@ -1486,11 +1653,11 @@
         "高层规定·第四条"
       ],
       "retrieved_scores": [
-        0.77,
-        0.747,
-        0.6,
-        0.489,
-        0.475
+        0.769,
+        0.731,
+        0.602,
+        0.487,
+        0.476
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1507,28 +1674,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 30.2,
-      "latency_ms": 30126,
-      "trace_id": "049ed131af834046",
-      "ttft_ms": 576,
+      "total_ms": 15770.6,
+      "retrieve_ms": 1727.77,
+      "pre_generation_ms": 1729.05,
+      "ttft_ms": 596,
+      "generate_ms": 14035,
+      "model_ms": 14028,
+      "tokens": 330,
+      "tokens_per_second": 23.5,
+      "seconds": 15.8,
+      "latency_ms": 15764,
+      "trace_id": "e91ddf0e5e6848d9",
       "timing": {
-        "route_ms": 2.45,
+        "route_ms": 1.16,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 331.0,
+        "retrieve_ms": 1727.77,
         "retrieval": {
-          "bm25_ms": 4.21,
-          "vector_ms": 28.1,
-          "graph_ms": 0.3,
-          "fusion_ms": 0.59,
-          "rule_rerank_ms": 3.4,
+          "bm25_ms": 2.57,
+          "vector_ms": 66.61,
+          "graph_ms": 0.44,
+          "fusion_ms": 0.57,
+          "rule_rerank_ms": 5.16,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 294.26,
-          "total_ms": 330.94
+          "cross_encoder_ms": 1652.29,
+          "total_ms": 1727.72
         },
-        "pre_generation_ms": 333.98,
-        "ttft_ms": 576,
-        "generate_ms": 29792,
-        "model_ms": 29764,
+        "pre_generation_ms": 1729.05,
+        "ttft_ms": 596,
+        "generate_ms": 14035,
+        "model_ms": 14028,
         "usage": {
           "prompt_tokens": 589,
           "completion_tokens": 330,
@@ -1536,7 +1710,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 30126
+        "total_ms": 15764
       },
       "api_intent": "law",
       "refused": false,
@@ -1558,7 +1732,7 @@
         "消防法·第六十九条"
       ],
       "retrieved_scores": [
-        0.633,
+        0.629,
         0.572,
         0.53,
         0.529,
@@ -1576,72 +1750,76 @@
       "id": "py10",
       "intent": "law",
       "question": "装修要电焊，物业不给开动火证能硬焊吗",
-      "passed": true,
+      "passed": false,
       "contract_passed": true,
-      "gold_hit": true,
-      "message": "OK",
-      "seconds": 42.4,
-      "latency_ms": 42397,
-      "trace_id": "0bb8e38c44e54936",
-      "ttft_ms": 618,
+      "gold_hit": false,
+      "message": "未命中金标条款",
+      "total_ms": 15718.5,
+      "retrieve_ms": 1923.22,
+      "pre_generation_ms": 1923.87,
+      "ttft_ms": 628,
+      "generate_ms": 13770,
+      "model_ms": 13762,
+      "tokens": 323,
+      "tokens_per_second": 23.5,
+      "seconds": 15.7,
+      "latency_ms": 15693,
+      "trace_id": "ae7cb434a79f40e1",
       "timing": {
-        "route_ms": 2.37,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 386.04,
+        "route_ms": 0.84,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1923.22,
         "retrieval": {
-          "bm25_ms": 14.07,
-          "vector_ms": 92.42,
-          "graph_ms": 0.97,
-          "fusion_ms": 0.65,
-          "rule_rerank_ms": 3.76,
+          "bm25_ms": 12.92,
+          "vector_ms": 260.76,
+          "graph_ms": 1.78,
+          "fusion_ms": 0.78,
+          "rule_rerank_ms": 7.37,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 273.98,
-          "total_ms": 385.98
+          "cross_encoder_ms": 1639.37,
+          "total_ms": 1923.14
         },
-        "pre_generation_ms": 389.47,
-        "ttft_ms": 618,
-        "generate_ms": 42008,
-        "model_ms": 41990,
+        "pre_generation_ms": 1923.87,
+        "ttft_ms": 628,
+        "generate_ms": 13770,
+        "model_ms": 13762,
         "usage": {
-          "prompt_tokens": 666,
-          "completion_tokens": 480,
-          "total_tokens": 1146
+          "prompt_tokens": 660,
+          "completion_tokens": 323,
+          "total_tokens": 983
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 42397
+        "total_ms": 15693
       },
       "api_intent": "law",
       "refused": false,
       "crag": "Correct",
       "strategy": "LLM生成（结构化+引用核验）",
-      "conclusion": "无",
+      "conclusion": "警告或五百元以下罚款",
       "basis": [
-        "《高层民用建筑消防安全管理规定》第十五条：高层民用建筑的业主、使用人或者物业服务企业、统一管理人应当对动用明火作业实行严格的消防安全管理，不得在具有火灾、爆炸危险的场所使用明火；因施工等特殊情况需要进行电焊、气焊等明火作业的，应当按照规定办理…",
-        "《高层民用建筑消防安全管理规定》第四十七条：违反本规定，有下列行为之一的，由消防救援机构责令改正，对经营性单位和个人处2000元以上10000元以下罚款，对非经营性单位和个人处500元以上1000元以下罚款：（一）在高层民用建筑内进行电焊、气焊…",
-        "《中华人民共和国消防法（2021修正）》第二十一条：禁止在具有火灾、爆炸危险的场所吸烟、使用明火。因施工等特殊情况需要使用明火作业的，应当按照规定事先办理审批手续，采取相应的消防安全措施；作业人员应当遵守消防安全规定。 进行电焊、气焊等具有火灾危险作业…"
+        "《高层民用建筑消防安全管理规定》第四十七条：违反本规定，有下列行为之一的，由消防救援机构责令改正，对经营性单位和个人处2000元以上10000元以下罚款，对非经营性单位和个人处500元以上1000元以下罚款：（一）在高层民用建筑内进行电焊、气焊…"
       ],
-      "confidence": "medium",
-      "guards": [
-        "json_truncation_repair"
-      ],
+      "confidence": "high",
+      "guards": [],
       "verification_passed": true,
       "verification_issues": [],
       "retrieved_articles": [
         "高层规定·第十五条",
         "高层规定·第四十七条",
-        "消防法·第二十一条",
         "消防法·第六十三条",
-        "高层规定·第十条"
+        "高层规定·第十条",
+        "消防法·第二十一条"
       ],
       "retrieved_scores": [
-        0.877,
-        0.678,
-        0.554,
-        0.552,
-        0.55
+        0.88,
+        0.669,
+        0.553,
+        0.547,
+        0.545
       ],
       "unsupported_marks": [
+        "数字无出处（['五百元']）",
         "问题与引用原文零词重叠（弱信号）"
       ],
       "expected_articles": [
@@ -1657,28 +1835,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 44.7,
-      "latency_ms": 44630,
-      "trace_id": "2e4b01770aff4749",
-      "ttft_ms": 564,
+      "total_ms": 21964.1,
+      "retrieve_ms": 1778.65,
+      "pre_generation_ms": 1780.35,
+      "ttft_ms": 629,
+      "generate_ms": 20166,
+      "model_ms": 20158,
+      "tokens": 480,
+      "tokens_per_second": 23.8,
+      "seconds": 22.0,
+      "latency_ms": 21946,
+      "trace_id": "7b5892593f354dc7",
       "timing": {
-        "route_ms": 2.71,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 339.26,
+        "route_ms": 0.8,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 1778.65,
         "retrieval": {
-          "bm25_ms": 14.74,
-          "vector_ms": 90.98,
-          "graph_ms": 1.25,
-          "fusion_ms": 0.69,
-          "rule_rerank_ms": 3.56,
+          "bm25_ms": 12.05,
+          "vector_ms": 248.83,
+          "graph_ms": 1.78,
+          "fusion_ms": 1.14,
+          "rule_rerank_ms": 6.54,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 227.82,
-          "total_ms": 339.19
+          "cross_encoder_ms": 1508.07,
+          "total_ms": 1778.57
         },
-        "pre_generation_ms": 342.13,
-        "ttft_ms": 564,
-        "generate_ms": 44288,
-        "model_ms": 44249,
+        "pre_generation_ms": 1780.35,
+        "ttft_ms": 629,
+        "generate_ms": 20166,
+        "model_ms": 20158,
         "usage": {
           "prompt_tokens": 557,
           "completion_tokens": 480,
@@ -1686,7 +1871,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 44630
+        "total_ms": 21946
       },
       "api_intent": "law",
       "refused": false,
@@ -1712,11 +1897,11 @@
         "高层规定·第五条"
       ],
       "retrieved_scores": [
-        0.649,
+        0.651,
         0.594,
         0.588,
-        0.541,
-        0.522
+        0.537,
+        0.525
       ],
       "unsupported_marks": [],
       "expected_articles": [
@@ -1734,12 +1919,19 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（应急要素齐全）",
-      "seconds": 0.0,
-      "latency_ms": 1,
-      "trace_id": "d5614cce18fd4fa9",
+      "total_ms": 19.1,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 0.0,
+      "latency_ms": 0,
+      "trace_id": "89e49045cd0745e3",
       "timing": {
-        "total_ms": 1
+        "total_ms": 0
       },
       "api_intent": "emergency",
       "refused": false,
@@ -1764,67 +1956,71 @@
       "contract_passed": true,
       "gold_hit": false,
       "message": "未命中金标条款",
-      "seconds": 31.1,
-      "latency_ms": 31093,
-      "trace_id": "27723889b8e04456",
-      "ttft_ms": 535,
+      "total_ms": 8027.4,
+      "retrieve_ms": 1439.0,
+      "pre_generation_ms": 1439.36,
+      "ttft_ms": 653,
+      "generate_ms": 6570,
+      "model_ms": 6562,
+      "tokens": 147,
+      "tokens_per_second": 22.4,
+      "seconds": 8.0,
+      "latency_ms": 8009,
+      "trace_id": "acb7ce36ddb343dc",
       "timing": {
-        "route_ms": 0.18,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 276.88,
+        "route_ms": 0.06,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 1439.0,
         "retrieval": {
-          "bm25_ms": 1.9,
-          "vector_ms": 29.58,
-          "graph_ms": 0.45,
-          "fusion_ms": 0.92,
-          "rule_rerank_ms": 4.31,
+          "bm25_ms": 1.01,
+          "vector_ms": 51.59,
+          "graph_ms": 0.56,
+          "fusion_ms": 0.76,
+          "rule_rerank_ms": 5.8,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 239.58,
-          "total_ms": 276.82
+          "cross_encoder_ms": 1379.13,
+          "total_ms": 1438.94
         },
-        "pre_generation_ms": 277.99,
-        "ttft_ms": 535,
-        "generate_ms": 30815,
-        "model_ms": 12510,
+        "pre_generation_ms": 1439.36,
+        "ttft_ms": 653,
+        "generate_ms": 6570,
+        "model_ms": 6562,
         "usage": {
-          "prompt_tokens": 496,
-          "completion_tokens": 131,
-          "total_tokens": 627
+          "prompt_tokens": 720,
+          "completion_tokens": 147,
+          "total_tokens": 867
         },
         "guard_retry": false,
-        "pipeline_retry": true,
-        "total_ms": 31093
+        "pipeline_retry": false,
+        "total_ms": 8009
       },
       "api_intent": "law",
       "refused": false,
       "crag": "Correct",
       "strategy": "LLM生成（结构化+引用核验）",
-      "conclusion": "谁主管、谁负责",
+      "conclusion": "消防工作",
       "basis": [
-        "《中华人民共和国消防法（2021修正）》第五十二条：地方各级人民政府应当落实消防工作责任制，对本级人民政府有关部门履行消防安全职责的情况进行监督检查。 县级以上地方人民政府有关部门应当根据本系统的特点，有针对性地开展消防安全检查，及时督促整改火灾隐患。"
+        "《消防安全责任制实施办法》第六条：县级以上地方各级人民政府应当落实消防工作责任制，履行下列职责：（一）贯彻执行国家法律法规和方针政策，以及上级党委、政府关于消防工作的部署要求，全面负责本地区消防工作，每年召开消防工作会议，研究部署本地…"
       ],
       "confidence": "high",
-      "guards": [
-        "citation_guard"
-      ],
+      "guards": [],
       "verification_passed": true,
       "verification_issues": [],
       "retrieved_articles": [
-        "消防法·第五十二条",
-        "责任制办法·第十二条",
-        "61号令·第三条",
         "责任制办法·第六条",
+        "责任制办法·第十二条",
+        "消防法·第五十二条",
+        "61号令·第三条",
         "责任制办法·第五条"
       ],
       "retrieved_scores": [
+        0.628,
         0.627,
-        0.627,
-        0.623,
-        0.618,
-        0.599
+        0.626,
+        0.625,
+        0.598
       ],
       "unsupported_marks": [
-        "守卫介入（模型原引用与提供条款不匹配：citation_guard）",
         "问题与引用原文零词重叠（弱信号）"
       ],
       "expected_articles": [
@@ -1839,12 +2035,19 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（引导到可问范围）",
-      "seconds": 0.0,
-      "latency_ms": 3,
-      "trace_id": "28319008dce548cb",
+      "total_ms": 4.4,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 0.0,
+      "latency_ms": 1,
+      "trace_id": "1ab8484e4af94cf4",
       "timing": {
-        "total_ms": 3
+        "total_ms": 1
       },
       "api_intent": "guide",
       "refused": false,
@@ -1869,28 +2072,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 8.2,
-      "latency_ms": 8131,
-      "trace_id": "19a99b825f124c6a",
-      "ttft_ms": 561,
+      "total_ms": 4792.0,
+      "retrieve_ms": 878.74,
+      "pre_generation_ms": 879.58,
+      "ttft_ms": 566,
+      "generate_ms": 3894,
+      "model_ms": 3887,
+      "tokens": 82,
+      "tokens_per_second": 21.1,
+      "seconds": 4.8,
+      "latency_ms": 4774,
+      "trace_id": "97dad4caab3a49bb",
       "timing": {
-        "route_ms": 2.5,
-        "query_prepare_ms": 0.02,
-        "retrieve_ms": 239.04,
+        "route_ms": 0.73,
+        "query_prepare_ms": 0.01,
+        "retrieve_ms": 878.74,
         "retrieval": {
-          "bm25_ms": 6.01,
-          "vector_ms": 43.03,
-          "graph_ms": 0.66,
-          "fusion_ms": 1.15,
-          "rule_rerank_ms": 4.25,
+          "bm25_ms": 1.68,
+          "vector_ms": 64.84,
+          "graph_ms": 0.55,
+          "fusion_ms": 0.7,
+          "rule_rerank_ms": 4.1,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 183.77,
-          "total_ms": 238.98
+          "cross_encoder_ms": 806.72,
+          "total_ms": 878.69
         },
-        "pre_generation_ms": 241.26,
-        "ttft_ms": 561,
-        "generate_ms": 7890,
-        "model_ms": 7865,
+        "pre_generation_ms": 879.58,
+        "ttft_ms": 566,
+        "generate_ms": 3894,
+        "model_ms": 3887,
         "usage": {
           "prompt_tokens": 477,
           "completion_tokens": 82,
@@ -1898,7 +2108,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 8131
+        "total_ms": 4774
       },
       "api_intent": "law",
       "refused": false,
@@ -1921,10 +2131,10 @@
       ],
       "retrieved_scores": [
         0.633,
-        0.511,
+        0.52,
         0.507,
         0.486,
-        0.477
+        0.476
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -1941,28 +2151,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 10.4,
-      "latency_ms": 10404,
-      "trace_id": "52dc6615a24a4fd4",
-      "ttft_ms": 673,
+      "total_ms": 6058.9,
+      "retrieve_ms": 1368.27,
+      "pre_generation_ms": 1368.83,
+      "ttft_ms": 625,
+      "generate_ms": 4658,
+      "model_ms": 4651,
+      "tokens": 101,
+      "tokens_per_second": 21.7,
+      "seconds": 6.1,
+      "latency_ms": 6027,
+      "trace_id": "808c1fb623dd4767",
       "timing": {
-        "route_ms": 2.72,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 295.19,
+        "route_ms": 0.76,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 1368.27,
         "retrieval": {
-          "bm25_ms": 6.3,
-          "vector_ms": 29.84,
-          "graph_ms": 0.47,
-          "fusion_ms": 1.43,
-          "rule_rerank_ms": 2.43,
+          "bm25_ms": 1.75,
+          "vector_ms": 63.08,
+          "graph_ms": 0.72,
+          "fusion_ms": 1.92,
+          "rule_rerank_ms": 4.2,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 254.49,
-          "total_ms": 295.06
+          "cross_encoder_ms": 1296.48,
+          "total_ms": 1368.22
         },
-        "pre_generation_ms": 297.73,
-        "ttft_ms": 673,
-        "generate_ms": 10106,
-        "model_ms": 10099,
+        "pre_generation_ms": 1368.83,
+        "ttft_ms": 625,
+        "generate_ms": 4658,
+        "model_ms": 4651,
         "usage": {
           "prompt_tokens": 662,
           "completion_tokens": 101,
@@ -1970,7 +2187,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 10404
+        "total_ms": 6027
       },
       "api_intent": "law",
       "refused": false,
@@ -2013,28 +2230,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 14.6,
-      "latency_ms": 14561,
-      "trace_id": "f266577c4b53420c",
-      "ttft_ms": 504,
+      "total_ms": 7187.0,
+      "retrieve_ms": 617.51,
+      "pre_generation_ms": 617.86,
+      "ttft_ms": 450,
+      "generate_ms": 6537,
+      "model_ms": 6531,
+      "tokens": 149,
+      "tokens_per_second": 22.8,
+      "seconds": 7.2,
+      "latency_ms": 7155,
+      "trace_id": "eacc134301294814",
       "timing": {
-        "route_ms": 0.1,
+        "route_ms": 0.06,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 213.77,
+        "retrieve_ms": 617.51,
         "retrieval": {
-          "bm25_ms": 2.18,
-          "vector_ms": 31.49,
-          "graph_ms": 0.4,
-          "fusion_ms": 0.61,
-          "rule_rerank_ms": 3.35,
+          "bm25_ms": 1.19,
+          "vector_ms": 51.84,
+          "graph_ms": 0.6,
+          "fusion_ms": 0.7,
+          "rule_rerank_ms": 5.75,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 175.58,
-          "total_ms": 213.7
+          "cross_encoder_ms": 557.25,
+          "total_ms": 617.42
         },
-        "pre_generation_ms": 213.6,
-        "ttft_ms": 504,
-        "generate_ms": 14348,
-        "model_ms": 14342,
+        "pre_generation_ms": 617.86,
+        "ttft_ms": 450,
+        "generate_ms": 6537,
+        "model_ms": 6531,
         "usage": {
           "prompt_tokens": 357,
           "completion_tokens": 149,
@@ -2042,7 +2266,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 14561
+        "total_ms": 7155
       },
       "api_intent": "law",
       "refused": false,
@@ -2065,7 +2289,7 @@
       ],
       "retrieved_scores": [
         0.717,
-        0.666,
+        0.667,
         0.661,
         0.648,
         0.628
@@ -2085,17 +2309,24 @@
       "contract_passed": true,
       "gold_hit": null,
       "message": "OK（库外题，管线拒答）",
-      "seconds": 0.3,
-      "latency_ms": 312,
-      "trace_id": "313bc64d7d9b4c39",
+      "total_ms": 1847.8,
+      "retrieve_ms": null,
+      "pre_generation_ms": null,
       "ttft_ms": null,
+      "generate_ms": null,
+      "model_ms": null,
+      "tokens": null,
+      "tokens_per_second": null,
+      "seconds": 1.8,
+      "latency_ms": 1823,
+      "trace_id": "b383269d192b4a06",
       "timing": {
-        "total_ms": 312
+        "total_ms": 1823
       },
       "api_intent": "refuse",
       "refused": true,
       "crag": "BelowThreshold",
-      "strategy": "检索门槛拒答（top1 fused=0.52<0.63 且 CE=0.50<0.6，无可靠依据）",
+      "strategy": "检索门槛拒答（top1 fused=0.51<0.625 且 CE=0.50<0.6，无可靠依据）",
       "conclusion": null,
       "basis": null,
       "confidence": null,
@@ -2115,28 +2346,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 24.6,
-      "latency_ms": 24559,
-      "trace_id": "ea0bfec4fbb44819",
-      "ttft_ms": 765,
+      "total_ms": 13397.0,
+      "retrieve_ms": 2327.91,
+      "pre_generation_ms": 2329.6,
+      "ttft_ms": 747,
+      "generate_ms": 11060,
+      "model_ms": 11052,
+      "tokens": 250,
+      "tokens_per_second": 22.6,
+      "seconds": 13.4,
+      "latency_ms": 13389,
+      "trace_id": "223a07295d0f41cc",
       "timing": {
-        "route_ms": 1.8,
+        "route_ms": 1.22,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 304.85,
+        "retrieve_ms": 2327.91,
         "retrieval": {
-          "bm25_ms": 8.33,
-          "vector_ms": 104.92,
-          "graph_ms": 1.33,
-          "fusion_ms": 0.68,
-          "rule_rerank_ms": 3.72,
+          "bm25_ms": 7.27,
+          "vector_ms": 689.75,
+          "graph_ms": 1.64,
+          "fusion_ms": 0.6,
+          "rule_rerank_ms": 4.36,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 185.68,
-          "total_ms": 304.79
+          "cross_encoder_ms": 1624.09,
+          "total_ms": 2327.86
         },
-        "pre_generation_ms": 305.97,
-        "ttft_ms": 765,
-        "generate_ms": 24253,
-        "model_ms": 24229,
+        "pre_generation_ms": 2329.6,
+        "ttft_ms": 747,
+        "generate_ms": 11060,
+        "model_ms": 11052,
         "usage": {
           "prompt_tokens": 586,
           "completion_tokens": 250,
@@ -2144,7 +2382,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 24559
+        "total_ms": 13389
       },
       "api_intent": "law",
       "refused": false,
@@ -2165,14 +2403,14 @@
         "61号令·第二十一条",
         "消防法·第二十八条",
         "责任制办法·第十五条",
-        "61号令·第三十一条"
+        "责任制办法·第十八条"
       ],
       "retrieved_scores": [
-        0.886,
-        0.69,
-        0.567,
-        0.52,
-        0.52
+        0.885,
+        0.685,
+        0.558,
+        0.519,
+        0.519
       ],
       "unsupported_marks": [
         "守卫介入（模型原引用与提供条款不匹配：citation_guard）",
@@ -2191,28 +2429,35 @@
       "contract_passed": true,
       "gold_hit": true,
       "message": "OK",
-      "seconds": 44.2,
-      "latency_ms": 44184,
-      "trace_id": "c4a0eaf3a01a49fb",
-      "ttft_ms": 608,
+      "total_ms": 21892.6,
+      "retrieve_ms": 1769.82,
+      "pre_generation_ms": 1770.36,
+      "ttft_ms": 652,
+      "generate_ms": 20105,
+      "model_ms": 20098,
+      "tokens": 480,
+      "tokens_per_second": 23.9,
+      "seconds": 21.9,
+      "latency_ms": 21876,
+      "trace_id": "87e67879a2dc47ec",
       "timing": {
-        "route_ms": 0.12,
+        "route_ms": 0.06,
         "query_prepare_ms": 0.01,
-        "retrieve_ms": 344.61,
+        "retrieve_ms": 1769.82,
         "retrieval": {
-          "bm25_ms": 9.86,
-          "vector_ms": 89.67,
-          "graph_ms": 1.23,
-          "fusion_ms": 0.76,
-          "rule_rerank_ms": 2.96,
+          "bm25_ms": 6.13,
+          "vector_ms": 191.23,
+          "graph_ms": 1.7,
+          "fusion_ms": 0.67,
+          "rule_rerank_ms": 4.99,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 239.93,
-          "total_ms": 344.55
+          "cross_encoder_ms": 1564.83,
+          "total_ms": 1769.71
         },
-        "pre_generation_ms": 344.83,
-        "ttft_ms": 608,
-        "generate_ms": 43839,
-        "model_ms": 43808,
+        "pre_generation_ms": 1770.36,
+        "ttft_ms": 652,
+        "generate_ms": 20105,
+        "model_ms": 20098,
         "usage": {
           "prompt_tokens": 604,
           "completion_tokens": 480,
@@ -2220,7 +2465,7 @@
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 44184
+        "total_ms": 21876
       },
       "api_intent": "law",
       "refused": false,
@@ -2246,11 +2491,11 @@
         "61号令·第二十一条"
       ],
       "retrieved_scores": [
-        0.75,
-        0.685,
-        0.673,
-        0.634,
-        0.605
+        0.746,
+        0.683,
+        0.671,
+        0.635,
+        0.61
       ],
       "unsupported_marks": [
         "问题与引用原文零词重叠（弱信号）"
@@ -2265,48 +2510,57 @@
       "id": "d07",
       "intent": "law",
       "question": "消防救援机构的监督检查职责是什么？",
-      "passed": false,
+      "passed": true,
       "contract_passed": true,
-      "gold_hit": false,
-      "message": "未命中金标条款",
-      "seconds": 9.7,
-      "latency_ms": 9657,
-      "trace_id": "24d625131e5741d4",
-      "ttft_ms": 497,
+      "gold_hit": true,
+      "message": "OK",
+      "total_ms": 14338.0,
+      "retrieve_ms": 592.86,
+      "pre_generation_ms": 592.54,
+      "ttft_ms": 409,
+      "generate_ms": 13739,
+      "model_ms": 13732,
+      "tokens": 317,
+      "tokens_per_second": 23.1,
+      "seconds": 14.3,
+      "latency_ms": 14331,
+      "trace_id": "ab6745a9a2114450",
       "timing": {
-        "route_ms": 0.1,
-        "query_prepare_ms": 0.01,
-        "retrieve_ms": 155.36,
+        "route_ms": 0.06,
+        "query_prepare_ms": 0.0,
+        "retrieve_ms": 592.86,
         "retrieval": {
-          "bm25_ms": 1.93,
-          "vector_ms": 33.02,
-          "graph_ms": 0.34,
-          "fusion_ms": 0.64,
-          "rule_rerank_ms": 2.97,
+          "bm25_ms": 1.03,
+          "vector_ms": 53.12,
+          "graph_ms": 0.64,
+          "fusion_ms": 1.25,
+          "rule_rerank_ms": 6.33,
           "ml_rerank_ms": 0.0,
-          "cross_encoder_ms": 116.32,
-          "total_ms": 155.3
+          "cross_encoder_ms": 530.33,
+          "total_ms": 592.8
         },
-        "pre_generation_ms": 156.32,
-        "ttft_ms": 497,
-        "generate_ms": 9500,
-        "model_ms": 9479,
+        "pre_generation_ms": 592.54,
+        "ttft_ms": 409,
+        "generate_ms": 13739,
+        "model_ms": 13732,
         "usage": {
-          "prompt_tokens": 316,
-          "completion_tokens": 104,
-          "total_tokens": 420
+          "prompt_tokens": 332,
+          "completion_tokens": 317,
+          "total_tokens": 649
         },
         "guard_retry": false,
         "pipeline_retry": false,
-        "total_ms": 9657
+        "total_ms": 14331
       },
       "api_intent": "law",
       "refused": false,
       "crag": "Correct",
       "strategy": "LLM生成（结构化+引用核验）",
-      "conclusion": "临时查封",
+      "conclusion": "消防救援机构在消防监督检查中发现火灾隐患的，应当通知有关单位或者个人立即采取措施消除隐患；不及时消除隐患可能严重威胁公共安全的，消防救援机构应当依照规定对危险部位或者场所采取临时查封措施。",
       "basis": [
-        "《中华人民共和国消防法（2021修正）》第五十四条：消防救援机构在消防监督检查中发现火灾隐患的，应当通知有关单位或者个人立即采取措施消除隐患；不及时消除隐患可能严重威胁公共安全的，消防救援机构应当依照规定对危险部位或者场所采取临时查封措施。"
+        "《中华人民共和国消防法（2021修正）》第五十四条：消防救援机构在消防监督检查中发现火灾隐患的，应当通知有关单位或者个人立即采取措施消除隐患；不及时消除隐患可能严重威胁公共安全的，消防救援机构应当依照规定对危险部位或者场所采取临时查封措施。",
+        "《中华人民共和国消防法（2021修正）》第五十三条：消防救援机构应当对机关、团体、企业、事业等单位遵守消防法律、法规的情况依法进行监督检查。公安派出所可以负责日常消防监督检查、开展消防宣传教育，具体办法由国务院公安部门规定。 消防救援机构、公安派出所的…",
+        "《高层民用建筑消防安全管理规定》第十一条：消防救援机构和其他负责消防监督检查的机构依法对高层民用建筑进行消防监督检查，督促业主、使用人、受委托的消防服务单位等落实消防安全责任；对监督检查中发现的火灾隐患，通知有关单位或者个人立即采取措施消除隐…"
       ],
       "confidence": "high",
       "guards": [],
@@ -2315,14 +2569,14 @@
       "retrieved_articles": [
         "消防法·第五十四条",
         "消防法·第五十三条",
-        "消防法·第五十五条",
         "高层规定·第十一条",
+        "消防法·第五十五条",
         "消防法·第二十五条"
       ],
       "retrieved_scores": [
         0.673,
         0.668,
-        0.663,
+        0.662,
         0.662,
         0.661
       ],

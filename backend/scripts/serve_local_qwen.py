@@ -43,6 +43,11 @@ import uuid
 
 from fastapi import FastAPI, HTTPException, Request
 
+# GPU 绑定：本服务独占 GPU（Qwen+LoRA 推理）。必须在任何 torch 导入之前设置——
+# torch/sentence_transformers 初始化 CUDA 上下文时读取该变量，晚了不生效。
+# 显式 "0" 而非依赖继承：即使外层环境被污染也只看设备 0。
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
+
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR = os.path.join(BACKEND_DIR, "models", "Qwen2.5-3B-Instruct")
 MERGED_DIR = os.path.join(BACKEND_DIR, "models", "Qwen2.5-3B-Instruct-firesage-v2-merged")
@@ -674,6 +679,13 @@ def main() -> None:
         print("[热身] 完成")
     if use_4bit:
         backend_label += " [4bit-nf4]"
+    # GPU 隔离验收日志：设备名 + 本进程显存占用（Qwen 独占 GPU 的证据）
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+        vram_mb = torch.cuda.memory_allocated() // (1024 * 1024)
+        print(f"[GPU] {props.name}（{props.total_memory // (1024 * 1024)} MiB，"
+              f"CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '?')}）")
+        print(f"[GPU] 本进程模型显存占用 {vram_mb} MiB")
     print(f"[就绪] {backend_label} → http://{args.host}:{args.port}")
 
     import uvicorn

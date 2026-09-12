@@ -36,10 +36,14 @@ CRAG_CE_FLOOR = 0.50    # CrossEncoder 低于此分 → 倾向引导而非硬拒
 CRAG_CE_SOFT = 0.47     # 有图谱命中时的软地板
 
 # 检索拒答门槛（scripts/analyze_threshold.py 对 35 题正误分布回放计算）：
-# top1 fused<0.63 且 top1 CrossEncoder<0.60 → 拦截全部 3 条库外题（o04/o07/o14）。
-# 0.63 而非 0.65：口语化问法（如"安排没证的人值班"）检索命中金标条款但 fused
-# 偏低（0.633），放宽避免误伤；误放行的库外题由引用验证+支撑核验兜底拒答。
-REFUSE_FUSED_TH = 0.63
+# top1 fused<0.625 且 top1 CrossEncoder<0.60 → 拦截 o14（0.515/0.50）等无依据题；
+# o04/o07 由 OUT_OF_KB_TOPICS 主题护栏拦截，不依赖本门槛。
+# v1.0-dev 标定（BGE 走 CPU + CE 走 ONNX INT8 的新环境，回放见
+# eval_reports/replay_retrieval.json）：口语化问法（如"安排没证的人值班"）命中金标
+# 条款但 fused 仅 0.629，阈值 0.63 会误伤 → 取 0.625 放行（0.629≥0.625）；
+# 库外最高分 o07=0.625（其 CE=0.608≥0.60，本就不触发双低门槛，由主题护栏兜底）。
+# 误放行的库外题由引用验证 + 支撑核验兜底拒答。
+REFUSE_FUSED_TH = 0.625
 REFUSE_CE_TH = 0.60
 
 GUIDE_EXAMPLES = (

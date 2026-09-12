@@ -104,6 +104,60 @@ def _load_cross_encoder(model_id: str):
     return CrossEncoder(model_id, max_length=512)
 
 
+class _OnnxInt8CrossEncoder:
+    """bge-reranker-v2-m3 的 ONNX INT8 CPU 推理（onnxruntime 直驱，无 optimum 依赖）。
+
+    接口对齐 sentence_transformers.CrossEncoder.predict：num_labels==1 时
+    返回 sigmoid(logits)——下游 score() 的双重 sigmoid 口径与 PyTorch 路径完全一致。
+    产物由 scripts/export_reranker_onnx.py 生成（模型 + tokenizer + meta.json）。
+    """
+
+    def __init__(self, model_dir):
+        import onnxruntime as ort
+        from transformers import AutoTokenizer
+
+        onnx_path = os.path.join(model_dir, "model_int8.onnx")
+        if not os.path.exists(onnx_path):
+            raise FileNotFoundError(f"缺少 {onnx_path}（先运行 scripts/export_reranker_onnx.py）")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
+        opts = ort.SessionOptions()
+        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        threads = os.getenv("RERANK_ONNX_THREADS", "").strip()
+        if threads.isdigit():
+            opts.intra_op_num_threads = int(threads)
+        self.session = ort.InferenceSession(
+            onnx_path, sess_options=opts, providers=["CPUExecutionProvider"])
+        self.max_length = 512
+
+    def predict(self, pairs):
+        """pairs: [(question, text), ...] → sigmoid(logits)，与 ST CrossEncoder 同口径。"""
+        import numpy as np
+
+        enc = self.tokenizer(list(pairs), return_tensors="np", padding=True,
+                             truncation=True, max_length=self.max_length)
+        feeds = {
+            "input_ids": np.asarray(enc["input_ids"], dtype="int64"),
+            "attention_mask": np.asarray(enc["attention_mask"], dtype="int64"),
+        }
+        logits = np.asarray(self.session.run(["logits"], feeds)[0]).reshape(-1)
+        return 1.0 / (1.0 + np.exp(-logits))
+
+
+def _load_reranker():
+    """按 RERANK_BACKEND 选择精排后端：onnx_int8（CPU 提速）或默认 PyTorch。"""
+    backend = os.getenv("RERANK_BACKEND", "").strip().lower()
+    if backend == "onnx_int8":
+        onnx_dir = os.path.join(BASE_DIR, "models", "bge-reranker-v2-m3-onnx-int8")
+        try:
+            model = _OnnxInt8CrossEncoder(onnx_dir)
+            print("[CrossEncoderReranker] ONNX INT8 后端已启用（bge-reranker-v2-m3, CPU）")
+            return model
+        except Exception as e:
+            print(f"[CrossEncoderReranker] ONNX INT8 加载失败（{type(e).__name__}: {e}），"
+                  f"回退 PyTorch CrossEncoder")
+    return _load_cross_encoder(RERANK_MODEL)
+
+
 def _corpus_fingerprint(chunks):
     raw = "|".join(f"{c['article']}:{c.get('text', '')}" for c in (chunks or []))
     return hashlib.md5(raw.encode("utf-8")).hexdigest()[:16]
@@ -240,8 +294,10 @@ class CrossEncoderReranker:
             print("[CrossEncoderReranker] FIRESAGE_LITE=1，跳过精排模型")
             return
         try:
-            self.model = _load_cross_encoder(RERANK_MODEL)
+            self.model = _load_reranker()
             self.available = True
+            if isinstance(self.model, _OnnxInt8CrossEncoder):
+                self.name = "CrossEncoder 语义精排（ONNX INT8）"
         except Exception as e:
             print(f"[CrossEncoderReranker] bge-reranker-v2-m3 不可用（{e}），保留法规意图重排")
 

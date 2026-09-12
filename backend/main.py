@@ -184,6 +184,8 @@ def _reload_knowledge(force: bool = False) -> dict:
 class AskBody(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
     previous_question: Optional[str] = Field(default=None, max_length=500)
+    # 评测脚本传 false 绕过回答缓存，保证每次真实走检索+生成
+    use_cache: bool = Field(default=True)
 
 
 class FeedbackBody(BaseModel):
@@ -469,7 +471,7 @@ def ask(body: AskBody, request: Request):
     question = body.question.strip()
     if not question:
         raise HTTPException(status_code=422, detail="问题不能为空")
-    result = pipe.ask(question, body.previous_question)
+    result = pipe.ask(question, body.previous_question, use_cache=body.use_cache)
     # 每次 HTTP 请求使用独立追踪号；即使命中回答缓存也能区分两次调用。
     result = dict(result)
     result["trace_id"] = uuid.uuid4().hex[:16]
