@@ -57,6 +57,22 @@ DATA_DIR = os.path.join(BACKEND_DIR, "data")
 # 法规索引：'abbr·num' -> {law_name, num, title, text}（main 启动时加载）
 LAW_INDEX: dict = {}
 
+
+def load_local_model_env() -> None:
+    """加载推理服务自己的 LOCAL_LLM_* 配置，不触碰 DeepSeek 生产配置。"""
+    path = os.path.join(BACKEND_DIR, ".env.local-model")
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8-sig") as source:
+        for raw_line in source:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip().strip("\"'")
+            if key.startswith("LOCAL_LLM_"):
+                os.environ.setdefault(key, value)
+
 # 训练时的 system 指令（与 build_gen_sft.py 完全一致）
 TRAIN_SYSTEM = (
     "你是消防法规助手。请严格依据给定条款，输出 JSON："
@@ -64,6 +80,78 @@ TRAIN_SYSTEM = (
     "不得编造未提供的条文。"
 )
 FIELDS = ["conclusion", "conditions", "basis", "supplement", "confidence"]
+
+# 演示态输出约束：法规事实仍由 RAG 提供，模型只需给出简洁结论和少量依据。
+# 这段指令附在 user 末尾，不改变 LoRA 训练时的 system 模板。
+CONCISE_SUFFIX = (
+    "\n\n输出要求：只输出一个完整 JSON 对象，结束右花括号后立即停止。"
+    "conclusion 不超过80字；conditions 最多3点；basis 最多2条，"
+    "每条只写《法规名》第X条和必要摘录；supplement 不超过100字。"
+)
+COMPLEX_QUESTION_PAT = re.compile(
+    r"分别|逐项|同时|以及|流程|程序|步骤|哪些条件|哪些责任|多项|综合|"
+    r"(?:处罚|责任|义务).{0,12}(?:和|与|以及)"
+)
+
+
+def _env_int(name: str, default: int, lower: int = 64, upper: int = 900) -> int:
+    try:
+        return max(lower, min(int(os.getenv(name, str(default)) or default), upper))
+    except (TypeError, ValueError):
+        return default
+
+
+def select_generation_budget(question: str, provided_keys: list[str] | None,
+                             requested: int, server_cap: int) -> tuple[int, str]:
+    """按问题复杂度分配生成预算，返回 (tokens, budget_class)。"""
+    ceiling = max(64, min(requested, server_cap, 900))
+    if FIRE_WORDS.search(question or "") and ACTION_WORDS.search(question or ""):
+        return min(ceiling, _env_int("LOCAL_LLM_EMERGENCY_TOKENS", 220)), "emergency"
+    if provided_keys is not None and not provided_keys:
+        return min(ceiling, 96), "no_articles"
+    if COMPLEX_QUESTION_PAT.search(question or ""):
+        return min(ceiling, _env_int("LOCAL_LLM_COMPLEX_TOKENS", 420)), "complex"
+    return min(ceiling, _env_int("LOCAL_LLM_SIMPLE_TOKENS", 340)), "simple"
+
+
+class CompleteJSONObjectStoppingCriteria:
+    """检测到首个完整 JSON 对象后停止，忽略字符串内部的花括号。"""
+
+    def __init__(self, tokenizer, prompt_length: int):
+        self.tokenizer = tokenizer
+        self.last_length = prompt_length
+        self.started = False
+        self.depth = 0
+        self.in_string = False
+        self.escape = False
+
+    def __call__(self, input_ids, scores=None, **kwargs):
+        current_length = int(input_ids.shape[1])
+        if current_length <= self.last_length:
+            return False
+        piece = self.tokenizer.decode(
+            input_ids[0, self.last_length:current_length], skip_special_tokens=True)
+        self.last_length = current_length
+        for ch in piece:
+            if not self.started:
+                if ch == "{":
+                    self.started = True
+                    self.depth = 1
+                continue
+            if self.escape:
+                self.escape = False
+            elif ch == "\\" and self.in_string:
+                self.escape = True
+            elif ch == '"':
+                self.in_string = not self.in_string
+            elif not self.in_string:
+                if ch == "{":
+                    self.depth += 1
+                elif ch == "}":
+                    self.depth -= 1
+                    if self.depth == 0:
+                        return True
+        return False
 
 # ---- FireSage 管线提示词识别与桥接 ----
 PIPELINE_MARK = "以下为检索到的法规条款"
@@ -146,7 +234,8 @@ def load_law_index() -> dict:
 
 def build_citation(info: dict) -> str:
     """按训练格式重建规范引用：《法规全名》第X条：原文摘录。"""
-    snippet = (info.get("text") or "")[:120].rstrip("。") + "。"
+    snippet_chars = _env_int("LOCAL_LLM_CITATION_CHARS", 80, lower=40, upper=120)
+    snippet = (info.get("text") or "")[:snippet_chars].rstrip("。") + "。"
     return f"《{info['law_name']}》{info['num']}：{snippet}"
 
 
@@ -373,11 +462,16 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
     # 拉取新版代码并重启后也会立即生效。长答案评测可显式设置为 700。
     server_token_cap = max(
         64, min(int(os.getenv("LOCAL_LLM_MAX_TOKENS", "480") or "480"), 900))
+    fast_mode = os.getenv("LOCAL_LLM_FAST_MODE", "1").strip().lower() \
+        not in ("0", "false", "no", "off")
 
     @app.get("/health")
     def health():
         return {"ok": True, "model": model_name, "backend": backend_label,
-                "max_output_tokens": server_token_cap}
+                "max_output_tokens": server_token_cap, "fast_mode": fast_mode,
+                "simple_tokens": _env_int("LOCAL_LLM_SIMPLE_TOKENS", 340),
+                "complex_tokens": _env_int("LOCAL_LLM_COMPLEX_TOKENS", 420),
+                "emergency_tokens": _env_int("LOCAL_LLM_EMERGENCY_TOKENS", 220)}
 
     @app.get("/v1/models")
     def models():
@@ -396,7 +490,6 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
         user = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
         temperature = float(body.get("temperature", 0) or 0)
         requested_tokens = int(body.get("max_tokens", 480) or 480)
-        max_tokens = max(64, min(requested_tokens, server_token_cap, 900))
         stream = bool(body.get("stream"))
 
         bridged = bridge_prompt(system, user)
@@ -405,14 +498,25 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
         else:
             sys_text, user_text, question, provided_keys = system, user, user[:200], None
 
-        import torch
+        if fast_mode and bridged:
+            user_text += CONCISE_SUFFIX
+            max_tokens, budget_class = select_generation_budget(
+                question, provided_keys, requested_tokens, server_token_cap)
+        else:
+            max_tokens = max(64, min(requested_tokens, server_token_cap, 900))
+            budget_class = "legacy"
 
-        def _gen_kwargs(inputs, streamer=None):
+        import torch
+        from transformers import StoppingCriteriaList
+
+        def _gen_kwargs(inputs, streamer=None, token_budget=None):
+            budget = token_budget or max_tokens
             kw = dict(
                 **inputs,
-                max_new_tokens=max_tokens,
+                max_new_tokens=budget,
                 do_sample=temperature > 0.05,
                 pad_token_id=tok.eos_token_id,
+                use_cache=True,
             )
             # 贪心解码不传 temperature/top_p，避免 transformers 的无效参数警告；
             # 显式要求采样时才加入对应参数。
@@ -421,6 +525,11 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                 kw["top_p"] = 0.8
             if streamer is not None:
                 kw["streamer"] = streamer
+            if fast_mode:
+                kw["stopping_criteria"] = StoppingCriteriaList([
+                    CompleteJSONObjectStoppingCriteria(
+                        tok, int(inputs["input_ids"].shape[1]))
+                ])
             return kw
 
         def _build_inputs(u_text: str):
@@ -429,17 +538,27 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
             prompt = tok.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
             return tok(prompt, return_tensors="pt", add_special_tokens=False).to(model.device)
 
-        def do_generate(u_text: str) -> dict:
+        def do_generate(u_text: str, token_budget=None) -> dict:
             inputs = _build_inputs(u_text)
             t0 = time.time()
-            with gen_lock, torch.no_grad():
-                out = model.generate(**_gen_kwargs(inputs))
+            budget = token_budget or max_tokens
+            with gen_lock, torch.inference_mode():
+                out = model.generate(**_gen_kwargs(inputs, token_budget=budget))
             raw = tok.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
             return {"raw": raw, "latency_ms": int((time.time() - t0) * 1000),
                     "ttft_ms": None,
                     "prompt_tokens": int(inputs["input_ids"].shape[1]),
                     "completion_tokens": len(out[0]) - int(inputs["input_ids"].shape[1]),
-                    "total_tokens": len(out[0])}
+                    "total_tokens": len(out[0]), "generation_attempts": 1,
+                    "budget_tokens": budget, "budget_class": budget_class}
+
+        def combine_generation_metrics(first: dict, second: dict) -> dict:
+            """引用重试时累计两轮真实耗时与 token，避免指标只记录第二轮。"""
+            for key in ("latency_ms", "prompt_tokens", "completion_tokens", "total_tokens"):
+                second[key] = int(first.get(key) or 0) + int(second.get(key) or 0)
+            second["ttft_ms"] = first.get("ttft_ms")
+            second["generation_attempts"] = int(first.get("generation_attempts") or 1) + 1
+            return second
 
         def post_process(raw: str, provided_keys, gen: dict):
             """生成后守卫管线：JSON 修复 → 引用守卫（可重试）→ 输出保护。"""
@@ -465,7 +584,10 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                             guards.append("citation_guard")
                     else:
                         guards.append("citation_retry")
-                        gen = do_generate(user_text + RETRY_SUFFIX)
+                        retry_budget = min(
+                            max_tokens, _env_int("LOCAL_LLM_RETRY_TOKENS", 280))
+                        retry_gen = do_generate(user_text + RETRY_SUFFIX, retry_budget)
+                        gen = combine_generation_metrics(gen, retry_gen)
                         data2, repair2 = parse_and_repair(gen["raw"])
                         if repair2 in ("truncation_repair", "fallback"):
                             guards.append(f"json_{repair2}")
@@ -510,7 +632,7 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                 ttft_ms = None
 
                 def _run():
-                    with gen_lock, torch.no_grad():
+                    with gen_lock, torch.inference_mode():
                         model.generate(**_gen_kwargs(inputs, streamer=streamer))
 
                 th = threading.Thread(target=_run)
@@ -530,7 +652,9 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                        "ttft_ms": ttft_ms,
                        "prompt_tokens": int(inputs["input_ids"].shape[1]),
                        "completion_tokens": n_out,
-                       "total_tokens": int(inputs["input_ids"].shape[1]) + n_out}
+                       "total_tokens": int(inputs["input_ids"].shape[1]) + n_out,
+                       "generation_attempts": 1, "budget_tokens": max_tokens,
+                       "budget_class": budget_class}
                 # 守卫在完整输出上执行；最终内容以 final_content 为准（增量仅为预览）
                 final, guards, gen = post_process(raw, provided_keys, gen)
                 yield chunk({}, finish_reason="stop",
@@ -540,7 +664,10 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                             latency_ms=gen["latency_ms"],
                             usage={"prompt_tokens": gen["prompt_tokens"],
                                    "completion_tokens": gen["completion_tokens"],
-                                   "total_tokens": gen["total_tokens"]})
+                                   "total_tokens": gen["total_tokens"],
+                                   "generation_attempts": gen["generation_attempts"],
+                                   "budget_tokens": gen["budget_tokens"],
+                                   "budget_class": gen["budget_class"]})
                 yield "data: [DONE]\n\n"
 
             return StreamingResponse(
@@ -561,7 +688,10 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
                          "message": {"role": "assistant", "content": content}}],
             "usage": {"prompt_tokens": gen["prompt_tokens"],
                       "completion_tokens": gen["completion_tokens"],
-                      "total_tokens": gen["total_tokens"]},
+                      "total_tokens": gen["total_tokens"],
+                      "generation_attempts": gen["generation_attempts"],
+                      "budget_tokens": gen["budget_tokens"],
+                      "budget_class": gen["budget_class"]},
             "firesage_protections": guards,
             "latency_ms": gen["latency_ms"],
             "ttft_ms": gen.get("ttft_ms"),
@@ -574,6 +704,7 @@ def build_app(model, tok, model_name: str, api_key: str, backend_label: str):
 
 
 def main() -> None:
+    load_local_model_env()
     parser = argparse.ArgumentParser(description="本地 OpenAI 兼容 Qwen+LoRA 服务")
     parser.add_argument("--adapter", default="auto",
                         help="auto=优先加载合并模型（快，推荐）；none=仅基座；"
@@ -646,17 +777,22 @@ def main() -> None:
 
     print(f"[加载] 模型 {load_dir}")
     tok = AutoTokenizer.from_pretrained(load_dir, local_files_only=True)
+    attn_impl = os.getenv("LOCAL_LLM_ATTN_IMPL", "sdpa").strip() or "sdpa"
     model = AutoModelForCausalLM.from_pretrained(
         load_dir, local_files_only=True,
         dtype=None if use_4bit else torch.bfloat16,
         quantization_config=quant_cfg,
         device_map="cuda",
+        attn_implementation=attn_impl,
     )
     if adapter_dir:
         from peft import PeftModel
         print(f"[加载] LoRA adapter {adapter_dir}")
         model = PeftModel.from_pretrained(model, adapter_dir)
     model = model.eval()
+    model.config.use_cache = True
+    print(f"[推理] attention={getattr(model.config, '_attn_implementation', attn_impl)}，"
+          "KV cache=on，JSON 完成即停止")
     if not args.skip_warmup:
         print("[热身] 正在预热 GPU（只在启动时执行一次）")
         warm_messages = [
@@ -667,7 +803,7 @@ def main() -> None:
             warm_messages, add_generation_prompt=True, tokenize=False)
         warm_inputs = tok(
             warm_prompt, return_tensors="pt", add_special_tokens=False).to(model.device)
-        with torch.no_grad():
+        with torch.inference_mode():
             model.generate(
                 **warm_inputs,
                 max_new_tokens=1,

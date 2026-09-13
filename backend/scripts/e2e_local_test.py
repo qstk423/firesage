@@ -221,6 +221,20 @@ def summarize_timings(rows: list[dict]) -> dict:
     - all_rows：全部题的 total_ms（客户端墙钟），仅作整体参考；
     - 每条生成题校验 total_ms >= generate_ms（客户端墙钟必须覆盖服务端生成段）。
     """
+    # 保留旧版调用者使用的扁平统计键（route_ms / retrieval.bm25_ms 等）。
+    # 新版生成题同批统计放在 generation 下，两套口径互不覆盖。
+    all_series: dict[str, list[float]] = {}
+    for row in rows:
+        timing = row.get("timing") or {}
+        for key, value in timing.items():
+            if key == "retrieval" or isinstance(value, bool):
+                continue
+            if isinstance(value, (int, float)):
+                all_series.setdefault(key, []).append(float(value))
+        for child_key, child_value in (timing.get("retrieval") or {}).items():
+            if isinstance(child_value, (int, float)) and not isinstance(child_value, bool):
+                all_series.setdefault(f"retrieval.{child_key}", []).append(float(child_value))
+
     gen_rows = [r for r in rows if is_generation_row(r)]
     gen_series: dict[str, list[float]] = {}
     for row in gen_rows:
@@ -240,6 +254,7 @@ def summarize_timings(rows: list[dict]) -> dict:
         if r.get("total_ms") is not None and r["total_ms"] < r["generate_ms"]
     ]
     return {
+        **{key: _stat(values) for key, values in sorted(all_series.items())},
         "generation_rows": len(gen_rows),
         "generation": {key: _stat(values) for key, values in sorted(gen_series.items())},
         "all_rows_total_ms": _stat([r["total_ms"] for r in rows
@@ -284,6 +299,9 @@ def main() -> None:
         timing = resp.get("timing") or {}
         usage = timing.get("usage") or {}
         tokens = usage.get("completion_tokens")
+        generation_attempts = usage.get("generation_attempts")
+        budget_tokens = usage.get("budget_tokens")
+        budget_class = usage.get("budget_class")
         model_ms = timing.get("model_ms")
         tokens_per_second = (round(tokens / (model_ms / 1000), 1)
                              if isinstance(tokens, (int, float)) and model_ms else None)
@@ -313,6 +331,9 @@ def main() -> None:
             "generate_ms": timing.get("generate_ms"),
             "model_ms": model_ms,
             "tokens": tokens,
+            "generation_attempts": generation_attempts,
+            "budget_tokens": budget_tokens,
+            "budget_class": budget_class,
             "tokens_per_second": tokens_per_second,
             "seconds": secs,
             "latency_ms": resp.get("latency_ms"),
@@ -370,6 +391,12 @@ def main() -> None:
         print(f"[校验] total_ms >= generate_ms 违例 {len(violations)} 条：{violations}")
     else:
         print(f"[校验] total_ms >= generate_ms：{gen_n}/{gen_n} 全部通过")
+    gen_rows = [r for r in results if is_generation_row(r)]
+    under_20s = sum(1 for r in gen_rows if r.get("total_ms", float("inf")) <= 20_000)
+    retries = sum(1 for r in gen_rows if (r.get("generation_attempts") or 1) > 1)
+    under_20s_rate = round(under_20s / max(1, len(gen_rows)) * 100, 1)
+    print(f"[20秒目标] {under_20s}/{len(gen_rows)} 条生成题 ≤20s（{under_20s_rate}%）")
+    print(f"[二次生成] {retries}/{len(gen_rows)} 条触发引用重试")
     ttfts = sorted(r["ttft_ms"] for r in results if r.get("ttft_ms"))
     ttft_p50 = ttfts[len(ttfts) // 2] if ttfts else None
     print(f"[内容不支撑标注] {len(unsupported_rows)} 条")
@@ -399,6 +426,9 @@ def main() -> None:
                                "total_ms_p50": gen_stats.get("total_ms", {}).get("p50"),
                                "tokens_per_second_p50": gen_stats.get(
                                    "tokens_per_second", {}).get("p50"),
+                               "under_20s_generation": f"{under_20s}/{len(gen_rows)}",
+                               "under_20s_rate": under_20s_rate,
+                               "generation_retries": retries,
                                "timing_ms": timing_summary,
                                "unsupported_marked": len(unsupported_rows)},
                    "rows": results}, f, ensure_ascii=False, indent=2)

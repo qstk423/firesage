@@ -185,11 +185,12 @@ powershell -ExecutionPolicy Bypass -File backend\scripts\stop_local_stack.ps1
 ```
 
 - **DeepSeek 回退**：本地栈读独立的 `.env.local-model`，**不修改** DeepSeek 生产配置（`.env.local`）。回退只需 `stop_local_stack.ps1` 停掉两个进程，再按原方式启动 `main.py`（8319）即恢复云端
-- 显存不足时 `run_firesage_local.py` 已强制 `CUDA_VISIBLE_DEVICES=""`，检索模型走 CPU，与 8320 推理服务互不抢占
+- `run_firesage_local.py` 在子进程导入 PyTorch 前强制 `CUDA_VISIBLE_DEVICES="-1"`，检索模型确定走 CPU，与 8320 推理服务互不抢占
 - 需要 `LLM_STREAM=1`（默认已写入 `.env.local-model`）开启流式生成与 TTFT 记录
-- 演示默认采用确定性生成并把输出限制为 480 tokens；8320 启动时会自动预热 GPU，减少第一次问答额外等待
+- 演示默认采用确定性生成；服务按普通题 340、复杂题 420、应急题 220 tokens 动态分配预算，并在首个完整 JSON 结束时提前停止。设置 `LOCAL_LLM_FAST_MODE=0` 可回退统一上限行为
+- 最终引用默认只保留每条前 80 字原文（法规全名和条号完整保留），降低冗余但不改变检索与引用核验口径
 - 返回的 `timing` 包含检索、总生成、纯模型生成、TTFT 与 token 用量，可据此区分 CPU 检索和 GPU 生成瓶颈
-- 若要复现 700-token 长答案评测，可在启动 8320 前设置 `LOCAL_LLM_MAX_TOKENS=700`，并同步调整 `LLM_MAX_TOKENS=700`
+- 若要复现旧版长答案评测，可在启动 8320 前设置 `LOCAL_LLM_FAST_MODE=0` 与 `LOCAL_LLM_MAX_TOKENS=700`，并同步调整 `LLM_MAX_TOKENS=700`
 
 ### Docker 一键启动（试点 / 演示）
 
